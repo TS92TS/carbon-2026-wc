@@ -1,6 +1,6 @@
 /* =========================================================================
    UNIFIED NAVIGATION (Production Grade)
-   Environment-agnostic: Works on Localhost, GitHub Pages, and Live Domains.
+   Environment-agnostic: Works on Localhost, GitHub Pages, urls and Live Domains.
    ========================================================================= */
 
 export function updateNavStates() {
