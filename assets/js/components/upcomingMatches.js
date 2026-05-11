@@ -22,7 +22,11 @@ export function renderUpcomingList(data) {
   }
 
   // Initial render: show the "upcoming" feed if available, otherwise fallback to england or empty
-  const initialList = Array.isArray(matchCache.upcoming) ? matchCache.upcoming : (Array.isArray(matchCache.england) ? matchCache.england : []);
+  const initialList = Array.isArray(matchCache.upcoming)
+    ? matchCache.upcoming
+    : Array.isArray(matchCache.england)
+      ? matchCache.england
+      : [];
   updateUI(initialList, container);
 }
 
@@ -32,7 +36,7 @@ function setupFilters(nav, container) {
     if (!btn) return;
 
     // UI: Update active state
-    nav.querySelectorAll(".c-chip").forEach(c => {
+    nav.querySelectorAll(".c-chip").forEach((c) => {
       c.classList.remove("c-chip--active");
       c.setAttribute("aria-pressed", "false");
     });
@@ -44,13 +48,21 @@ function setupFilters(nav, container) {
 
     // LOGIC: Choose the appropriate pre-prepared feed or derive a filtered list
     if (filterType === "all") {
-      listToDisplay = Array.isArray(matchCache.upcoming) ? matchCache.upcoming : [];
+      listToDisplay = Array.isArray(matchCache.upcoming)
+        ? matchCache.upcoming
+        : [];
     } else if (filterType === "england") {
-      listToDisplay = Array.isArray(matchCache.england) ? matchCache.england : [];
+      listToDisplay = Array.isArray(matchCache.england)
+        ? matchCache.england
+        : [];
     } else if (filterType === "knockout") {
-      listToDisplay = (Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []).filter(m => m.badge === 'Knockout');
+      listToDisplay = (
+        Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []
+      ).filter((m) => m.badge === "Knockout");
     } else if (filterType === "weekend") {
-      listToDisplay = (Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []).filter(m => {
+      listToDisplay = (
+        Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []
+      ).filter((m) => {
         const d = new Date(m.datetimeIso);
         const day = isNaN(d) ? -1 : d.getDay();
         return day === 0 || day === 6; // Sunday (0) or Saturday (6)
@@ -76,8 +88,19 @@ function updateUI(matches, container) {
   // Display up to 5 items to keep the homepage tidy
   matches.slice(0, 5).forEach((match) => {
     const date = new Date(safe(match.datetimeIso));
-    const dateStr = isNaN(date) ? "" : date.toLocaleDateString("en-GB", { weekday: 'short', day: 'numeric', month: 'short' });
-    const timeStr = isNaN(date) ? "" : date.toLocaleTimeString("en-GB", { hour: '2-digit', minute: '2-digit' });
+    const dateStr = isNaN(date)
+      ? ""
+      : date.toLocaleDateString("en-GB", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        });
+    const timeStr = isNaN(date)
+      ? ""
+      : date.toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
 
     const teamAName = safe(match.teamA && match.teamA.name);
     const teamBName = safe(match.teamB && match.teamB.name);
@@ -90,16 +113,16 @@ function updateUI(matches, container) {
       <a class="c-fixture-row" href="/fixtures.html">
         <div class="c-fixture-row__teams">
           <span class="c-fixture-row__team">
-            <span class="c-fixture-row__flag" style="background-image: ${teamAFlag ? `url('${teamAFlag}')` : 'none'}" aria-hidden="true"></span>
+            <span class="c-fixture-row__flag" style="background-image: ${teamAFlag ? `url('${teamAFlag}')` : "none"}" aria-hidden="true"></span>
             ${teamAName}
           </span>
           <span class="c-fixture-row__vs">vs</span>
           <span class="c-fixture-row__team">
-            <span class="c-fixture-row__flag" style="background-image: ${teamBFlag ? `url('${teamBFlag}')` : 'none'}" aria-hidden="true"></span>
+            <span class="c-fixture-row__flag" style="background-image: ${teamBFlag ? `url('${teamBFlag}')` : "none"}" aria-hidden="true"></span>
             ${teamBName}
           </span>
         </div>
-        <p class="c-fixture-row__meta">${dateStr}${dateStr && timeStr ? ' · ' : ''}${timeStr}${(dateStr || timeStr) && badge ? ' · ' : ''}${badge}</p>
+        <p class="c-fixture-row__meta">${dateStr}${dateStr && timeStr ? " · " : ""}${timeStr}${(dateStr || timeStr) && badge ? " · " : ""}${badge}</p>
         <span class="c-fixture-row__arrow" aria-hidden="true">→</span>
       </a>
     `;

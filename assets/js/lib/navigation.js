@@ -1,28 +1,38 @@
-/*=================================
-	UNIFIED NAVIGATION
-	=================================*/
+/* =========================================================================
+   UNIFIED NAVIGATION (Domain-Aware Version)
+   Prevents external links with similar paths from being highlighted.
+   ========================================================================= */
 
 export function updateNavStates() {
-  const allLinks = document.querySelectorAll('.c-mobile-nav__link, .c-nav__item');
-  const path = window.location.pathname;
+  const allLinks = document.querySelectorAll(".c-mobile-nav__link, .c-nav__item");
+  
+  // 1. Get the current site's details
+  const currentHost = window.location.hostname;
+  const currentPath = window.location.pathname.replace(/\/$/, "") || "/";
 
-  allLinks.forEach(link => {
-    const href = link.getAttribute('href');
-    if (!href) return;
+  allLinks.forEach((link) => {
+    // browser-resolved properties
+    const linkHost = link.hostname;
+    const linkPath = link.pathname.replace(/\/$/, "") || "/";
 
-    // Remove active markers
-    link.classList.remove('is-active');
-    link.removeAttribute('aria-current');
+    // 2. Clear previous states
+    link.classList.remove("is-active");
+    link.removeAttribute("aria-current");
 
-    // Safer matching: use endsWith to avoid partial path collisions
-    const isHome = (path === '/' || path.endsWith('index.html')) && 
-                   (href === '/' || href.endsWith('index.html'));
-    
-    const isOtherPage = href !== '/' && !href.endsWith('index.html') && path.endsWith(href.replace('./', ''));
+    // 3. THE GUARD: Only proceed if the link is on the same domain
+    if (linkHost !== currentHost) return;
 
-    if (isHome || isOtherPage) {
-      link.classList.add('is-active');
-      link.setAttribute('aria-current', 'page');
+    // 4. Precise matching logic for internal pages
+    const isExactMatch = currentPath === linkPath;
+
+    // GitHub Pages / Root index.html fallback
+    const isHomeFallback = 
+      (currentPath === "/" || currentPath.endsWith("index.html")) && 
+      (linkPath === "/" || linkPath.endsWith("index.html"));
+
+    if (isExactMatch || isHomeFallback) {
+      link.classList.add("is-active");
+      link.setAttribute("aria-current", "page");
     }
   });
 }
