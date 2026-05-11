@@ -1,0 +1,790 @@
+/* =========================================================================
+   COMPONENTS
+   Reusable UI patterns constructed from tokens.
+   Token names match tokens.css exactly: --type-small, --type-tiny (not -sm/-xs).
+   ========================================================================= */
+
+/* =========================================================================
+   PAGE LAYOUT · HOME FEED
+   ========================================================================= */
+.p-home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding-block: var(--space-4) 0; /* visit section provides its own bottom padding via bleed */
+}
+
+/* =========================================================================
+   BUTTONS
+   Semantic naming: --primary drives the most important action (Pitch Green).
+   --ghost is the calmer alternate (white-on-dark) for secondary CTAs.
+   ========================================================================= */
+.c-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-6);
+  font-family: var(--font-body);
+  font-weight: var(--weight-semibold);
+  font-size: var(--type-body);
+  letter-spacing: var(--tracking-wide);
+  border-radius: var(--radius-md);
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.c-button:active {
+  transform: scale(0.98); /* per brief — haptic-style feedback */
+}
+
+/* Primary — Pitch Green. The conversion driver. */
+.c-button--primary {
+  background-color: var(--accent-pitch);
+  color: var(--text-on-accent);
+  box-shadow: 0 6px 16px rgba(57, 255, 20, 0.22);
+}
+
+.c-button--primary:hover {
+  background-color: var(--accent-pitch-dim);
+  box-shadow: 0 8px 20px rgba(57, 255, 20, 0.28);
+}
+
+/* Ghost — calm white for secondary actions. */
+.c-button--ghost {
+  background-color: var(--text-primary);
+  color: var(--surface-base);
+}
+
+.c-button--ghost:hover {
+  background-color: var(--text-secondary);
+}
+
+/* Mill — premium amber, reserved for VIP / upsell actions. */
+.c-button--mill {
+  background-color: var(--accent-mill);
+  color: var(--text-on-mill);
+}
+
+.c-button--mill:hover {
+  background-color: var(--accent-mill-dim);
+}
+
+.c-button--block {
+  width: 100%;
+}
+
+/* =========================================================================
+   COMPONENT · HERO
+   Full-bleed media block. Math is parent-padding-independent.
+   ========================================================================= */
+.c-hero {
+  position: relative;
+  /* Full-bleed regardless of parent padding — robust at every breakpoint */
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--space-8) var(--space-5) var(--space-6);
+  overflow: hidden;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+.c-hero__media,
+.c-hero__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-base);
+}
+
+.c-hero__media {
+  background-size: cover;
+  background-position: center;
+}
+
+/* Stronger overlay — protects text legibility regardless of image */
+.c-hero__overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(18, 18, 18, 0) 0%,
+    rgba(18, 18, 18, 0.4) 45%,
+    rgba(18, 18, 18, 0.92) 100%
+  );
+}
+
+.c-hero__content {
+  position: relative;
+  z-index: var(--z-raised);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  max-width: 540px;
+}
+
+.c-hero__caption {
+  font-size: var(--type-small);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--accent-pitch);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.c-hero__title {
+  font-size: var(--type-hero);
+  line-height: 0.98;
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-primary);
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+}
+
+.c-hero .c-button {
+  margin-top: var(--space-2);
+}
+
+/* =========================================================================
+   COMPONENT · APP CHIPS (horizontal scroll)
+   ========================================================================= */
+.c-chip-scroll {
+  /* Bleed to viewport edges so chips can scroll under the page padding */
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+
+.c-chip-scroll__list {
+  display: flex;
+  gap: var(--space-2);
+  padding-inline: var(--space-4);
+  list-style: none;
+  margin: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.c-chip-scroll__list::-webkit-scrollbar {
+  display: none;
+}
+
+.c-chip {
+  white-space: nowrap;
+  padding: var(--space-2) var(--space-4);
+  min-height: 36px;
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-full);
+  font-size: var(--type-small);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.c-chip:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.c-chip--active,
+.c-chip[aria-pressed="true"] {
+  background-color: rgba(57, 255, 20, 0.08);
+  border-color: var(--border-accent);
+  color: var(--accent-pitch);
+}
+
+/* =========================================================================
+   COMPONENT · MATCH CARD
+   ========================================================================= */
+.c-match-card {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.c-match-card--elevated {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    var(--shadow-card);
+}
+
+.c-match-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--type-tiny);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.c-match-card__header time {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.c-match-card__teams {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.c-match-card__team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* Flags as 3:2 rectangles — real flag proportions, no central-element cropping */
+.c-match-card__flag {
+  width: 56px;
+  aspect-ratio: 3 / 2;
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-overlay);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Team name in body font (semibold, uppercase, tracked) — no overflow on long names */
+.c-match-card__name {
+  font-family: var(--font-body);
+  font-weight: var(--weight-semibold);
+  font-size: var(--type-small);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-primary);
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.c-match-card__vs {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--type-small);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-tertiary);
+}
+
+/* =========================================================================
+   COMPONENT · BADGE
+   ========================================================================= */
+.c-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--type-tiny);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+}
+
+.c-badge--live {
+  background-color: rgba(255, 61, 61, 0.14);
+  color: var(--status-live);
+}
+
+.c-badge--mill {
+  background-color: rgba(197, 160, 89, 0.14);
+  color: var(--accent-mill);
+}
+
+/* =========================================================================
+   UTILITY · SKELETON LOADER
+   Driven by parent's aria-busy state — robust, semantic, no string matching.
+   ========================================================================= */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+[aria-busy="true"] .u-skeleton {
+  background-color: var(--surface-overlay);
+  background-image: none !important;
+  animation: skeleton-pulse 1.5s var(--ease-in-out) infinite;
+  color: transparent;
+}
+
+/* =========================================================================
+   COMPONENT · ZONES TEASER
+   ========================================================================= */
+.c-zones-teaser {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.c-zones-teaser__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+/* Inherits all heading styles from base.css — no overrides needed */
+.c-zones-teaser__title {
+  margin: 0;
+}
+
+.c-zones-teaser__grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.c-zone-card {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.c-zone-card:hover {
+  border-color: var(--border-strong);
+}
+
+.c-zone-card:active {
+  transform: scale(0.995);
+}
+
+.c-zone-card__media {
+  aspect-ratio: 16 / 9;
+  background-color: var(--surface-overlay);
+  background-size: cover;
+  background-position: center;
+}
+
+.c-zone-card__content {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Inherits h3 styles from base.css */
+.c-zone-card__title {
+  margin: 0;
+}
+
+.c-zone-card__desc {
+  font-size: var(--type-small);
+  line-height: var(--leading-normal);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.c-zone-card__specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2) 0 0;
+  font-size: var(--type-tiny);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.c-zone-card__specs li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Spec icons — 14×14, currentColor so they inherit the spec text colour */
+.c-zone-card__specs svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  stroke-width: 1.75;
+}
+
+/* Mill variant — amber on specs that reference Mill kitchen / outdoor terrace */
+.c-zone-card__specs--mill {
+  color: var(--accent-mill);
+}
+
+/* =========================================================================
+   COMPONENT · LINK ACTION (inline tertiary links)
+   ========================================================================= */
+.c-link-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--accent-pitch);
+  font-size: var(--type-small);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.c-link-action::after {
+  content: "→";
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.c-link-action:hover {
+  color: var(--accent-pitch-dim);
+}
+
+.c-link-action:hover::after {
+  transform: translateX(2px);
+}
+
+/* =========================================================================
+   LAYOUT · SECTION
+   Generic semantic section wrapper. Provides internal vertical rhythm.
+   Used in place of bespoke per-section layout flex/gap declarations.
+   ========================================================================= */
+.c-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* =========================================================================
+   COMPONENT · SECTION HEADER
+   Universal pattern: small caption + heading on the left, optional action on
+   the right. Replaces bespoke .c-zones-teaser__header.
+   ========================================================================= */
+.c-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.c-section-header__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.c-section-header__text > * {
+  margin: 0;
+}
+
+/* =========================================================================
+   COMPONENT · HERO SUBTITLE
+   Supporting value-prop line beneath the hero title. Kept narrow so it reads
+   as a single thought, with strong text-shadow against the image.
+   ========================================================================= */
+.c-hero__subtitle {
+  max-width: 36ch;
+  font-size: 1.0625rem;
+  line-height: var(--leading-snug);
+  color: var(--text-primary);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  margin: calc(var(--space-1) * -1) 0 var(--space-1);
+}
+
+/* =========================================================================
+   COMPONENT · FIXTURES LIST
+   Compact, scannable list of upcoming matches. Each row is a card-link.
+   Two-row grid: teams on top, meta below, arrow spanning both on the right.
+   ========================================================================= */
+.c-fixtures-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.c-fixture-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: var(--space-4);
+  row-gap: var(--space-2);
+  padding: var(--space-4);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.c-fixture-row:hover {
+  border-color: var(--border-strong);
+  background-color: var(--surface-overlay);
+}
+
+.c-fixture-row:active {
+  transform: scale(0.99);
+}
+
+.c-fixture-row__teams {
+  grid-row: 1;
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.c-fixture-row__team {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-weight: var(--weight-semibold);
+  font-size: var(--type-small);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.c-fixture-row__flag {
+  width: 28px;
+  aspect-ratio: 3 / 2;
+  border-radius: 2px;
+  background-color: var(--surface-overlay);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.c-fixture-row__vs {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--type-tiny);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+
+.c-fixture-row__meta {
+  grid-row: 2;
+  grid-column: 1;
+  margin: 0;
+  font-size: var(--type-tiny);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.c-fixture-row__arrow {
+  grid-row: 1 / -1;
+  grid-column: 2;
+  align-self: center;
+  color: var(--accent-pitch);
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.c-fixture-row:hover .c-fixture-row__arrow {
+  transform: translateX(3px);
+}
+
+/* =========================================================================
+   COMPONENT · STATS BAND
+   Venue-credibility moment. Numeric tiles, Pitch Green numerals, uppercase
+   micro-labels. Auto-fits 2→3→4 columns by viewport.
+   ========================================================================= */
+.c-stats-band__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+}
+
+.c-stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.c-stat-tile__num {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: 2.75rem;
+  line-height: 0.95;
+  letter-spacing: var(--tracking-tight);
+  color: var(--accent-pitch);
+}
+
+.c-stat-tile__label {
+  font-size: var(--type-tiny);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* =========================================================================
+   COMPONENT · VISIT
+   The page's final moment. Full-bleed, subtle Mill Amber radial inflection
+   from the top edge — roots the venue in its Stowmarket locale. Title takes
+   the Amber. Hours typeset as a definition list with tabular numerals.
+   ========================================================================= */
+.c-visit {
+  position: relative;
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  margin-top: var(--space-4);
+  padding: var(--space-10) var(--space-5) var(--space-12);
+  background-color: var(--surface-base);
+  background-image: radial-gradient(
+    ellipse 110% 80% at 50% 0%,
+    rgba(197, 160, 89, 0.08),
+    transparent 65%
+  );
+  border-top: 1px solid var(--border-hairline);
+}
+
+.c-visit__inner {
+  max-width: var(--max-content);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7, 1.75rem);
+}
+
+.c-visit__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.c-visit__header > * {
+  margin: 0;
+}
+
+.c-visit__title {
+  color: var(--accent-mill);
+}
+
+.c-visit__body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-6);
+}
+
+.c-visit__location {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.c-visit__address {
+  font-style: normal;
+  font-size: var(--type-body);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.c-visit__address strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--type-h3);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.c-visit__hours {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--space-5);
+  row-gap: var(--space-2);
+  font-size: var(--type-small);
+  margin: 0;
+}
+
+.c-visit__hours dt {
+  font-size: var(--type-tiny);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-primary);
+  align-self: center;
+}
+
+.c-visit__hours dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.c-visit__links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.c-visit__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding: var(--space-2) 0;
+  font-size: var(--type-body);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.c-visit__link:hover {
+  color: var(--accent-mill);
+}
+
+.c-visit__link svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--accent-mill);
+  stroke-width: 1.75;
+}
