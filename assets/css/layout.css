@@ -1,0 +1,308 @@
+/* =========================================================================
+   LAYOUT
+   The persistent shell: header, bottom nav, page container.
+   ========================================================================= */
+
+/* ---------- PAGE SHELL ------------------------------------------------ */
+.l-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: calc(var(--header-height) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+}
+
+.l-page__content {
+  flex: 1;
+  width: 100%;
+  max-width: var(--max-content);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+/* =========================================================================
+   HEADER · Persistent top bar
+   Logo · Marquee · More
+   ========================================================================= */
+.c-header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: calc(var(--header-height) + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+  z-index: var(--z-header);
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding-inline: var(--space-4);
+
+  background-color: rgba(18, 18, 18, 0.72);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+/* ---------- HEADER · LOGO --------------------------------------------- */
+.c-header__logo {
+  min-height: var(--tap-min);
+  margin-inline-start: calc(var(--space-1) * -1);
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.c-header__logo:hover {
+  opacity: 0.8;
+}
+
+.c-header__logo:active {
+  opacity: 0.6;
+}
+
+.c-header__logo-mark {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  filter: drop-shadow(0 0 6px rgba(57, 255, 20, 0.18));
+}
+
+/* ---------- HEADER · MARQUEE (centre column) -------------------------- */
+.c-header__marquee {
+  min-width: 0; /* allow text truncation in grid */
+  display: flex;
+  justify-content: center;
+}
+
+/* ---------- HEADER · MORE BUTTON -------------------------------------- */
+.c-header__more {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  display: grid;
+  place-items: center;
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.c-header__more:hover {
+  background-color: var(--surface-overlay);
+}
+
+.c-header__more:active {
+  transform: scale(0.94);
+}
+
+.c-header__more svg {
+  width: 36px;
+  height: 36px;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* =========================================================================
+   MARQUEE · The persistent context-aware status bar
+   States: countdown | live | post-match | promo
+   ========================================================================= */
+.c-marquee {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 100%;
+  padding-inline: var(--space-2);
+  font-size: var(--type-caption);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wider);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.c-marquee__text {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.c-marquee__label {
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
+}
+
+.c-marquee__num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  color: var(--accent-pitch);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+}
+
+.c-marquee[data-state="live"] .c-marquee__num,
+.c-marquee[data-state="live"] .c-marquee__label {
+  color: var(--text-primary);
+  font-weight: var(--weight-semibold);
+}
+
+/* On very narrow viewports the label hides — dot + number is enough context */
+@media (max-width: 419px) {
+  .c-marquee__label {
+    display: none;
+  }
+}
+
+.c-marquee__dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+}
+
+/* Dot variants by state */
+.c-marquee[data-state="countdown"] .c-marquee__dot {
+  background-color: var(--accent-pitch);
+  box-shadow: 0 0 8px rgba(57, 255, 20, 0.6);
+  animation: marquee-pulse 2s var(--ease-in-out) infinite;
+}
+
+.c-marquee[data-state="live"] .c-marquee__dot {
+  background-color: var(--status-live);
+  box-shadow: 0 0 10px rgba(255, 61, 61, 0.7);
+  animation: marquee-pulse 1.2s var(--ease-in-out) infinite;
+}
+
+.c-marquee[data-state="promo"] .c-marquee__dot {
+  background-color: var(--accent-mill);
+}
+
+@keyframes marquee-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+}
+
+/* =========================================================================
+   BOTTOM NAV · Primary navigation
+   Home · Fixtures · The Space · My Booking
+   ========================================================================= */
+.c-nav {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: var(--z-nav);
+
+  padding-bottom: env(safe-area-inset-bottom);
+
+  background-color: rgba(18, 18, 18, 0.85);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border-top: 1px solid var(--border-hairline);
+}
+
+.c-nav__list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: var(--nav-height);
+  max-width: var(--max-content);
+  margin-inline: auto;
+  padding: 0;
+  list-style: none;
+}
+
+.c-nav__item {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: var(--tap-min);
+  padding-block: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--type-tiny);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.c-nav__item:active {
+  transform: scale(0.92);
+}
+
+.c-nav__item:hover {
+  color: var(--text-primary)
+}
+
+.c-nav__icon {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor; /* THIS IS THE KEY */
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: 
+    filter var(--duration-fast) var(--ease-out),
+    stroke var(--duration-fast) var(--ease-out);
+}
+
+/* Active state — Pitch Green with a top-edge indicator and a soft glow */
+.c-nav__item[aria-current="page"] {
+  color: var(--accent-pitch);
+}
+
+.c-nav__item[aria-current="page"] .c-nav__icon {
+  filter: drop-shadow(0 0 8px var(--accent-pitch));
+}
+
+.c-nav__item[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px; /* Slightly wider for better visual balance */
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background-color: var(--accent-pitch);
+  box-shadow: 0 2px 10px var(--accent-pitch);
+}
+
+/* Notification dot on nav items (e.g. live match on Fixtures) */
+.c-nav__item[data-badge]::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: calc(50% - 18px);
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background-color: var(--status-live);
+  box-shadow:
+    0 0 0 2px rgba(18, 18, 18, 0.85),
+    0 0 8px rgba(255, 61, 61, 0.7);
+  animation: marquee-pulse 1.2s var(--ease-in-out) infinite;
+}
+
+/* =========================================================================
+   DESKTOP ADAPTATION (≥1024px)
+   Shell stays the same — content adapts inside .l-page__content
+   Side-rail nav variant deferred to a later pass.
+   ========================================================================= */
+@media (min-width: 1024px) {
+  .c-header {
+    padding-inline: var(--space-6);
+  }
+}
