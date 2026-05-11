@@ -107,6 +107,10 @@
   background-position: center;
 }
 
+.c-hero--home .c-hero__media {
+  background-image: url("../img/hero-img.webp");
+}
+
 /* Stronger overlay — protects text legibility regardless of image */
 .c-hero__overlay {
   background: linear-gradient(
@@ -138,7 +142,7 @@
 
 .c-hero__title {
   font-size: var(--type-hero);
-  line-height: 0.98;
+  line-height: 0.98;           /* hero-only compression — tighter than --leading-tight */
   letter-spacing: var(--tracking-tight);
   color: var(--text-primary);
   text-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
@@ -146,6 +150,20 @@
 
 .c-hero .c-button {
   margin-top: var(--space-2);
+}
+
+/* =========================================================================
+   COMPONENT · HERO SUBTITLE
+   Supporting value-prop line beneath the hero title. Kept narrow so it reads
+   as a single thought, with strong text-shadow against the image.
+   ========================================================================= */
+.c-hero__subtitle {
+  max-width: 36ch;
+  font-size: var(--type-lead); /* 1.0625rem — between body and h3 */
+  line-height: var(--leading-snug);
+  color: var(--text-primary);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  margin: calc(var(--space-1) * -1) 0 var(--space-1);
 }
 
 /* =========================================================================
@@ -176,7 +194,7 @@
 .c-chip {
   white-space: nowrap;
   padding: var(--space-2) var(--space-4);
-  min-height: 36px;
+  min-height: var(--tap-min);   /* 44px floor for touch */
   background-color: var(--surface-raised);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-full);
@@ -329,6 +347,30 @@
   background-image: none !important;
   animation: skeleton-pulse 1.5s var(--ease-in-out) infinite;
   color: transparent;
+}
+
+/* =========================================================================
+   UTILITY · SKELETON ROW
+   Full-width placeholder bar for list loading states. Pulses in sync
+   with .u-skeleton elements when inside an [aria-busy="true"] container.
+   ========================================================================= */
+.u-skeleton-row {
+  height: 80px;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface-overlay);
+}
+
+.u-skeleton-row:nth-child(1) {
+  opacity: 0.5;
+}
+
+.u-skeleton-row:nth-child(2) {
+  opacity: 0.3;
+}
+
+[aria-busy="true"] .u-skeleton-row {
+  animation: skeleton-pulse 1.5s var(--ease-in-out) infinite;
 }
 
 /* =========================================================================
@@ -496,20 +538,6 @@
 }
 
 /* =========================================================================
-   COMPONENT · HERO SUBTITLE
-   Supporting value-prop line beneath the hero title. Kept narrow so it reads
-   as a single thought, with strong text-shadow against the image.
-   ========================================================================= */
-.c-hero__subtitle {
-  max-width: 36ch;
-  font-size: 1.0625rem;
-  line-height: var(--leading-snug);
-  color: var(--text-primary);
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
-  margin: calc(var(--space-1) * -1) 0 var(--space-1);
-}
-
-/* =========================================================================
    COMPONENT · FIXTURES LIST
    Compact, scannable list of upcoming matches. Each row is a card-link.
    Two-row grid: teams on top, meta below, arrow spanning both on the right.
@@ -607,8 +635,8 @@
   grid-column: 2;
   align-self: center;
   color: var(--accent-pitch);
-  font-size: 1.25rem;
-  line-height: 1;
+  font-size: var(--type-h3);      /* 1.25rem — was raw 1.25rem */
+  line-height: var(--leading-solid); /* 1 — was raw 1 */
   transition: transform var(--duration-fast) var(--ease-out);
 }
 
@@ -644,8 +672,8 @@
 .c-stat-tile__num {
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
-  font-size: 2.75rem;
-  line-height: 0.95;
+  font-size: var(--type-stat);       /* 2.75rem — was raw 2.75rem */
+  line-height: var(--leading-flat);  /* 0.95 — was raw 0.95 */
   letter-spacing: var(--tracking-tight);
   color: var(--accent-pitch);
 }
@@ -683,9 +711,14 @@
   width: 100%;
 }
 
-/* Tactile feedback for mobile taps */
 .c-promo-item:active {
   transform: scale(0.98);
+}
+
+.c-promo-item__link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 
 .c-promo-item__media {
@@ -731,7 +764,7 @@
   margin-inline: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-7, 1.75rem);
+  gap: var(--space-7);
 }
 
 .c-visit__header {
@@ -836,7 +869,9 @@
   stroke-width: 1.75;
 }
 
-/* ---------- COMPONENT: MOBILE NAV OVERLAY ----------------------------- */
+/* =========================================================================
+   COMPONENT: MOBILE NAV OVERLAY
+   ========================================================================= */
 .c-mobile-nav {
   position: fixed;
   inset: 0;
@@ -865,9 +900,11 @@
   transform: translateY(0);
 }
 
+/* Consolidated .is-menu-open .c-header — single source of truth */
 .is-menu-open .c-header {
   z-index: calc(var(--z-modal) + 1);
-  position: relative;
+  position: fixed;
+  background-color: var(--surface-base);
 }
 
 .c-mobile-nav__inner {
@@ -886,6 +923,10 @@
 }
 
 .c-mobile-nav__link {
+  display: flex;                    /* ensure tap target fills available width */
+  align-items: center;
+  min-height: var(--tap-min);       /* 44px floor */
+  padding-block: var(--space-2);
   font-size: var(--type-display);
   text-decoration: none;
   color: var(--text-tertiary); /* Dimmed when not active */
@@ -921,8 +962,9 @@
   color: var(--text-tertiary);
 }
 
-/* ---------- HAMBURGER BUTTON ANIMATION ------------------------------- */
-/* Styles for the button lines transforming into an 'X' */
+/* =========================================================================
+   HAMBURGER BUTTON ANIMATION
+   ========================================================================= */
 .c-header__more svg {
   overflow: visible;
 }
@@ -933,12 +975,6 @@
     opacity var(--duration-base) var(--ease-out);
   transform-origin: center;
   transform-box: fill-box;
-}
-
-.is-menu-open .c-header {
-  z-index: 401; /* Must be higher than the overlay's z-index */
-  background-color: var(--surface-base);
-  position: fixed;
 }
 
 .is-menu-open .c-header__more svg line:nth-child(1) {

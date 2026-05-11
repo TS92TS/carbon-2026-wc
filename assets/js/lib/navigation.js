@@ -1,6 +1,6 @@
 /*=================================
-UNIFIED NAVIGATION
-=================================*/
+	UNIFIED NAVIGATION
+	=================================*/
 
 export function updateNavStates() {
   const allLinks = document.querySelectorAll('.c-mobile-nav__link, .c-nav__item');
@@ -14,11 +14,11 @@ export function updateNavStates() {
     link.classList.remove('is-active');
     link.removeAttribute('aria-current');
 
-    // Robust matching logic
+    // Safer matching: use endsWith to avoid partial path collisions
     const isHome = (path === '/' || path.endsWith('index.html')) && 
-                   (href === '/' || href.includes('index.html'));
+                   (href === '/' || href.endsWith('index.html'));
     
-    const isOtherPage = href !== '/' && !href.includes('index.html') && path.includes(href.replace('./', ''));
+    const isOtherPage = href !== '/' && !href.endsWith('index.html') && path.endsWith(href.replace('./', ''));
 
     if (isHome || isOtherPage) {
       link.classList.add('is-active');

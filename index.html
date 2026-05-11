@@ -28,7 +28,8 @@
     <link rel="stylesheet" href="assets/css/base.css" />
     <link rel="stylesheet" href="assets/css/layout.css" />
     <link rel="stylesheet" href="assets/css/components.css" />
-  </head>
+  <base target="_blank">
+</head>
   <body>
     <!-- =========================================================================
        HEADER · Logo · Marquee · More
@@ -70,16 +71,8 @@
        ========================================================================= -->
     <main class="l-page" id="main">
       <div class="l-page__content p-home">
-        <section class="c-hero" aria-labelledby="hero-heading">
-          <div
-            class="c-hero__media"
-            style="
-              background-image: url(&quot;assets/img/hero-img.webp&quot;);
-              background-position: center;
-              background-repeat: no-repeat;
-              background-size: cover;
-            "
-          ></div>
+        <section class="c-hero c-hero--home" aria-labelledby="hero-heading">
+          <div class="c-hero__media"></div>
           <div class="c-hero__overlay"></div>
           <div class="c-hero__content">
             <p class="c-hero__caption">Stowmarket · 2026 World Cup</p>
@@ -110,8 +103,8 @@
             aria-busy="true"
           >
             <header class="c-match-card__header">
-              <span class="c-badge c-badge--live" data-match-target="badge"
-                >Loading...</span
+              <span class="c-badge c-badge--live u-skeleton" data-match-target="badge"
+                >&nbsp;</span
               >
               <time data-match-target="time" datetime="">-- --- · --:--</time>
             </header>
@@ -204,14 +197,8 @@
           </nav>
 
           <ul class="c-fixtures-list" id="upcoming-fixtures-list" role="list">
-            <li
-              class="u-skeleton-row"
-              style="height: 80px; margin-bottom: var(--space-2); opacity: 0.5"
-            ></li>
-            <li
-              class="u-skeleton-row"
-              style="height: 80px; margin-bottom: var(--space-2); opacity: 0.3"
-            ></li>
+            <li class="u-skeleton-row"></li>
+            <li class="u-skeleton-row"></li>
           </ul>
         </section>
 
@@ -260,9 +247,9 @@
                   </li>
                   <li>
                     <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
-                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                      <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
                     </svg>
                     Surround sound
                   </li>
@@ -363,18 +350,22 @@
 
           <ul class="c-promo-list" role="list">
             <li class="c-promo-item">
-              <img
-                class="c-promo-item__media"
-                src="./assets/img/pizza-pint-deal.webp"
-                alt="12 inch pizza and pint Deal · £10"
-              />
+              <a href="/menu.html" class="c-promo-item__link" aria-label="View pizza and pint deal on menu">
+                <img
+                  class="c-promo-item__media"
+                  src="./assets/img/pizza-pint-deal.webp"
+                  alt="12 inch pizza and pint Deal · £10"
+                />
+              </a>
             </li>
             <li class="c-promo-item">
-              <img
-                class="c-promo-item__media"
-                src="./assets/img/pitcher-deal.webp"
-                alt="4 pint pitcher deal · from £12"
-              />
+              <a href="/menu.html" class="c-promo-item__link" aria-label="View pitcher deal on menu">
+                <img
+                  class="c-promo-item__media"
+                  src="./assets/img/pitcher-deal.webp"
+                  alt="4 pint pitcher deal · from £12"
+                />
+              </a>
             </li>
           </ul>
         </section>
@@ -437,7 +428,7 @@
                 </li>
                 <li>
                   <a
-                    href="https://www.welovecarbon.com/sports"
+                    href="mailto:hello@welovecarbon.com"
                     class="c-visit__link"
                   >
                     <svg viewBox="0 0 24 24" aria-hidden="true">

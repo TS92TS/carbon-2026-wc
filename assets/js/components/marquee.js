@@ -1,4 +1,3 @@
-
 /* =========================================================================
    MARQUEE COMPONENT
    Persistent context-aware status bar at the top of every page.
@@ -80,4 +79,3 @@ export function initMarquee(root, config) {
  
   return { destroy: stop };
 }
- 

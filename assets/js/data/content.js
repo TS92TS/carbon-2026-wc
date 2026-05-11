@@ -18,6 +18,3 @@ export const marqueeState = {
   prefix: 'OPENS IN',
   liveText: 'MATCH UNDERWAY · TAP FOR LIVE'
 };
-
-
- 
