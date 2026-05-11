@@ -963,26 +963,40 @@
 }
 
 /* =========================================================================
-   HAMBURGER BUTTON ANIMATION
+   HAMBURGER BUTTON · UNIFIED COMPONENT
+   Handles: X-Morph, Sticky-Hover Fix, and Precise Alignment
    ========================================================================= */
+
 .c-header__more svg {
   overflow: visible;
+  display: block;
 }
 
 .c-header__more svg line {
+  /* 1. Base Stroke Style */
   stroke: var(--text-primary);
   stroke-width: 2;
   stroke-linecap: round;
+
+  /* 2. Animation Logic */
   transition:
     stroke var(--duration-fast) var(--ease-out),
     transform var(--duration-base) var(--ease-out),
     opacity var(--duration-base) var(--ease-out);
+  transform-origin: center;
+  transform-box: fill-box;
 }
 
-@media (hover: hover) {
-  .c-header__more:hover svg line {
-    stroke: var(--accent-pitch);
-  }
+/* --- State: Menu Open (The "X") --- */
+
+.is-menu-open .c-header {
+  z-index: 401;
+  background-color: var(--surface-base);
+}
+
+/* Morph lines into 'X' and turn Pitch Green */
+.is-menu-open .c-header__more svg line {
+  stroke: var(--accent-pitch);
 }
 
 .is-menu-open .c-header__more svg line:nth-child(1) {
@@ -998,15 +1012,16 @@
   transform: translateY(-5px) rotate(-45deg);
 }
 
-.is-menu-open .c-header__more svg line {
-  stroke: var(--accent-pitch);
+/* --- State: Interaction (Hover/Sticky fix) --- */
+
+/* Desktop only: Highlight on hover */
+@media (hover: hover) {
+  .c-header__more:hover svg line {
+    stroke: var(--accent-pitch);
+  }
 }
 
-.c-header__more {
-  position: relative;
-  z-index: 10;
-}
-
-.c-header__more:focus {
-  outline: none;
+/* Ensure color resets instantly when closed on mobile */
+body:not(.is-menu-open) .c-header__more svg line {
+  stroke: var(--text-primary);
 }

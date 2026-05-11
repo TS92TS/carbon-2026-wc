@@ -86,7 +86,7 @@
 }
 
 .c-header__more:hover {
-  background-color: var(--surface-overlay);
+  opacity: 0.8;
 }
 
 .c-header__more:active {
