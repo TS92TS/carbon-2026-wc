@@ -8,6 +8,7 @@ import { updateNavStates } from "./lib/navigation.js";
 import { getMatchData } from "./lib/matchData.js";
 import { renderFeaturedMatch } from "./components/featuredMatch.js";
 import { renderUpcomingList } from "./components/upcomingMatches.js";
+import { initZoneSliders } from "./components/zoneSlider.js";
 
 const marqueeState = {
   mode: "countdown",
@@ -19,6 +20,7 @@ async function boot() {
   // 1. UI Initialisation (Must happen before 'await' to prevent lag)
   initMobileMenu();
   updateNavStates();
+  initZoneSliders();
 
   const marqueeRoot = document.querySelector('[data-component="marquee"]');
   if (marqueeRoot) initMarquee(marqueeRoot, marqueeState);

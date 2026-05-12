@@ -919,7 +919,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-4);
 }
 
 .c-mobile-nav__link {
@@ -1024,4 +1024,240 @@
 /* Ensure color resets instantly when closed on mobile */
 body:not(.is-menu-open) .c-header__more svg line {
   stroke: var(--text-primary);
+}
+
+/* =========================================================================
+   ZONES PAGE
+   These rules only apply to the Zones page to protect the Home layout.
+   ========================================================================= */
+/* =========================================================================
+   PAGE SPECIFIC · ZONES (The Space)
+   Additive rules to maximize atmosphere without breaking index.html
+   ========================================================================= */
+
+/* Solves the fixed-header overlap and adds page-level breathing room */
+.p-zones {
+  padding-top: var(--space-20);
+  padding-bottom: var(--space-12);
+}
+
+.c-section-header.--hero {
+  margin-bottom: var(--space-10);
+}
+
+.c-section-header.--hero .u-display {
+  font-size: 3.5rem; /* Massive, cinematic 'App' header */
+  line-height: 1;
+}
+
+/* --- The Feed --- */
+.c-zone-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16); /* Large gaps to separate 'Environments' */
+}
+
+.c-zone-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.c-zone-card__media {
+  position: relative;
+  aspect-ratio: 16 / 10; /* Cinematic widescreen ratio */
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border-bottom: 1px solid var();
+  background-color: var(--surface-raised);
+}
+
+.c-zone-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+/* Showcase Overlay: Gradient ensures labels on images are legible */
+.c-zone-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(18,18,18,0.7) 0%, transparent 40%);
+  display: flex;
+  align-items: flex-end;
+  padding: var(--space-4);
+  pointer-events: none;
+}
+
+/* High-end glassmorphism tags */
+.c-tag {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--type-tiny);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: auto;
+}
+
+.c-tag.--pitch {
+  background-color: var(--accent-pitch);
+  color: var(--text-on-accent);
+}
+
+.c-tag.--glass {
+  background-color: rgba(18, 18, 18, 0.6);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  color: var(--text-primary);
+}
+
+.c-zone-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.c-zone-card__content .u-display {
+  font-size: 1.5rem;
+  letter-spacing: var(--tracking-tight);
+}
+
+/* Ergonomics: Thumb-friendly full-width buttons */
+.c-zone-card .c-button {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+.space-specs {
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+/* =========================================================================
+   COMPONENT · ZONE SLIDER (Native Swiper)
+   ========================================================================= */
+
+.c-zone-card__slider {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  height: 100%;
+  
+  /* Hide scrollbars but keep functionality */
+  -ms-overflow-style: none;  /* IE/Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.c-zone-card__slider::-webkit-scrollbar {
+  display: none;             /* Chrome/Safari */
+}
+
+.c-zone-card__slider img {
+  flex: 0 0 100%;            /* Each image takes full width */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* --- Pagination Dots --- */
+.c-zone-card__pagination {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4); /* Positioned top-right for thumb ergonomics */
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  border-radius: var(--radius-full);
+}
+
+.c-zone-card__dot {
+  width: 5px;
+  height: 5px;
+  background-color: rgba(255, 255, 255, 0.4);
+  border-radius: var(--radius-full);
+  transition: 
+    transform var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.c-zone-card__dot.is-active {
+  background-color: var(--accent-pitch);
+  transform: scale(1.4);
+  box-shadow: 0 0 8px var(--accent-pitch);
+}
+
+/* =========================================================================
+   REFINED ATMOSPHERE PORTAL
+   High-end cinematic reveal for the page finale.
+   ========================================================================= */
+
+.c-atmosphere-portal {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  margin-top: var(--space-16);
+  background-color: var(--surface-base);
+  overflow: hidden;
+}
+
+.c-atmosphere-portal__inner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1.2; /* Taller on mobile for maximum 'App' immersion */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+@media (min-width: 768px) {
+  .c-atmosphere-portal__inner {
+    aspect-ratio: 21 / 9; /* Ultra-wide cinematic on desktop */
+  }
+}
+
+.c-atmosphere-portal__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.6) saturate(1.2); /* 'Color grading' the video via CSS */
+}
+
+/* Subtle Vignette to draw eyes to center/bottom */
+.c-atmosphere-portal__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 20%, rgba(18,18,18,0.8) 100%);
+  pointer-events: none;
+}
+
+.c-atmosphere-portal__content {
+  position: relative;
+  z-index: 2;
+  padding: var(--space-8) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  /* Gentle glass effect for the text background */
+  background: linear-gradient(to top, var(--surface-base) 20%, transparent 100%);
+}
+
+.c-atmosphere-portal__text h2 {
+  font-size: clamp(3rem, 12vw, 5rem); /* Responsive fluid typography */
+  line-height: 0.85;
+  letter-spacing: var(--tracking-tighter);
 }

@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#121212" />
+    <meta name="color-scheme" content="dark" />
+
+    <title>2026 World Cup · Carbon Sports Bar</title>
+    <meta
+      name="description"
+      content="The home of the 2026 tournament in Stowmarket. Premium screens, Mill kitchen, guaranteed seats. Secure your bench."
+    />
+
+    <!-- Fonts: Big Shoulders Display (headings) + Inter (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    />
+
+    <!-- Styles: load order matters (tokens → base → layout → components) -->
+    <link rel="stylesheet" href="assets/css/tokens.css" />
+    <link rel="stylesheet" href="assets/css/base.css" />
+    <link rel="stylesheet" href="assets/css/layout.css" />
+    <link rel="stylesheet" href="assets/css/components.css" />
+    <base target="_blank" />
+  </head>
+  <body>
+    <!-- =========================================================================
+       HEADER · Logo · Marquee · More
+       ========================================================================= -->
+    <header class="c-header" role="banner">
+      <a
+        class="c-header__logo"
+        href="https://www.welovecarbon.com/sports"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Carbon Sports Bar — home"
+      >
+        <img
+          class="c-header__logo-mark"
+          src="assets/img/carbon-logo.webp"
+          alt="Carbon Logo"
+          width="36"
+          height="36"
+        />
+      </a>
+
+      <div
+        class="c-header__marquee"
+        data-component="marquee"
+        aria-label="Match status"
+      >
+        <!-- Marquee mounts here on JS load -->
+      </div>
+
+      <button class="c-header__more" type="button" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="4" y1="7" x2="20" y2="7" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="17" x2="20" y2="17" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- =========================================================================
+       PAGE CONTENT
+       ========================================================================= -->
+
+<main class="l-page__content p-zones">
+  <header class="c-section-header --hero">
+    <div class="c-section-header__text">
+      <p class="u-caption u-accent">Explore Carbon</p>
+      <h1 class="u-display">The Space</h1>
+      <p class="u-dim" style="max-width: 44ch; margin-top: var(--space-2);">
+        Engineered for the ultimate match-day experience. Three distinct zones, zero bad views.
+      </p>
+    </div>
+  </header>
+
+<div class="c-zone-list">
+
+  <article class="c-zone-card" data-component="zone-slider">
+    <div class="c-zone-card__media">
+      <div class="c-zone-card__slider">
+        <img src="./assets/img/sports-bar-4.webp" alt="The Main Bar view 1">
+        <img src="./assets/img/sports-bar-3.webp" alt="The Main Bar view 2">
+        <img src="./assets/img/sports-bar-2.webp" alt="The Main Bar view 3">
+      </div>
+
+      <div class="c-zone-card__pagination">
+        <span class="c-zone-card__dot is-active"></span>
+        <span class="c-zone-card__dot"></span>
+        <span class="c-zone-card__dot"></span>
+      </div>
+
+      <div class="c-zone-card__overlay">
+        <span class="c-tag --pitch">High Energy</span>
+      </div>
+    </div>
+
+    <div class="c-zone-card__content">
+      <h2 class="u-display">Main Bar</h2>
+      <p class="u-dim">The heart of the action. Over 20 HD screens, surround-sound audio, and fresh pints at arms reach.</p>
+      <a href="./book.html?zone=arena" class="c-button --primary">Book a Bench</a>
+      <ul class="c-zone-card__specs space-specs" role="list">
+                  <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="2" y="5" width="20" height="13" rx="1" />
+                      <line x1="8" y1="22" x2="16" y2="22" />
+                      <line x1="12" y1="18" x2="12" y2="22" />
+                    </svg>
+                    20+ Screens
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M8 22h8" />
+                      <path d="M7 10h10" />
+                      <path d="M12 15v7" />
+                      <path d="M7 2h10l-1 13a4 4 0 0 1-8 0Z" />
+                    </svg>
+                    Bar
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                    </svg>
+                    Surround sound
+                  </li>
+                </ul>
+    </div>
+  </article>
+
+  <article class="c-zone-card" data-component="zone-slider">
+    <div class="c-zone-card__media">
+      <div class="c-zone-card__slider">
+        <img src="./assets/img/mill-outside-busy.webp" alt="Terrace view 1">
+        <img src="./assets/img/terrace-2.webp" alt="Terrace view 2">
+        <img src="./assets/img/terrace-3.webp" alt="Terrace view 3">
+      </div>
+
+      <div class="c-zone-card__pagination">
+        <span class="c-zone-card__dot is-active"></span>
+        <span class="c-zone-card__dot"></span>
+        <span class="c-zone-card__dot"></span>
+      </div>
+
+      <div class="c-zone-card__overlay">
+        <span class="c-tag --glass">Outdoor</span>
+      </div>
+    </div>
+
+    <div class="c-zone-card__content">
+      <h2 class="u-display">The Mill Terrace</h2>
+      <p class="u-dim">Classic Pub Garden Experience. Outdoor viewing with full cover, terrace catering and a mobile bar.</p>
+      <a href="./book.html?zone=terrace" class="c-button --ghost">Check Availability</a>
+      <ul
+                  class="c-zone-card__specs space-specs"
+                  role="list"
+                >
+                  <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <circle cx="12" cy="12" r="4" />
+                      <path d="M12 2v2" />
+                      <path d="M12 20v2" />
+                      <path d="m4.93 4.93 1.41 1.41" />
+                      <path d="m17.66 17.66 1.41 1.41" />
+                      <path d="M2 12h2" />
+                      <path d="M20 12h2" />
+                      <path d="m6.34 17.66-1.41 1.41" />
+                      <path d="m19.07 4.93-1.41 1.41" />
+                    </svg>
+                    Outdoor
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+                      <path d="M7 2v20" />
+                      <path
+                        d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"
+                      />
+                    </svg>
+                    Terrace Catering
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M8 22h8" />
+                      <path d="M7 10h10" />
+                      <path d="M12 15v7" />
+                      <path d="M7 2h10l-1 13a4 4 0 0 1-8 0Z" />
+                    </svg>
+                    Mobile bar
+                  </li>
+                </ul>
+    </div>
+  </article>
+
+  <article class="c-zone-card" data-component="zone-slider">
+    <div class="c-zone-card__media">
+      <div class="c-zone-card__slider">
+        <img src="./assets/img/booth-1.webp" alt="Booth view 1">
+        <img src="./assets/img/booth-2.webp" alt="Booth view 2">
+        <img src="./assets/img/booth-3.webp" alt="Booth view 3">
+      </div>
+
+      <div class="c-zone-card__pagination">
+        <span class="c-zone-card__dot is-active"></span>
+        <span class="c-zone-card__dot"></span>
+        <span class="c-zone-card__dot"></span>
+      </div>
+
+      <div class="c-zone-card__overlay">
+        <span class="c-tag --glass">High Comfort</span>
+      </div>
+    </div>
+
+    <div class="c-zone-card__content">
+      <h2 class="u-display">VIP Booths</h2>
+      <p class="u-dim">Best View in the house. Dedicated screens, guaranteed group seating, comfort and thrill in one.</p>
+      <a href="./book.html?zone=vip" class="c-button --ghost">Enquire Now</a>
+    </div>
+  </article>
+
+</div>
+
+<section class="c-atmosphere-portal">
+  <div class="c-atmosphere-portal__inner">
+    <video 
+      class="c-atmosphere-portal__video"
+      autoplay muted loop playsinline 
+      poster="./assets/img/celebration-still.webp">
+      <source src="./assets/video/carbon-celebration.mp4" type="video/mp4">
+    </video>
+
+    <div class="c-atmosphere-portal__content">
+      <div class="c-atmosphere-portal__text">
+        <p class="u-caption u-accent">The Atmosphere</p>
+        <h2 class="u-display">BE THERE FOR <br>THE MOMENT</h2>
+      </div>
+      
+      <div class="c-atmosphere-portal__actions">
+        <p class="u-dim">Join 200+ fans in Stowmarket's premier sports venue.</p>
+      </div>
+    </div>
+    
+    <div class="c-atmosphere-portal__vignette"></div>
+  </div>
+</section>
+
+</main>
+
+       <section class="c-visit" aria-labelledby="visit-heading">
+          <div class="c-visit__inner">
+            <header class="c-visit__header">
+              <p class="u-caption">Find Us</p>
+              <h2 id="visit-heading" class="c-visit__title">
+                Home of the main event
+              </h2>
+            </header>
+
+            <div class="c-visit__body">
+              <div class="c-visit__location">
+                <address class="c-visit__address">
+                  <strong>Carbon Sports Bar</strong>
+                  Market Place, Stowmarket<br />
+                  Suffolk, IP14 1DG
+                </address>
+
+                <dl class="c-visit__hours">
+                  <dt>Mon–Thu</dt>
+                  <dd>4pm — 11pm</dd>
+                  <dt>Fri</dt>
+                  <dd>12pm — 1am</dd>
+                  <dt>Sat</dt>
+                  <dd>11am — 1am</dd>
+                  <dt>Sun</dt>
+                  <dd>11am — 10pm</dd>
+                </dl>
+              </div>
+
+              <ul class="c-visit__links" role="list">
+                <li>
+                  <a href="tel:+441449 674674" class="c-visit__link">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                      />
+                    </svg>
+                    01449 674674
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=Carbon+Sports+Bar+Stowmarket"
+                    class="c-visit__link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                      />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    Get Directions
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:hello@mill.restaurant" class="c-visit__link">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                      />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                    Email the Venue
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- =========================================================================
+       BOTTOM NAV · Primary navigation
+       ========================================================================= -->
+    <nav class="c-nav" aria-label="Primary navigation">
+      <ul class="c-nav__list" role="list">
+        <li>
+          <a class="c-nav__item" href="/" target="_self">
+            <svg class="c-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M3 11 L12 3 L21 11 L21 20 A1 1 0 0 1 20 21 L15 21 L15 14 L9 14 L9 21 L4 21 A1 1 0 0 1 3 20 Z"
+              />
+            </svg>
+            <span>Home</span>
+          </a>
+        </li>
+        <li>
+          <a class="c-nav__item" href="/fixtures.html" target="_self">
+            <svg class="c-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+              <line x1="8" y1="3" x2="8" y2="7" />
+              <line x1="16" y1="3" x2="16" y2="7" />
+            </svg>
+            <span>Fixtures</span>
+          </a>
+        </li>
+        <li>
+          <a class="c-nav__item" href="/zones.html" target="_self">
+            <svg class="c-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2 L22 7 L12 12 L2 7 Z" />
+              <polyline points="2 12 12 17 22 12" />
+              <polyline points="2 17 12 22 22 17" />
+            </svg>
+            <span>The Space</span>
+          </a>
+        </li>
+        <li>
+          <a class="c-nav__item" href="/book.html" target="_self">
+            <svg class="c-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M3 8 A2 2 0 0 1 5 6 L19 6 A2 2 0 0 1 21 8 L21 10 A2 2 0 0 0 21 14 L21 16 A2 2 0 0 1 19 18 L5 18 A2 2 0 0 1 3 16 L3 14 A2 2 0 0 0 3 10 Z"
+              />
+              <line x1="13" y1="9" x2="13" y2="11" />
+              <line x1="13" y1="13" x2="13" y2="15" />
+            </svg>
+            <span>My Booking</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- =========================================================================
+       TOP NAV · Marquee navigation
+       ========================================================================= -->
+
+    <nav class="c-mobile-nav" id="mobile-menu" aria-hidden="true">
+      <div class="c-mobile-nav__inner">
+        <ul class="c-mobile-nav__list" role="list">
+          <li><a href="/" class="c-mobile-nav__link u-display" target="_self">Home</a></li>
+          <li>
+            <a href="./fixtures.html" class="c-mobile-nav__link u-display" target="_self"
+              >Fixtures</a
+            >
+          </li>
+          <li>
+            <a href="./zones.html" class="c-mobile-nav__link u-display" target="_self"
+              >The Space</a
+            >
+          </li>
+          <li>
+            <a href="./menu.html" class="c-mobile-nav__link u-display" target="_self"
+              >Food & Drink</a
+            >
+          </li>
+          <li>
+            <a href="./book.html" class="c-mobile-nav__link u-display" target="_self"
+              >Book a Bench</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://www.mill.restaurant/"
+              class="c-mobile-nav__link u-display"
+              target="_blank"
+              rel="noopener noreferrer"
+              >The Mill</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://welovecarbon.com/sports"
+              class="c-mobile-nav__link u-display"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Carbon Sports Bar</a
+            >
+          </li>
+        </ul>
+
+        <footer class="c-mobile-nav__footer">
+          <p class="u-caption">Carbon · Stowmarket</p>
+          <div class="c-mobile-nav__socials"></div>
+        </footer>
+      </div>
+    </nav>
+
+    <!-- App entry — native ES modules, no build step -->
+    <script type="module" src="assets/js/app.js"></script>
+  </body>
+</html>
