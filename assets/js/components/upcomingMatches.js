@@ -58,6 +58,7 @@ function setupFilters(nav, container) {
 
 function updateUI(matches, container) {
   container.innerHTML = "";
+  container.setAttribute("aria-busy", "false");
   const safe = (v) => (v === undefined || v === null ? "" : v);
 
   if (!matches || matches.length === 0) {

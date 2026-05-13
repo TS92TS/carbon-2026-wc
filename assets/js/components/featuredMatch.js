@@ -1,18 +1,32 @@
 import { buildBookingURL } from "../lib/urlHelpers.js";
 
-export function renderFeaturedMatch(data) {
+/**
+ * Renders the primary Hero match card with England priority.
+ * @param {Object} matchPayload - The full data object containing .upcoming and .england arrays.
+ */
+export function renderFeaturedMatch(matchPayload) {
   const card = document.getElementById("featured-match");
-  if (!card || !data) return;
+  if (!card || !matchPayload) return;
 
   const safe = (v) => (v === undefined || v === null ? "" : v);
 
-  if (data.status === "concluded") {
+  // 1. THE SELECTION LOGIC (England Priority)
+  // We prioritize the specialized England array. If empty, we fallback to general upcoming.
+  const featured = (matchPayload.england && matchPayload.england.length > 0)
+    ? matchPayload.england[0]
+    : (matchPayload.upcoming && matchPayload.upcoming.length > 0)
+      ? matchPayload.upcoming[0]
+      : null;
+
+  // 2. SAFETY CHECK: If the tournament is over or no data exists
+  if (matchPayload.status === "concluded" || !featured) {
     card.innerHTML = '<div class="c-match-card__header">Tournament Concluded</div>';
     card.setAttribute("aria-busy", "false");
     return;
   }
 
-  const matchDate = new Date(safe(data.datetimeIso));
+  // 3. DATA PREPARATION (Optimized formatting)
+  const matchDate = new Date(safe(featured.datetimeIso));
   const dateFormatted = isNaN(matchDate) ? "" : matchDate.toLocaleDateString("en-GB", {
     weekday: "short", day: "numeric", month: "short"
   });
@@ -20,29 +34,40 @@ export function renderFeaturedMatch(data) {
     hour: "2-digit", minute: "2-digit"
   });
 
-  const badgeEl = card.querySelector('[data-match-target="badge"]');
-  const timeEl = card.querySelector('[data-match-target="time"]');
-  const nameAEl = card.querySelector('[data-match-target="name-a"]');
-  const flagAEl = card.querySelector('[data-match-target="flag-a"]');
-  const nameBEl = card.querySelector('[data-match-target="name-b"]');
-  const flagBEl = card.querySelector('[data-match-target="flag-b"]');
-  const bookingBtn = card.querySelector('[data-match-target="booking-link"]');
+  // 4. DOM INJECTION (Scoped Lookups)
+  const els = {
+    badge: card.querySelector('[data-match-target="badge"]'),
+    time: card.querySelector('[data-match-target="time"]'),
+    nameA: card.querySelector('[data-match-target="name-a"]'),
+    flagA: card.querySelector('[data-match-target="flag-a"]'),
+    nameB: card.querySelector('[data-match-target="name-b"]'),
+    flagB: card.querySelector('[data-match-target="flag-b"]'),
+    bookingBtn: card.querySelector('[data-match-target="booking-link"]')
+  };
 
-  if (badgeEl) badgeEl.textContent = safe(data.badge);
-  if (timeEl) {
-    timeEl.textContent = `${dateFormatted}${dateFormatted && timeFormatted ? " · " : ""}${timeFormatted}`;
-    if (safe(data.datetimeIso)) timeEl.setAttribute("datetime", safe(data.datetimeIso));
+  if (els.badge) els.badge.textContent = safe(featured.badge);
+  
+  if (els.time) {
+    els.time.textContent = `${dateFormatted}${dateFormatted && timeFormatted ? " · " : ""}${timeFormatted}`;
+    if (safe(featured.datetimeIso)) els.time.setAttribute("datetime", safe(featured.datetimeIso));
   }
 
-  if (nameAEl) nameAEl.textContent = safe(data.teamA && data.teamA.name);
-  if (flagAEl) flagAEl.style.backgroundImage = safe(data.teamA && data.teamA.flag) ? `url('${data.teamA.flag}')` : "";
-  if (nameBEl) nameBEl.textContent = safe(data.teamB && data.teamB.name);
-  if (flagBEl) flagBEl.style.backgroundImage = safe(data.teamB && data.teamB.flag) ? `url('${data.teamB.flag}')` : "";
+  if (els.nameA) els.nameA.textContent = safe(featured.teamA?.name);
+  if (els.flagA) els.flagA.style.backgroundImage = safe(featured.teamA?.flag) ? `url('${featured.teamA.flag}')` : "";
+  
+  if (els.nameB) els.nameB.textContent = safe(featured.teamB?.name);
+  if (els.flagB) els.flagB.style.backgroundImage = safe(featured.teamB?.flag) ? `url('${featured.teamB.flag}')` : "";
 
-  if (bookingBtn) {
-    bookingBtn.href = buildBookingURL(data);
-    if (safe(data.badge).toLowerCase() === 'live') {
-      bookingBtn.textContent = "Join the Atmosphere";
+  // 5. UX ENHANCEMENT: Contextual Button Logic
+  if (els.bookingBtn) {
+    els.bookingBtn.href = buildBookingURL(featured);
+    
+    const status = safe(featured.badge).toLowerCase();
+    if (status === 'live') {
+      els.bookingBtn.textContent = "Join the Atmosphere";
+      els.bookingBtn.classList.add('c-button--pulse'); // Optional CSS hook for live games
+    } else {
+      els.bookingBtn.textContent = "Book a Table";
     }
   }
 

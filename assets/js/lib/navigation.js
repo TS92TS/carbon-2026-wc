@@ -27,8 +27,10 @@ export function updateNavStates() {
     link.classList.remove("is-active");
     link.removeAttribute("aria-current");
 
-    // 4. Domain Guard: Skip external links (like The Mill)
-    if (link.hostname !== currentHost && currentHost !== "") return;
+    // 4. Domain Guard: Skip external links regardless of protocol.
+    // (link.hostname is always populated; currentHost is "" only on file://.
+    //  If currentHost is empty we treat any non-empty link.hostname as external.)
+    if (link.hostname && link.hostname !== currentHost) return;
 
     // 5. Compare the "essence" of the link and the browser URL
     const linkNormalized = normalize(link.pathname);

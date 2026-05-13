@@ -56,106 +56,108 @@
       </button>
     </header>
 
-    <main class="l-page__content p-booking">
-      <header class="c-section-header --hero">
-        <div class="c-section-header__text">
-          <p class="u-caption u-accent">Reservations</p>
-          <h1 class="u-display">Secure Your Spot</h1>
-        </div>
-      </header>
+    <main class="l-page" id="main">
+      <div class="l-page__content p-booking">
+        <header class="c-section-header c-section-header--hero">
+          <div class="c-section-header__text">
+            <p class="u-caption u-accent">Reservations</p>
+            <h1 class="u-display">Secure Your Spot</h1>
+          </div>
+        </header>
 
-      <div id="booking-summary" class="c-booking-summary" style="display: none">
-        <div class="c-booking-summary__layout">
-          <div class="c-booking-summary__info">
-            <p
-              class="u-tiny u-uppercase u-dim"
-              style="letter-spacing: 0.1em; margin-bottom: 8px"
-            >
-              Your Selection
-            </p>
-            <div class="c-booking-summary__match">
-              <span id="summary-flag-a" class="c-fixture-row__flag"></span>
-              <h3 id="summary-title" class="u-display">Reservation</h3>
-              <span id="summary-flag-b" class="c-fixture-row__flag"></span>
+        <div id="booking-summary" class="c-booking-summary" hidden>
+          <div class="c-booking-summary__layout">
+            <div class="c-booking-summary__info">
+              <p class="u-caption">Your Selection</p>
+              <div class="c-booking-summary__match">
+                <span id="summary-flag-a" class="c-fixture-row__flag"></span>
+                <h3 id="summary-title" class="u-display">Reservation</h3>
+                <span id="summary-flag-b" class="c-fixture-row__flag"></span>
+              </div>
+              <p id="summary-meta" class="u-caption u-accent"></p>
             </div>
-            <p id="summary-meta" class="u-caption u-accent"></p>
+
+            <div id="zone-snapshot" class="c-zone-snapshot" hidden>
+              <div class="c-zone-snapshot__frame">
+                <img
+                  id="zone-snapshot-img"
+                  src=""
+                  alt=""
+                  class="c-zone-snapshot__img"
+                />
+              </div>
+              <span id="zone-snapshot-label" class="u-caption"></span>
+            </div>
+          </div>
+        </div>
+
+        <form id="booking-form" class="c-booking-form">
+          <div class="c-form-group">
+            <label for="f-match" class="u-caption"
+              >Watching a specific match?</label
+            >
+            <select name="match" id="f-match" class="c-form-input">
+              <option value="">General Booking / Other</option>
+            </select>
           </div>
 
-          <div id="zone-snapshot" class="c-zone-snapshot" style="display: none">
-            <div class="c-zone-snapshot__frame">
-              <img
-                id="zone-snapshot-img"
-                src=""
-                alt=""
-                class="c-zone-snapshot__img"
+          <div class="c-form-group">
+            <label for="f-zone" class="u-caption">Preferred Zone</label>
+            <select name="zone" id="f-zone" class="c-form-input" required>
+              <option value="" disabled selected hidden>
+                Select a Zone...
+              </option>
+              <option value="carbon">Main Bar</option>
+              <option value="terrace">The Mill Terrace</option>
+              <option value="booth">VIP Booths</option>
+            </select>
+          </div>
+
+          <div class="c-form-row">
+            <div class="c-form-group">
+              <label for="f-date" class="u-caption">Date</label>
+              <input
+                type="date"
+                name="date"
+                id="f-date"
+                class="c-form-input"
+                required
               />
             </div>
-            <span id="zone-snapshot-label" class="u-tiny u-uppercase"></span>
+            <div class="c-form-group">
+              <label for="f-time" class="u-caption">Time</label>
+              <input
+                type="time"
+                name="time"
+                id="f-time"
+                class="c-form-input"
+                required
+              />
+            </div>
           </div>
-        </div>
-      </div>
 
-      <form id="booking-form" class="c-booking-form">
-        <div class="c-form-group">
-          <label for="f-match" class="u-caption"
-            >Watching a specific match?</label
+          <div class="c-form-group">
+            <label for="f-guests" class="u-caption">Number of Guests</label>
+            <input
+              type="number"
+              name="guests"
+              id="f-guests"
+              class="c-form-input"
+              placeholder="e.g. 4"
+              min="1"
+              max="20"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="c-button c-button--primary c-button--block"
           >
-          <select name="match" id="f-match" class="c-form-input">
-            <option value="">General Booking / Other</option>
-          </select>
-        </div>
-
-        <div class="c-form-group">
-          <label for="f-zone" class="u-caption">Preferred Zone</label>
-          <select name="zone" id="f-zone" class="c-form-input" required>
-            <option value="" disabled selected hidden>Select a Zone...</option>
-            <option value="carbon">Main Bar</option>
-            <option value="terrace">The Mill Terrace</option>
-            <option value="booth">VIP Booths</option>
-          </select>
-        </div>
-
-        <div class="c-form-row">
-          <div class="c-form-group">
-            <label for="f-date" class="u-caption">Date</label>
-            <input
-              type="date"
-              name="date"
-              id="f-date"
-              class="c-form-input"
-              required
-            />
-          </div>
-          <div class="c-form-group">
-            <label for="f-time" class="u-caption">Time</label>
-            <input
-              type="time"
-              name="time"
-              id="f-time"
-              class="c-form-input"
-              required
-            />
-          </div>
-        </div>
-
-        <div class="c-form-group">
-          <label for="f-guests" class="u-caption">Number of Guests</label>
-          <input
-            type="number"
-            name="guests"
-            id="f-guests"
-            class="c-form-input"
-            placeholder="e.g. 4"
-            min="1"
-            max="20"
-            required
-          />
-        </div>
-
-        <button type="submit" class="c-button --primary u-full-width">
-          Find a Table &rarr;
-        </button>
-      </form>
+            Find a Table &rarr;
+          </button>
+        </form>
+      </div>
     </main>
 
     <nav class="c-nav" aria-label="Primary navigation">

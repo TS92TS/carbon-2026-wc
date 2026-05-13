@@ -1,7 +1,7 @@
 /* =========================================================================
    APP ENTRY · Unified Orchestrator
    ========================================================================= */
-
+ 
 import { initMarquee } from "./components/marquee.js";
 import { initMobileMenu } from "./components/mobileMenu.js";
 import { updateNavStates } from "./lib/navigation.js";
@@ -10,38 +10,48 @@ import { renderFeaturedMatch } from "./components/featuredMatch.js";
 import { renderUpcomingList } from "./components/upcomingMatches.js";
 import { initZoneSliders } from "./components/zoneSlider.js";
 import { initScrollVideos } from "./lib/video.js";
-import { initBookingConcierge } from './components/booking.js';
-
-const marqueeState = {
-  mode: "countdown",
-  targetIso: "2026-06-11T20:00:00Z",
-  prefix: "Opening Match",
-};
-
+import { initBookingConcierge } from "./components/booking.js";
+import { marqueeState } from "./data/content.js";
+ 
 async function boot() {
-  // 1. UI Initialisation (Must happen before 'await' to prevent lag)
+  // ---- 1. SHELL · always-on UI ------------------------------------------
   initMobileMenu();
   updateNavStates();
-  initZoneSliders();
-  initScrollVideos();
-  initBookingConcierge();
-
+ 
   const marqueeRoot = document.querySelector('[data-component="marquee"]');
   if (marqueeRoot) initMarquee(marqueeRoot, marqueeState);
-
-  // 2. Data Fetching
-  try {
-    const data = await getMatchData();
-    if (data) {
-      renderFeaturedMatch(data);
-      renderUpcomingList(data);
+ 
+  // ---- 2. PAGE-SPECIFIC · only run if the page has markers --------------
+  if (document.querySelector('[data-component="zone-slider"]')) {
+    initZoneSliders();
+  }
+ 
+  if (document.querySelector('[data-component="scroll-video"]')) {
+    initScrollVideos();
+  }
+ 
+  if (document.getElementById("booking-form")) {
+    initBookingConcierge();
+  }
+ 
+  // ---- 3. DATA · only fetch on pages that need it -----------------------
+  const featuredCard = document.getElementById("featured-match");
+  const fixturesList = document.getElementById("upcoming-fixtures-list");
+ 
+  if (featuredCard || fixturesList) {
+    try {
+      const data = await getMatchData();
+      if (data) {
+        if (featuredCard) renderFeaturedMatch(data);
+        if (fixturesList) renderUpcomingList(data);
+      }
+    } catch (err) {
+      console.warn("App: Match data failed to load:", err);
     }
-  } catch (err) {
-    console.warn("App Boot: Data fetch failed, but UI is functional.", err);
   }
 }
-
-// Single Entry Point
+ 
+// Single entry point
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", boot);
 } else {
