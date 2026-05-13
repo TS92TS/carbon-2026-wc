@@ -14,27 +14,36 @@ export function renderFeaturedMatch(matchPayload) {
   card.setAttribute("aria-busy", "true");
 
   // 1. THE SELECTION LOGIC (England Priority)
-  const featured = (matchPayload.england && matchPayload.england.length > 0)
-    ? matchPayload.england[0]
-    : (matchPayload.upcoming && matchPayload.upcoming.length > 0)
-      ? matchPayload.upcoming[0]
-      : null;
+  const featured =
+    matchPayload.england && matchPayload.england.length > 0
+      ? matchPayload.england[0]
+      : matchPayload.upcoming && matchPayload.upcoming.length > 0
+        ? matchPayload.upcoming[0]
+        : null;
 
   // 2. SAFETY CHECK: If the tournament is over or no data exists
   if (matchPayload.status === "concluded" || !featured) {
-    card.innerHTML = '<div class="c-match-card__header">Tournament Concluded</div>';
+    card.innerHTML =
+      '<div class="c-match-card__header">Tournament Concluded</div>';
     card.setAttribute("aria-busy", "false");
     return;
   }
 
   // 3. DATA PREPARATION (Optimized formatting)
   const matchDate = new Date(safe(featured.datetimeIso));
-  const dateFormatted = isNaN(matchDate) ? "" : matchDate.toLocaleDateString("en-GB", {
-    weekday: "short", day: "numeric", month: "short"
-  });
-  const timeFormatted = isNaN(matchDate) ? "" : matchDate.toLocaleTimeString("en-GB", {
-    hour: "2-digit", minute: "2-digit"
-  });
+  const dateFormatted = isNaN(matchDate)
+    ? ""
+    : matchDate.toLocaleDateString("en-GB", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      });
+  const timeFormatted = isNaN(matchDate)
+    ? ""
+    : matchDate.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 
   // 4. DOM INJECTION (Scoped Lookups)
   const els = {
@@ -44,14 +53,15 @@ export function renderFeaturedMatch(matchPayload) {
     flagA: card.querySelector('[data-match-target="flag-a"]'),
     nameB: card.querySelector('[data-match-target="name-b"]'),
     flagB: card.querySelector('[data-match-target="flag-b"]'),
-    bookingBtn: card.querySelector('[data-match-target="booking-link"]')
+    bookingBtn: card.querySelector('[data-match-target="booking-link"]'),
   };
 
   if (els.badge) els.badge.textContent = safe(featured.badge);
 
   if (els.time) {
     els.time.textContent = `${dateFormatted}${dateFormatted && timeFormatted ? " · " : ""}${timeFormatted}`;
-    if (safe(featured.datetimeIso)) els.time.setAttribute("datetime", safe(featured.datetimeIso));
+    if (safe(featured.datetimeIso))
+      els.time.setAttribute("datetime", safe(featured.datetimeIso));
   }
 
   if (els.nameA) els.nameA.textContent = safe(featured.teamA?.name);
@@ -76,9 +86,9 @@ export function renderFeaturedMatch(matchPayload) {
     }
 
     const status = safe(featured.badge).toLowerCase();
-    if (status === 'live') {
+    if (status === "live") {
       els.bookingBtn.textContent = "Join the Atmosphere";
-      els.bookingBtn.classList.add('c-button--pulse');
+      els.bookingBtn.classList.add("c-button--pulse");
     } else {
       els.bookingBtn.textContent = "Book a Table";
     }

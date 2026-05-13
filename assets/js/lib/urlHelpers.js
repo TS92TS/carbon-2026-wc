@@ -3,7 +3,7 @@
  * @param {object} match - The match data object
  */
 export function buildBookingURL(match) {
-  const baseUrl = "./book.html";
+  const baseUrl = "/book.html";
   if (!match || !match.datetimeIso) return baseUrl;
 
   const dateObj = new Date(match.datetimeIso);

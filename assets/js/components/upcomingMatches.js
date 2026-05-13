@@ -15,7 +15,9 @@ export function renderUpcomingList(data) {
     filterNav.dataset.initialized = "true";
   }
 
-  const initialList = Array.isArray(matchCache.upcoming) ? matchCache.upcoming : [];
+  const initialList = Array.isArray(matchCache.upcoming)
+    ? matchCache.upcoming
+    : [];
   updateUI(initialList, container);
 }
 
@@ -39,11 +41,13 @@ function setupFilters(nav, container) {
     } else if (filter === "england") {
       listToDisplay = matchCache.england;
     } else if (filter === "knockout") {
-      listToDisplay = (Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []).filter(
-        (m) => m.badge && m.badge.toLowerCase().includes("knockout")
-      );
+      listToDisplay = (
+        Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []
+      ).filter((m) => m.badge && m.badge.toLowerCase().includes("knockout"));
     } else if (filter === "weekend") {
-      listToDisplay = (Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []).filter((m) => {
+      listToDisplay = (
+        Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []
+      ).filter((m) => {
         const d = new Date(m.datetimeIso);
         if (isNaN(d.getTime())) return false;
         const day = d.getDay();
@@ -76,12 +80,19 @@ function updateUI(matches, container) {
   limitedMatches.forEach((match) => {
     const dateObj = new Date(safe(match.datetimeIso));
     // FIX: Restored weekday to match previous site behaviour
-    const dateStr = isNaN(dateObj) ? "" : dateObj.toLocaleDateString("en-GB", {
-      weekday: "short", day: "numeric", month: "short"
-    });
-    const timeStr = isNaN(dateObj) ? "" : dateObj.toLocaleTimeString("en-GB", {
-      hour: "2-digit", minute: "2-digit"
-    });
+    const dateStr = isNaN(dateObj)
+      ? ""
+      : dateObj.toLocaleDateString("en-GB", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        });
+    const timeStr = isNaN(dateObj)
+      ? ""
+      : dateObj.toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
 
     let bookingUrl = "#";
     try {
@@ -133,7 +144,10 @@ function updateUI(matches, container) {
     timeEl.textContent = `${dateStr} · ${timeStr}`;
     metaDiv.appendChild(timeEl);
 
-    const arrowSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const arrowSvg = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "svg",
+    );
     arrowSvg.setAttribute("class", "c-fixture-row__arrow");
     arrowSvg.setAttribute("viewBox", "0 0 24 24");
     arrowSvg.setAttribute("fill", "none");

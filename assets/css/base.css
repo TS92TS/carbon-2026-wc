@@ -111,7 +111,9 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: var(--z-raised); /* FIX: was z-toast (500), above modals. Now sits above content but below all UI layers. */
+  z-index: var(
+    --z-raised
+  ); /* FIX: was z-toast (500), above modals. Now sits above content but below all UI layers. */
   pointer-events: none;
   opacity: 0.025;
   mix-blend-mode: overlay;

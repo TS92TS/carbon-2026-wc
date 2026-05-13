@@ -253,7 +253,7 @@
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: 
+  transition:
     filter var(--duration-fast) var(--ease-out),
     stroke var(--duration-fast) var(--ease-out);
 }
@@ -274,7 +274,7 @@
   left: 50%;
   transform: translateX(-50%);
   width: var(--space-8); /* 2rem = 32px — was raw 32px */
-  height: 3px;           /* decorative stroke — one-off, below 4pt grid */
+  height: 3px; /* decorative stroke — one-off, below 4pt grid */
   border-radius: 0 0 4px 4px;
   background-color: var(--accent-pitch);
   box-shadow: 0 2px 10px var(--accent-pitch);

@@ -1,9 +1,9 @@
 import { getMatchData } from "../lib/matchData.js";
 
 const ZONE_DATA = {
-  carbon:  { name: "Main Bar",       img: "./assets/img/carbon-thumb.webp" },
-  terrace: { name: "The Mill Terrace", img: "./assets/img/terrace-thumb.webp" },
-  booth:   { name: "VIP Booths",       img: "./assets/img/booth-thumb.webp" },
+  carbon: { name: "Main Bar", img: "/assets/img/carbon-thumb.webp" },
+  terrace: { name: "The Mill Terrace", img: "/assets/img/terrace-thumb.webp" },
+  booth: { name: "VIP Booths", img: "/assets/img/booth-thumb.webp" },
 };
 
 const TOURNAMENT_DISPLAY_LIMIT = 20;
@@ -48,7 +48,8 @@ export async function initBookingConcierge() {
 
   const updateMatchUI = (info) => {
     showSummary();
-    if (els.summaryTitle) els.summaryTitle.textContent = (info.slug || "").toUpperCase();
+    if (els.summaryTitle)
+      els.summaryTitle.textContent = (info.slug || "").toUpperCase();
     if (info.flagA && els.flagA) {
       const clean = cleanUrl(info.flagA);
       if (clean) els.flagA.style.backgroundImage = `url('${clean}')`;
@@ -95,7 +96,8 @@ export async function initBookingConcierge() {
   }
 
   if (els.match) {
-    els.match.innerHTML = '<option value="" disabled selected>Loading fixtures...</option>';
+    els.match.innerHTML =
+      '<option value="" disabled selected>Loading fixtures...</option>';
   }
 
   let matchData;
@@ -104,7 +106,8 @@ export async function initBookingConcierge() {
   } catch (err) {
     console.warn("Booking: Data load failed.", err);
     if (els.match) {
-      els.match.innerHTML = '<option value="" disabled selected>Fixtures unavailable</option>';
+      els.match.innerHTML =
+        '<option value="" disabled selected>Fixtures unavailable</option>';
     }
     return;
   }
@@ -124,17 +127,29 @@ export async function initBookingConcierge() {
     const [datePart, timePart = ""] = m.datetimeIso.split("T");
     const d = new Date(m.datetimeIso);
     // FIX: Added weekday to dropdown label for consistency with site cards
-    const dateLabel = isNaN(d) ? "" : d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+    const dateLabel = isNaN(d)
+      ? ""
+      : d.toLocaleDateString("en-GB", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        });
 
     const opt = document.createElement("option");
     opt.value = JSON.stringify({
-      slug, date: datePart, time: timePart.substring(0, 5),
-      flagA: safe(m.teamA?.flag), flagB: safe(m.teamB?.flag)
+      slug,
+      date: datePart,
+      time: timePart.substring(0, 5),
+      flagA: safe(m.teamA?.flag),
+      flagB: safe(m.teamB?.flag),
     });
 
     opt.textContent = `${teamA} v ${teamB} — ${dateLabel}`;
 
-    if (fixtureParam && slug.toLowerCase() === fixtureParam.replace(/-/g, " ").toLowerCase()) {
+    if (
+      fixtureParam &&
+      slug.toLowerCase() === fixtureParam.replace(/-/g, " ").toLowerCase()
+    ) {
       opt.selected = true;
     }
     return opt;
@@ -144,19 +159,21 @@ export async function initBookingConcierge() {
   if (engArray.length > 0 && els.match) {
     const engGroup = document.createElement("optgroup");
     engGroup.label = ">> ENGLAND FIXTURES";
-    engArray.forEach(m => {
+    engArray.forEach((m) => {
       const opt = createOption(m);
       if (opt) engGroup.appendChild(opt);
     });
     fragment.appendChild(engGroup);
   }
 
-  const tourneyArray = Array.isArray(matchData?.upcoming) ? matchData.upcoming : [];
+  const tourneyArray = Array.isArray(matchData?.upcoming)
+    ? matchData.upcoming
+    : [];
   if (tourneyArray.length > 0 && els.match) {
     const tourneyGroup = document.createElement("optgroup");
     tourneyGroup.label = `>> NEXT ${TOURNAMENT_DISPLAY_LIMIT} TOURNAMENT FIXTURES`;
 
-    tourneyArray.slice(0, TOURNAMENT_DISPLAY_LIMIT).forEach(m => {
+    tourneyArray.slice(0, TOURNAMENT_DISPLAY_LIMIT).forEach((m) => {
       const opt = createOption(m);
       if (opt) tourneyGroup.appendChild(opt);
     });
@@ -164,7 +181,8 @@ export async function initBookingConcierge() {
   }
 
   if (els.match) {
-    els.match.innerHTML = '<option value="" disabled selected hidden>Watching a specific match?</option>';
+    els.match.innerHTML =
+      '<option value="" disabled selected hidden>Watching a specific match?</option>';
     els.match.appendChild(fragment);
   }
 

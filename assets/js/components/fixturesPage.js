@@ -19,11 +19,17 @@ export function initFixturesPage(data) {
 
   // Populate England HQ strip immediately
   if (englandContainer) {
-    const engMatches = Array.isArray(matchCache.england) ? matchCache.england : [];
+    const engMatches = Array.isArray(matchCache.england)
+      ? matchCache.england
+      : [];
     if (engMatches.length > 0) {
-      renderFixtures(engMatches, englandContainer, { skipDateHeaders: true, isEnglandStrip: true });
+      renderFixtures(engMatches, englandContainer, {
+        skipDateHeaders: true,
+        isEnglandStrip: true,
+      });
     } else {
-      englandContainer.innerHTML = '<li class="u-dim u-tiny" style="padding:var(--space-4)">No England fixtures scheduled.</li>';
+      englandContainer.innerHTML =
+        '<li class="u-dim u-tiny" style="padding:var(--space-4)">No England fixtures scheduled.</li>';
       englandContainer.setAttribute("aria-busy", "false");
     }
   }
@@ -33,7 +39,9 @@ export function initFixturesPage(data) {
     filterNav.dataset.initialized = "true";
   }
 
-  const initialList = Array.isArray(matchCache.upcoming) ? matchCache.upcoming : [];
+  const initialList = Array.isArray(matchCache.upcoming)
+    ? matchCache.upcoming
+    : [];
   renderFixtures(initialList, container);
 }
 
@@ -58,11 +66,13 @@ function setupFilters(nav, container) {
     if (filter === "all") {
       listToDisplay = matchCache.upcoming;
     } else if (filter === "knockout") {
-      listToDisplay = (Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []).filter(
-        (m) => m.badge && m.badge.toLowerCase().includes("knockout")
-      );
+      listToDisplay = (
+        Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []
+      ).filter((m) => m.badge && m.badge.toLowerCase().includes("knockout"));
     } else if (filter === "weekend") {
-      listToDisplay = (Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []).filter((m) => {
+      listToDisplay = (
+        Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []
+      ).filter((m) => {
         const d = new Date(m.datetimeIso);
         if (isNaN(d.getTime())) return false;
         const day = d.getDay();
@@ -105,7 +115,9 @@ function renderFixtures(matches, container, options = {}) {
   });
 
   // 2. Chronological sort
-  cleanMatches.sort((a, b) => new Date(a.datetimeIso) - new Date(b.datetimeIso));
+  cleanMatches.sort(
+    (a, b) => new Date(a.datetimeIso) - new Date(b.datetimeIso),
+  );
 
   // 3. Single-pass partition by date
   const groups = new Map();
@@ -209,7 +221,8 @@ function createFixtureRow(match, options = {}) {
   metaDiv.className = "c-fixture-row__meta";
 
   const timeEl = document.createElement("time");
-  if (safe(match.datetimeIso)) timeEl.setAttribute("datetime", safe(match.datetimeIso));
+  if (safe(match.datetimeIso))
+    timeEl.setAttribute("datetime", safe(match.datetimeIso));
 
   // England strip shows: "Mon 12 Jun · 20:00" — full date + time
   // Full list shows: "20:00" — time only (date is in the sticky header above)
@@ -227,7 +240,10 @@ function createFixtureRow(match, options = {}) {
   }
 
   // Arrow
-  const arrowSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const arrowSvg = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "svg",
+  );
   arrowSvg.setAttribute("class", "c-fixture-row__arrow");
   arrowSvg.setAttribute("viewBox", "0 0 24 24");
   arrowSvg.setAttribute("fill", "none");
