@@ -10,6 +10,7 @@ import { renderFeaturedMatch } from "./components/featuredMatch.js";
 import { renderUpcomingList } from "./components/upcomingMatches.js";
 import { initZoneSliders } from "./components/zoneSlider.js";
 import { initScrollVideos } from "./lib/video.js";
+import { initBookingConcierge } from './components/booking.js';
 
 const marqueeState = {
   mode: "countdown",
@@ -23,6 +24,7 @@ async function boot() {
   updateNavStates();
   initZoneSliders();
   initScrollVideos();
+  initBookingConcierge();
 
   const marqueeRoot = document.querySelector('[data-component="marquee"]');
   if (marqueeRoot) initMarquee(marqueeRoot, marqueeState);
