@@ -1191,6 +1191,8 @@ body:not(.is-menu-open) .c-header__more svg line {
   scroll-behavior: smooth;
   height: 100%;
 
+  -webkit-overflow-scrolling: touch;
+
   /* Hide scrollbars but keep functionality */
   -ms-overflow-style: none; /* IE/Edge */
   scrollbar-width: none; /* Firefox */
@@ -1270,7 +1272,7 @@ body:not(.is-menu-open) .c-header__more svg line {
 }
 
 [data-component="zone-slider"] .c-zone-card__slider {
-  animation: swipeNudge 1.2s cubic-bezier(0.25, 1, 0.5, 1) 1.5s 1;
+  animation: swipeNudge 0.8s cubic-bezier(0.25, 1, 0.5, 1) 1.5s 1;
 }
 
 [data-component="zone-slider"] .c-zone-card__media::after {
@@ -1294,6 +1296,7 @@ body:not(.is-menu-open) .c-header__more svg line {
 [data-component="zone-slider"].is-interacted .c-zone-card__media::after {
   opacity: 0;
   animation: none !important;
+  transform: none !important;
   display: none;
 }
 /* =========================================================================
