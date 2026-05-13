@@ -496,8 +496,9 @@
   text-decoration: none;
 }
 
-#carboncard, #terracecard {
-  scroll-margin-top: 80px; 
+#carboncard,
+#terracecard {
+  scroll-margin-top: 80px;
 }
 /* =========================================================================
    COMPONENT · LINK ACTION (inline tertiary links)
@@ -1215,20 +1216,20 @@ body:not(.is-menu-open) .c-header__more svg line {
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   height: 100%;
-
   -webkit-overflow-scrolling: touch;
-
-  /* Hide scrollbars but keep functionality */
-  -ms-overflow-style: none; /* IE/Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+  transform: translateZ(0);
+  will-change: transform, scroll-position;
 }
 
 .c-zone-card__slider::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
 }
 
 .c-zone-card__slider img {
-  flex: 0 0 100%; /* Each image takes full width */
+  flex: 0 0 100%;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1236,11 +1237,10 @@ body:not(.is-menu-open) .c-header__more svg line {
   scroll-snap-stop: always;
 }
 
-/* --- Pagination Dots --- */
 .c-zone-card__pagination {
   position: absolute;
   top: var(--space-4);
-  right: var(--space-4); /* Positioned top-right for thumb ergonomics */
+  right: var(--space-4);
   display: flex;
   gap: 6px;
   z-index: 2;
@@ -1512,7 +1512,7 @@ body:not(.is-menu-open) .c-header__more svg line {
   .c-booking-summary__layout {
     flex-direction: column;
     align-items: center; /* Centers both blocks horizontally */
-    text-align: center;   /* Centers titles and metadata text */
+    text-align: center; /* Centers titles and metadata text */
     gap: var(--space-8);
   }
 
