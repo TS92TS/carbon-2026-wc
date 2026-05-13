@@ -1,9 +1,11 @@
 import { getMatchData } from "../lib/matchData.js";
 
+const IMG = new URL("../../img/", import.meta.url).href;
+
 const ZONE_DATA = {
-  carbon: { name: "Main Bar", img: "/assets/img/carbon-thumb.webp" },
-  terrace: { name: "The Mill Terrace", img: "/assets/img/terrace-thumb.webp" },
-  booth: { name: "VIP Booths", img: "/assets/img/booth-thumb.webp" },
+  carbon: { name: "Main Bar", img: `${IMG}carbon-thumb.webp` },
+  terrace: { name: "The Mill Terrace", img: `${IMG}terrace-thumb.webp` },
+  booth: { name: "VIP Booths", img: `${IMG}booth-thumb.webp` },
 };
 
 const TOURNAMENT_DISPLAY_LIMIT = 20;

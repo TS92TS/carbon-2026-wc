@@ -108,7 +108,7 @@
 }
 
 .c-hero--home .c-hero__media {
-  background-image: url("/assets/img/hero-img.webp");
+  background-image: url("../img/hero-img.webp");
 }
 
 /* Stronger overlay — protects text legibility regardless of image */
