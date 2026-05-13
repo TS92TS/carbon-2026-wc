@@ -414,7 +414,11 @@
 }
 
 .c-zone-card:active {
-  transform: scale(0.995);
+  transform: none;
+}
+
+.c-zones-teaser .c-zone-card:active {
+  transform: scale(0.98);
 }
 
 .c-zone-card__media {
