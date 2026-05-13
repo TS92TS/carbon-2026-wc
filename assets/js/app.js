@@ -8,6 +8,7 @@ import { updateNavStates } from "./lib/navigation.js";
 import { getMatchData } from "./lib/matchData.js";
 import { renderFeaturedMatch } from "./components/featuredMatch.js";
 import { renderUpcomingList } from "./components/upcomingMatches.js";
+import { initFixturesPage } from "./components/fixturesPage.js";
 import { initZoneSliders } from "./components/zoneSlider.js";
 import { initScrollVideos } from "./lib/video.js";
 import { initBookingConcierge } from "./components/booking.js";
@@ -45,8 +46,9 @@ async function boot() {
   // ---- 3. DATA · only fetch on pages that need it -----------------------
   const featuredCard = document.getElementById("featured-match");
   const fixturesList = document.getElementById("upcoming-fixtures-list");
+  const fullFixtures = document.getElementById("fixtures-list");
 
-  if (featuredCard || fixturesList) {
+  if (featuredCard || fixturesList || fullFixtures) {
     // Adapter wrappers: new object API mapped to existing functional imports/DOM
     const featuredMatch = {
       update: (d) => {
@@ -91,12 +93,18 @@ async function boot() {
       if (data.status === "concluded") {
         featuredMatch.renderConcluded();
         upcomingMatches.hide();
+        if (fullFixtures) {
+          fullFixtures.innerHTML =
+            '<p class="u-caption" style="text-align:center;padding:var(--space-12)">The tournament has concluded. See you next season!</p>';
+          fullFixtures.setAttribute("aria-busy", "false");
+        }
         return;
       }
 
       // 3. Normal Path (Match exists)
       featuredMatch.update(data);
       upcomingMatches.update(data);
+      if (fullFixtures) initFixturesPage(data);
 
       // Check for England matches to trigger booking CTA
       if (data.england && data.england.length > 0) {

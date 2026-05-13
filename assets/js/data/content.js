@@ -15,6 +15,6 @@
 export const marqueeState = {
   mode: "countdown",
   targetIso: "2026-06-11T20:00:00+01:00", // 2026 opener kick-off
-  prefix: "OPENS IN",
+  prefix: "OPENING MATCH IN",
   liveText: "MATCH UNDERWAY · TAP FOR LIVE",
 };

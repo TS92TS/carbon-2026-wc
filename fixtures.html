@@ -9,13 +9,12 @@
     <meta name="theme-color" content="#121212" />
     <meta name="color-scheme" content="dark" />
 
-    <title>2026 World Cup · Carbon Sports Bar</title>
+    <title>Tournament Fixtures · Carbon Sports Bar</title>
     <meta
       name="description"
-      content="The home of the 2026 tournament in Stowmarket. Premium screens, Mill kitchen, guaranteed seats. Secure your bench."
+      content="Every 2026 World Cup match live at Carbon in Stowmarket. England fixtures, knockouts and the full schedule."
     />
 
-    <!-- Fonts: Big Shoulders Display (headings) + Inter (body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -23,17 +22,13 @@
       href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap"
     />
 
-    <!-- Styles: load order matters (tokens → base → layout → components) -->
     <link rel="stylesheet" href="./assets/css/tokens.css" />
     <link rel="stylesheet" href="./assets/css/base.css" />
     <link rel="stylesheet" href="./assets/css/layout.css" />
     <link rel="stylesheet" href="./assets/css/components.css" />
-    <base target="_self">
+    <base target="_self" />
   </head>
   <body>
-    <!-- =========================================================================
-       HEADER · Logo · Marquee · More
-       ========================================================================= -->
     <header class="c-header" role="banner">
       <a
         class="c-header__logo"
@@ -55,11 +50,15 @@
         class="c-header__marquee"
         data-component="marquee"
         aria-label="Match status"
-      >
-        <!-- Marquee mounts here on JS load -->
-      </div>
+      ></div>
 
-      <button class="c-header__more" type="button" aria-label="Open menu">
+      <button
+        class="c-header__more"
+        type="button"
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      >
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <line x1="4" y1="7" x2="20" y2="7" />
           <line x1="4" y1="12" x2="20" y2="12" />
@@ -68,71 +67,246 @@
       </button>
     </header>
 
-    <!-- =========================================================================
-       PAGE CONTENT
-       ========================================================================= -->
     <main class="l-page" id="main">
       <div class="l-page__content p-fixtures">
+        <!-- 1. Page Header -->
         <header class="p-fixtures__header">
           <div class="p-fixtures__header-content">
-            <h1 class="u-display u-uppercase u-leading-tight">
-              Tournament <span class="u-text-accent">Fixtures</span>
+            <p class="u-caption u-accent">Live at carbon</p>
+            <h1 class="u-display">
+              2026 Tournament <span class="u-accent">Fixtures</span>
             </h1>
-            <p class="u-text-muted">
-              Live on the big screens. Every match. Every moment.
+            <p class="u-dim">
+              Live on the big screens. Every major match. Every moment.
             </p>
           </div>
-
           <div class="p-fixtures__divider" aria-hidden="true"></div>
         </header>
 
-        <nav
-          class="p-fixtures__filters"
-          id="fixture-filters"
-          aria-label="Filter match schedule"
-        >
-          <div class="p-fixtures__filter-track">
-            <button
-              class="c-chip c-chip--active"
-              data-filter="all"
-              aria-pressed="true"
-            >
-              All Games
-            </button>
-            <button class="c-chip" data-filter="england" aria-pressed="false">
-              England
-            </button>
-            <button class="c-chip" data-filter="knockout" aria-pressed="false">
-              Knockouts
-            </button>
-          </div>
-        </nav>
+        <!-- 2. Stats Band — tournament scope -->
+        <section class="c-stats-band c-section" aria-labelledby="stats-heading">
+          <header class="c-section-header">
+            <div class="c-section-header__text">
+              <p class="u-caption">The Tournament</p>
+              <h2 id="stats-heading">At a Glance</h2>
+            </div>
+          </header>
+          <ul class="c-stats-band__list" role="list">
+            <li class="c-stat-tile">
+              <span class="c-stat-tile__num">64</span>
+              <span class="c-stat-tile__label">Matches Live</span>
+            </li>
+            <li class="c-stat-tile">
+              <span class="c-stat-tile__num">48</span>
+              <span class="c-stat-tile__label">Group Games</span>
+            </li>
+            <li class="c-stat-tile">
+              <span class="c-stat-tile__num">16</span>
+              <span class="c-stat-tile__label">Knockouts</span>
+            </li>
+            <li class="c-stat-tile">
+              <span class="c-stat-tile__num">4</span>
+              <span class="c-stat-tile__label">Weeks of Football</span>
+            </li>
+          </ul>
+        </section>
 
+        <!-- 3. England HQ — Priority Strip (self-contained, no external filter dependency) -->
         <section
-          id="fixtures-list"
-          class="p-fixtures__list"
-          aria-busy="true"
-          aria-live="polite"
+          class="c-section"
+          aria-labelledby="england-heading"
+          id="england-strip"
         >
-          <div class="c-loader">
-            <div class="c-spinner" aria-hidden="true"></div>
-            <p class="u-caption u-uppercase u-letter-spacing">
-              Updating tournament feed...
-            </p>
+          <header class="c-section-header">
+            <div class="c-section-header__text">
+              <p class="u-caption u-accent">Priority</p>
+              <h2 id="england-heading">England Fixtures</h2>
+            </div>
+            <a href="./book.html" class="c-link-action">Book England</a>
+          </header>
+          <ul
+            class="c-fixtures-list"
+            id="england-fixtures-list"
+            role="list"
+            aria-busy="true"
+          >
+            <li class="c-loader" aria-hidden="true">
+              <div class="c-spinner"></div>
+              <p class="u-caption">Loading England fixtures...</p>
+            </li>
+          </ul>
+        </section>
+
+        <!-- 4. Full Tournament List — with integrated sticky filter -->
+        <section class="c-section" aria-labelledby="schedule-heading">
+          <header class="c-section-header" id="schedule-header">
+            <div class="c-section-header__text">
+              <p class="u-caption">Schedule</p>
+              <h2 id="schedule-heading">Full Tournament</h2>
+            </div>
+          </header>
+
+          <!-- Filter is now visually anchored to the list it controls -->
+          <nav
+            class="p-fixtures__filters"
+            id="fixture-filters"
+            aria-label="Filter match schedule"
+          >
+            <div class="p-fixtures__filter-track">
+              <button
+                class="c-chip c-chip--active"
+                data-filter="all"
+                aria-pressed="true"
+              >
+                All Games
+              </button>
+              <button
+                class="c-chip"
+                data-filter="knockout"
+                aria-pressed="false"
+              >
+                Knockouts
+              </button>
+              <button class="c-chip" data-filter="weekend" aria-pressed="false">
+                Weekends
+              </button>
+            </div>
+          </nav>
+
+          <div
+            id="fixtures-list"
+            class="p-fixtures__list"
+            aria-busy="true"
+            aria-live="polite"
+          >
+            <div class="c-loader">
+              <div class="c-spinner" aria-hidden="true"></div>
+              <p class="u-caption">Updating tournament feed...</p>
+            </div>
           </div>
         </section>
 
+        <!-- 5. Match-Day Deals -->
+        <section class="c-section" aria-labelledby="deals-heading">
+          <header class="c-section-header">
+            <div class="c-section-header__text">
+              <p class="u-caption">Deals</p>
+              <h2 id="deals-heading">Match-Day Value</h2>
+            </div>
+          </header>
+          <ul class="c-promo-list" role="list">
+            <li class="c-promo-item">
+              <a
+                href="./menu.html"
+                class="c-promo-item__link"
+                aria-label="View pizza and pint deal on menu"
+              >
+                <img
+                  class="c-promo-item__media"
+                  src="./assets/img/pizza-pint-deal.webp"
+                  alt="12 inch pizza and pint Deal · £10"
+                />
+              </a>
+            </li>
+            <li class="c-promo-item">
+              <a
+                href="./menu.html"
+                class="c-promo-item__link"
+                aria-label="View pitcher deal on menu"
+              >
+                <img
+                  class="c-promo-item__media"
+                  src="./assets/img/pitcher-deal.webp"
+                  alt="4 pint pitcher deal · from £12"
+                />
+              </a>
+            </li>
+          </ul>
+        </section>
+
+        <!-- 6. Tactical Footer CTA -->
         <footer class="p-fixtures__footer">
           <p class="u-text-secondary u-small">Watching with a group?</p>
           <a href="./book.html" class="c-button c-button--ghost">
             Book a Bench
           </a>
         </footer>
+
+        <!-- 7. Visit Section — universal closer -->
+        <section class="c-visit" aria-labelledby="visit-heading">
+          <div class="c-visit__inner">
+            <header class="c-visit__header">
+              <p class="u-caption">Find Us</p>
+              <h2 id="visit-heading" class="c-visit__title">
+                Home of the main event
+              </h2>
+            </header>
+
+            <div class="c-visit__body">
+              <div class="c-visit__location">
+                <address class="c-visit__address">
+                  <strong>Carbon Sports Bar</strong>
+                  Market Place, Stowmarket<br />
+                  Suffolk, IP14 1DG
+                </address>
+
+                <dl class="c-visit__hours">
+                  <dt>Mon–Thu</dt>
+                  <dd>4pm — 11pm</dd>
+                  <dt>Fri</dt>
+                  <dd>12pm — 1am</dd>
+                  <dt>Sat</dt>
+                  <dd>11am — 1am</dd>
+                  <dt>Sun</dt>
+                  <dd>11am — 10pm</dd>
+                </dl>
+              </div>
+
+              <ul class="c-visit__links" role="list">
+                <li>
+                  <a href="tel:+441449674674" class="c-visit__link">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                      />
+                    </svg>
+                    01449 674674
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=Carbon+Sports+Bar+Stowmarket"
+                    class="c-visit__link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                      />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    Get Directions
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:hello@mill.restaurant" class="c-visit__link">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                      />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                    Email the Venue
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
-    <!-- =========================================================================
-       BOTTOM NAV · Primary navigation
-       ========================================================================= -->
+
     <nav class="c-nav" aria-label="Primary navigation">
       <ul class="c-nav__list" role="list">
         <li>
@@ -146,7 +320,7 @@
           </a>
         </li>
         <li>
-          <a class="c-nav__item" href="./fixtures.html">
+          <a class="c-nav__item" href="./fixtures.html" aria-current="page">
             <svg class="c-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
               <rect x="3" y="5" width="18" height="16" rx="2" />
               <line x1="3" y1="10" x2="21" y2="10" />
@@ -181,10 +355,6 @@
       </ul>
     </nav>
 
-    <!-- =========================================================================
-       TOP NAV · Marquee navigation
-       ========================================================================= -->
-
     <nav class="c-mobile-nav" id="mobile-menu" aria-hidden="true">
       <div class="c-mobile-nav__inner">
         <ul class="c-mobile-nav__list" role="list">
@@ -192,7 +362,10 @@
             <a href="./index.html" class="c-mobile-nav__link u-display">Home</a>
           </li>
           <li>
-            <a href="./fixtures.html" class="c-mobile-nav__link u-display"
+            <a
+              href="./fixtures.html"
+              class="c-mobile-nav__link u-display"
+              aria-current="page"
               >Fixtures</a
             >
           </li>
@@ -230,7 +403,6 @@
             >
           </li>
         </ul>
-
         <footer class="c-mobile-nav__footer">
           <p class="u-caption">Carbon · Stowmarket</p>
           <div class="c-mobile-nav__socials"></div>
@@ -238,7 +410,6 @@
       </div>
     </nav>
 
-    <!-- App entry — native ES modules-->
     <script type="module" src="./assets/js/app.js"></script>
   </body>
 </html>

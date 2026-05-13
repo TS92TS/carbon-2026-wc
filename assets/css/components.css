@@ -196,7 +196,7 @@
   padding: var(--space-2) var(--space-4);
   min-height: var(--tap-min); /* 44px floor for touch */
   background-color: var(--surface-raised);
-  border: 1px solid var(--border-hairline);
+  border: 2px solid var(--border-hairline);
   border-radius: var(--radius-full);
   font-size: var(--type-small);
   font-weight: var(--weight-medium);
@@ -551,6 +551,7 @@
    the right. Replaces bespoke .c-zones-teaser__header.
    ========================================================================= */
 .c-section-header {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -702,7 +703,7 @@
   width: 24px;
   height: 24px;
   border: 3px solid var(--border-strong);
-  border-top-color: var(--accent-pitch); 
+  border-top-color: var(--accent-pitch);
   border-radius: var(--radius-full);
   animation: spin 0.6s linear infinite;
 }
@@ -715,13 +716,15 @@
 
 .c-fixtures-list .c-loader {
   padding-block: var(--space-10);
-  min-height: 300px; 
+  min-height: 300px;
   background-color: rgba(255, 255, 255, 0.01);
   border-radius: var(--radius-md);
   /* border removed — invalid value */
 }
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* =========================================================================
@@ -1108,8 +1111,7 @@ body:not(.is-menu-open) .c-header__more svg line {
 
 /* Solves the fixed-header overlap and adds page-level breathing room */
 .p-zones {
-  padding-top: var(--space-20);
-  padding-bottom: var(--space-12);
+  padding-block: var(--space-4) 0;
 }
 
 .c-section-header--hero {
@@ -1132,7 +1134,7 @@ body:not(.is-menu-open) .c-header__more svg line {
 .p-zones .c-zone-card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4); 
+  gap: var(--space-4);
 }
 
 .p-zones .c-zone-card__media {
@@ -1153,7 +1155,7 @@ body:not(.is-menu-open) .c-header__more svg line {
 .p-zones .c-zone-card__content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2); 
+  gap: var(--space-2);
 }
 
 /* Showcase Overlay: Gradient ensures labels on images are legible */
@@ -1241,10 +1243,6 @@ body:not(.is-menu-open) .c-header__more svg line {
 .space-specs {
   justify-content: center;
   color: var(--text-secondary);
-}
-
-.c-visit__zones {
-  padding-bottom: var(--space-20);
 }
 
 /* =========================================================================
@@ -1464,30 +1462,86 @@ body:not(.is-menu-open) .c-header__more svg line {
 .p-booking {
   max-width: 600px;
   margin-inline: auto;
-  padding-bottom: var(--space-20);
+  padding-block: var(--space-4) 0;
+  margin-bottom: var(--space-8);
 }
 
-.p-booking .c-section-header--hero {
-  padding-top: var(--space-20);
+.p-booking__lede {
+  max-width: 44ch;
+  margin-top: var(--space-2);
 }
 
 /* 1. The Summary Card (Refined Split Layout) */
+/* 1. The Summary Card */
 .c-booking-summary {
-  background: var(--surface-overlay);
-  border: 1px solid var(--border-hairline);
-  padding: var(--space-6);
-  border-radius: var(--radius-md);
+  background: rgba(30, 30, 30, 0.5);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(57, 255, 20, 0.15);
+  border-radius: var(--radius-lg);
+  padding: clamp(var(--space-4), 4vw, var(--space-6));
   margin-bottom: var(--space-8);
   position: relative;
   overflow: hidden;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
   animation: slideInDown 0.5s var(--ease-out);
 }
 
+.c-booking-summary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    145deg,
+    transparent 0%,
+    transparent 30%,
+    rgba(57, 255, 20, 0.04) 32%,
+    rgba(57, 255, 20, 0.09) 45%,
+    rgba(197, 160, 89, 0.05) 50%,
+    rgba(57, 255, 20, 0.04) 55%,
+    transparent 58%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.c-booking-summary::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -15%;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(
+    circle,
+    rgba(57, 255, 20, 0.18) 0%,
+    rgba(197, 160, 89, 0.06) 40%,
+    transparent 70%
+  );
+  filter: blur(50px);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .c-booking-summary__layout {
+  position: relative;
+  z-index: 2;
   display: flex;
+  flex-wrap: nowrap;
   justify-content: space-between;
-  align-items: flex-end; /* Keeps labels and text aligned at bottom on desktop */
-  gap: var(--space-6);
+  align-items: center;
+  gap: clamp(var(--space-3), 4vw, var(--space-5));
+}
+
+.c-booking-summary__info {
+  flex: 1 1 auto;
+  min-width: min-content;
+  overflow: hidden;
 }
 
 .c-booking-summary__match {
@@ -1495,8 +1549,7 @@ body:not(.is-menu-open) .c-header__more svg line {
   align-items: center;
   gap: var(--space-3);
   margin-bottom: var(--space-1);
-  margin-right: 0;
-  padding-right: 0;
+  min-width: 0;
 }
 
 .c-booking-summary .c-fixture-row__flag {
@@ -1506,40 +1559,61 @@ body:not(.is-menu-open) .c-header__more svg line {
 }
 
 .c-booking-summary #summary-title {
-  font-size: clamp(2rem, 8vw, 3rem);
+  font-size: clamp(1.5rem, 6vw, 3rem);
   line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* 2. Zone Visual Anchor (The Parallel Image) */
+/* 2. Zone Visual Anchor — Miniature glass card */
 .c-zone-snapshot {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: var(--space-2);
   flex-shrink: 0;
-  margin-left: 0;
-  padding-left: 0;
 }
 
 .c-zone-snapshot__frame {
   position: relative;
-  width: 110px;
-  height: 64px;
-  border-radius: var(--radius-sm);
+  width: clamp(90px, 26vw, 120px);
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  border: 1px solid var(--border-hairline);
-  background: var(--surface-raised); /* Prevents "flicker" during image load */
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(18, 18, 18, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.c-zone-snapshot__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(18, 18, 18, 0.5) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 
 .c-zone-snapshot__img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.9; /* Slightly dimmed to keep the focus on the Match Title */
-  transition: opacity var(--duration-base) var(--ease-out);
+  opacity: 0.85;
+  transition:
+    opacity var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-out);
 }
 
-/* The Label Styling */
+.c-booking-summary:hover .c-zone-snapshot__img {
+  opacity: 1;
+  transform: scale(1.02);
+}
+
 #zone-snapshot-label {
   font-size: var(--type-tiny);
   font-weight: var(--weight-bold);
@@ -1547,47 +1621,40 @@ body:not(.is-menu-open) .c-header__more svg line {
   text-transform: uppercase;
   letter-spacing: var(--tracking-widest);
   line-height: var(--leading-tight);
+  text-align: right;
 }
 
 [hidden] {
   display: none !important;
 }
 
-
-/* MOBILE ADAPTATION: Centered Stacking */
-@media (max-width: 436px) {
+/* Very small screens only: cinematic stack */
+@media (max-width: 370px) {
   .c-booking-summary__layout {
     flex-direction: column;
-    align-items: center; /* Centers both blocks horizontally */
-    text-align: center; /* Centers titles and metadata text */
-    gap: var(--space-8);
+    align-items: stretch;
+    gap: var(--space-6);
+    text-align: center;
   }
 
   .c-booking-summary__match {
-    justify-content: center; /* Centers flags and VS within the row */
+    justify-content: center;
   }
 
   .c-zone-snapshot {
-    align-items: center; /* Centers the image frame and its label */
+    align-items: stretch;
+    width: 100%;
   }
-}
 
-.c-booking-summary:hover .c-zone-snapshot__img {
-  opacity: 1;
-}
+  .c-zone-snapshot__frame {
+    width: 100%;
+    aspect-ratio: 21 / 9;
+    max-height: 160px;
+  }
 
-/* Atmospheric Glow */
-.c-booking-summary::after {
-  content: "";
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 150px;
-  height: 150px;
-  background: var(--accent-pitch);
-  filter: blur(60px);
-  opacity: 0.1;
-  pointer-events: none;
+  #zone-snapshot-label {
+    text-align: center;
+  }
 }
 
 /* 3. Form Hierarchy & Select Icons */
@@ -1631,24 +1698,186 @@ body:not(.is-menu-open) .c-header__more svg line {
 }
 
 /* =========================================================================
-   PAGE · FIXTURES
-   Namespace: .p-fixtures
+   COMPONENT · FIXTURES LIST
+   Shared across home teaser and full fixtures page.
    ========================================================================= */
+.c-fixtures-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
 
+/* =========================================================================
+   COMPONENT · FIXTURE ROW
+   Premium scannable card. Used in home teaser and fixtures page.
+   ========================================================================= */
+.c-fixture-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: var(--space-4);
+  row-gap: var(--space-2);
+  padding: var(--space-5);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.c-fixture-row:hover {
+  border-color: var(--border-strong);
+  background-color: var(--surface-overlay);
+}
+
+.c-fixture-row:active {
+  transform: scale(0.98);
+}
+
+.c-fixture-row__teams {
+  grid-row: 1;
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.c-fixture-row__team {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-weight: var(--weight-semibold);
+  font-size: var(--type-small);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.c-fixture-row__flag {
+  width: 32px;
+  aspect-ratio: 3 / 2;
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-overlay);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.c-fixture-row__vs {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--type-tiny);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.c-fixture-row__meta {
+  grid-row: 2;
+  grid-column: 1;
+  margin: 0;
+  font-size: var(--type-tiny);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.c-fixture-row__arrow {
+  grid-row: 1 / -1;
+  grid-column: 2;
+  align-self: center;
+  color: var(--accent-pitch);
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.c-fixture-row:hover .c-fixture-row__arrow {
+  transform: translateX(4px);
+}
+
+/* =========================================================================
+   COMPONENT · LOADER & SPINNER
+   ========================================================================= */
+.c-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  color: var(--text-tertiary);
+  width: 100%;
+  list-style: none;
+}
+
+.c-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--border-strong);
+  border-top-color: var(--accent-pitch);
+  border-radius: var(--radius-full);
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Page-specific loader adjustments */
+.p-fixtures .c-loader,
+.p-fixtures__list > .c-loader {
+  padding-block: var(--space-12);
+  min-height: 40vh;
+}
+
+.c-fixtures-list .c-loader {
+  padding-block: var(--space-10);
+  min-height: 300px;
+  background-color: rgba(255, 255, 255, 0.01);
+  border-radius: var(--radius-md);
+}
+
+/* =========================================================================
+   PAGE · FIXTURES
+   ========================================================================= */
 .p-fixtures {
   display: flex;
   flex-direction: column;
-  /* SYNC WITH .p-home: --space-4 matches the primary site beat.
-     The l-page wrapper handles nav-bar clearance, so bottom is 0. */
   padding-block: var(--space-4) 0;
   gap: var(--space-8);
+  /* Exposed for sticky date-header calculations:
+     tap-min (44px) + filter padding (12px*2) + track pad (2px) + border (1px) */
+  --filter-bar-height: 72px;
 }
 
 /* 1. Header & Cinematic Depth */
 .p-fixtures__header {
-  position: relative; /* Essential for the absolute divider */
+  position: relative;
   text-align: center;
-  padding-bottom: var(--space-8); /* Increased for breathing room */
+  padding-bottom: var(--space-8);
 }
 
 .p-fixtures__header-content {
@@ -1656,37 +1885,48 @@ body:not(.is-menu-open) .c-header__more svg line {
   z-index: var(--z-raised);
 }
 
-/* Atmospheric Divider: Aligns with the torn-edge/painterly aesthetic */
+/* Scoped typographic upgrades — no HTML changes required */
+.p-fixtures__header-content .u-display {
+  font-size: var(--type-hero);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+}
+
+.p-fixtures__header-content .u-text-muted {
+  color: var(--text-muted);
+  max-width: 40ch;
+  margin-inline: auto;
+  margin-top: var(--space-2);
+}
+
 .p-fixtures__divider {
   position: absolute;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 40%; /* Narrower for a more "bespoke" look */
+  width: 40%;
   height: 1px;
-  background: linear-gradient(90deg, 
-    transparent, 
-    var(--accent-pitch), 
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent-pitch),
     transparent
   );
   opacity: 0.3;
 }
 
-/* 2. Sticky Filter Navigation (Ergonomics) */
+/* 2. Sticky Filter Navigation — glassmorphism shell cohesion */
 .p-fixtures__filters {
   position: sticky;
-  /* THE FIX: Must match total header clearance from layout.css */
-  top: calc(var(--header-height) + env(safe-area-inset-top)); 
+  top: calc(var(--header-height) + env(safe-area-inset-top));
   z-index: var(--z-sticky);
-  background-color: var(--surface-base);
+  background-color: rgba(18, 18, 18, 0.85);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border-top: 1px solid var(--border-hairline); /* ← added */
   border-bottom: 1px solid var(--border-hairline);
-  
-  /* Edge-to-edge logic inside the l-page__content container */
-  margin-inline: calc(var(--space-4) * -1); 
+  margin-inline: calc(var(--space-4) * -1);
   padding: var(--space-3) var(--space-4);
-  
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 
 .p-fixtures__filter-track {
@@ -1702,44 +1942,58 @@ body:not(.is-menu-open) .c-header__more svg line {
   display: none;
 }
 
-/* 3. The Fixture List & Grouping */
+/* 3. The Fixture List — tight app-like feed rhythm */
 .p-fixtures__list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-10); /* Deep rhythmic gap between dates */
-  padding-block: var(--space-4) var(--space-12);
-  min-height: 40vh; /* Ensures footer doesn't jump up during load */
+  gap: var(--space-2);
+  padding-block: var(--space-2) var(--space-12);
+  min-height: 40vh;
 }
 
-/* Sticky Date Headers: The secondary "Snap" point */
+/* 4. Sticky Date Headers — secondary snap point */
 .p-fixtures__date-header {
   position: sticky;
-  /* Top = Header (approx 64px) + Filter Bar (approx 56px) */
-  top: calc(var(--header-height) + env(safe-area-inset-top) + 54px);
+  top: calc(
+    var(--header-height) + env(safe-area-inset-top) + var(--filter-bar-height)
+  );
   z-index: var(--z-raised);
-  background-color: var(--surface-base);
-  padding-block: var(--space-3);
-  margin-bottom: var(--space-2);
-  color: var(--text-muted);
+  padding-block: var(--space-3) var(--space-2);
+  margin-top: var(--space-8);
   font-family: var(--font-display);
-  font-size: var(--type-small);
+  font-size: var(--type-caption);
+  font-weight: var(--weight-bold);
   letter-spacing: var(--tracking-widest);
   text-transform: uppercase;
-  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-tertiary);
+  background-color: var(--surface-base);
+  border-bottom: 1px solid var(--border-hairline);
 }
 
-/* 4. England Priority Highlight (Contextual Glow) */
+.p-fixtures__date-header:first-child {
+  margin-top: 0;
+}
+
+/* 5. England Priority Highlight */
 .c-fixture-row--england {
-  position: relative;
   background: linear-gradient(
     90deg,
-    rgba(57, 255, 20, 0.04) 0%, /* Very subtle brand wash */
+    rgba(57, 255, 20, 0.06) 0%,
     transparent 100%
   );
   border-left: 2px solid var(--accent-pitch);
 }
 
-/* 5. Tactical Footer Call-to-Action */
+.c-fixture-row--england:hover {
+  background: linear-gradient(
+    90deg,
+    rgba(57, 255, 20, 0.1) 0%,
+    var(--surface-overlay) 100%
+  );
+  border-color: var(--border-accent);
+}
+
+/* 6. Tactical Footer Call-to-Action */
 .p-fixtures__footer {
   padding-block: var(--space-12);
   border-top: 1px solid var(--border-strong);
@@ -1747,5 +2001,14 @@ body:not(.is-menu-open) .c-header__more svg line {
   flex-direction: column;
   align-items: center;
   gap: var(--space-4);
-  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.01));
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 255, 255, 0.01)
+  );
+}
+
+.p-fixtures__footer > p {
+  color: var(--text-secondary);
+  font-size: var(--type-small);
 }
