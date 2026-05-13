@@ -242,7 +242,7 @@
 }
 
 .c-nav__item:hover {
-  color: var(--text-primary)
+  color: var(--text-primary); /* FIX: added semicolon for consistency */
 }
 
 .c-nav__icon {

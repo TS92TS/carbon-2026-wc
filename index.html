@@ -28,7 +28,8 @@
     <link rel="stylesheet" href="./assets/css/base.css" />
     <link rel="stylesheet" href="./assets/css/layout.css" />
     <link rel="stylesheet" href="./assets/css/components.css" />
-  </head>
+  <base target="_self">
+</head>
   <body>
     <!-- =========================================================================
        HEADER · Logo · Marquee · More
@@ -58,7 +59,7 @@
         <!-- Marquee mounts here on JS load -->
       </div>
 
-      <button class="c-header__more" type="button" aria-label="Open menu">
+      <button class="c-header__more" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <line x1="4" y1="7" x2="20" y2="7" />
           <line x1="4" y1="12" x2="20" y2="12" />
@@ -206,8 +207,11 @@
             role="list"
             aria-busy="true"
           >
-            <li class="u-skeleton-row"></li>
-            <li class="u-skeleton-row"></li>
+            <li class="c-loader" aria-hidden="true">
+              <div class="c-spinner"></div>
+              <p class="u-caption">Updating Feed...</p>
+            </li>
+
           </ul>
         </section>
 
@@ -471,7 +475,7 @@
     <nav class="c-nav" aria-label="Primary navigation">
       <ul class="c-nav__list" role="list">
         <li>
-          <a class="c-nav__item" href="./index.html">
+          <a class="c-nav__item" href="./index.html" aria-current="page">
             <svg class="c-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M3 11 L12 3 L21 11 L21 20 A1 1 0 0 1 20 21 L15 21 L15 14 L9 14 L9 21 L4 21 A1 1 0 0 1 3 20 Z"
@@ -524,7 +528,7 @@
       <div class="c-mobile-nav__inner">
         <ul class="c-mobile-nav__list" role="list">
           <li>
-            <a href="./index.html" class="c-mobile-nav__link u-display">Home</a>
+            <a href="./index.html" class="c-mobile-nav__link u-display" aria-current="page">Home</a>
           </li>
           <li>
             <a href="./fixtures.html" class="c-mobile-nav__link u-display"

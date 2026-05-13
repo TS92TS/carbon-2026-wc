@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#121212" />
+    <meta name="color-scheme" content="dark" />
+
+    <title>2026 World Cup · Carbon Sports Bar</title>
+    <meta
+      name="description"
+      content="The home of the 2026 tournament in Stowmarket. Premium screens, Mill kitchen, guaranteed seats. Secure your bench."
+    />
+
+    <!-- Fonts: Big Shoulders Display (headings) + Inter (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    />
+
+    <!-- Styles: load order matters (tokens → base → layout → components) -->
+    <link rel="stylesheet" href="./assets/css/tokens.css" />
+    <link rel="stylesheet" href="./assets/css/base.css" />
+    <link rel="stylesheet" href="./assets/css/layout.css" />
+    <link rel="stylesheet" href="./assets/css/components.css" />
+    <base target="_self">
+  </head>
+  <body>
+    <!-- =========================================================================
+       HEADER · Logo · Marquee · More
+       ========================================================================= -->
+    <header class="c-header" role="banner">
+      <a
+        class="c-header__logo"
+        href="https://www.welovecarbon.com/sports"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Carbon Sports Bar — home"
+      >
+        <img
+          class="c-header__logo-mark"
+          src="./assets/img/carbon-logo.webp"
+          alt="Carbon Logo"
+          width="36"
+          height="36"
+        />
+      </a>
+
+      <div
+        class="c-header__marquee"
+        data-component="marquee"
+        aria-label="Match status"
+      >
+        <!-- Marquee mounts here on JS load -->
+      </div>
+
+      <button class="c-header__more" type="button" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="4" y1="7" x2="20" y2="7" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="17" x2="20" y2="17" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- =========================================================================
+       PAGE CONTENT
+       ========================================================================= -->
+    <main class="l-page" id="main">
+      <div class="l-page__content p-fixtures">
+        <header class="p-fixtures__header">
+          <div class="p-fixtures__header-content">
+            <h1 class="u-display u-uppercase u-leading-tight">
+              Tournament <span class="u-text-accent">Fixtures</span>
+            </h1>
+            <p class="u-text-muted">
+              Live on the big screens. Every match. Every moment.
+            </p>
+          </div>
+
+          <div class="p-fixtures__divider" aria-hidden="true"></div>
+        </header>
+
+        <nav
+          class="p-fixtures__filters"
+          id="fixture-filters"
+          aria-label="Filter match schedule"
+        >
+          <div class="p-fixtures__filter-track">
+            <button
+              class="c-chip c-chip--active"
+              data-filter="all"
+              aria-pressed="true"
+            >
+              All Games
+            </button>
+            <button class="c-chip" data-filter="england" aria-pressed="false">
+              England
+            </button>
+            <button class="c-chip" data-filter="knockout" aria-pressed="false">
+              Knockouts
+            </button>
+          </div>
+        </nav>
+
+        <section
+          id="fixtures-list"
+          class="p-fixtures__list"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          <div class="c-loader">
+            <div class="c-spinner" aria-hidden="true"></div>
+            <p class="u-caption u-uppercase u-letter-spacing">
+              Updating tournament feed...
+            </p>
+          </div>
+        </section>
+
+        <footer class="p-fixtures__footer">
+          <p class="u-text-secondary u-small">Watching with a group?</p>
+          <a href="./book.html" class="c-button c-button--ghost">
+            Book a Bench
+          </a>
+        </footer>
+      </div>
+    </main>
+    <!-- =========================================================================
+       BOTTOM NAV · Primary navigation
+       ========================================================================= -->
+    <nav class="c-nav" aria-label="Primary navigation">
+      <ul class="c-nav__list" role="list">
+        <li>
+          <a class="c-nav__item" href="./index.html">
+            <svg class="c-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M3 11 L12 3 L21 11 L21 20 A1 1 0 0 1 20 21 L15 21 L15 14 L9 14 L9 21 L4 21 A1 1 0 0 1 3 20 Z"
+              />
+            </svg>
+            <span>Home</span>
+          </a>
+        </li>
+        <li>
+          <a class="c-nav__item" href="./fixtures.html">
+            <svg class="c-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+              <line x1="8" y1="3" x2="8" y2="7" />
+              <line x1="16" y1="3" x2="16" y2="7" />
+            </svg>
+            <span>Fixtures</span>
+          </a>
+        </li>
+        <li>
+          <a class="c-nav__item" href="./zones.html">
+            <svg class="c-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2 L22 7 L12 12 L2 7 Z" />
+              <polyline points="2 12 12 17 22 12" />
+              <polyline points="2 17 12 22 22 17" />
+            </svg>
+            <span>The Space</span>
+          </a>
+        </li>
+        <li>
+          <a class="c-nav__item" href="./book.html">
+            <svg class="c-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M3 8 A2 2 0 0 1 5 6 L19 6 A2 2 0 0 1 21 8 L21 10 A2 2 0 0 0 21 14 L21 16 A2 2 0 0 1 19 18 L5 18 A2 2 0 0 1 3 16 L3 14 A2 2 0 0 0 3 10 Z"
+              />
+              <line x1="13" y1="9" x2="13" y2="11" />
+              <line x1="13" y1="13" x2="13" y2="15" />
+            </svg>
+            <span>Booking</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- =========================================================================
+       TOP NAV · Marquee navigation
+       ========================================================================= -->
+
+    <nav class="c-mobile-nav" id="mobile-menu" aria-hidden="true">
+      <div class="c-mobile-nav__inner">
+        <ul class="c-mobile-nav__list" role="list">
+          <li>
+            <a href="./index.html" class="c-mobile-nav__link u-display">Home</a>
+          </li>
+          <li>
+            <a href="./fixtures.html" class="c-mobile-nav__link u-display"
+              >Fixtures</a
+            >
+          </li>
+          <li>
+            <a href="./zones.html" class="c-mobile-nav__link u-display"
+              >The Space</a
+            >
+          </li>
+          <li>
+            <a href="./menu.html" class="c-mobile-nav__link u-display"
+              >Food & Drink</a
+            >
+          </li>
+          <li>
+            <a href="./book.html" class="c-mobile-nav__link u-display"
+              >Book a Bench</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://www.mill.restaurant/"
+              class="c-mobile-nav__link u-display"
+              target="_blank"
+              rel="noopener noreferrer"
+              >The Mill</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://welovecarbon.com/sports"
+              class="c-mobile-nav__link u-display"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Carbon Sports Bar</a
+            >
+          </li>
+        </ul>
+
+        <footer class="c-mobile-nav__footer">
+          <p class="u-caption">Carbon · Stowmarket</p>
+          <div class="c-mobile-nav__socials"></div>
+        </footer>
+      </div>
+    </nav>
+
+    <!-- App entry — native ES modules-->
+    <script type="module" src="./assets/js/app.js"></script>
+  </body>
+</html>

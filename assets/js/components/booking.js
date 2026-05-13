@@ -6,11 +6,16 @@ const ZONE_DATA = {
   booth:   { name: "VIP Booths",       img: "./assets/img/booth-thumb.webp" },
 };
 
-// UX CONFIGURATION
-const TOURNAMENT_DISPLAY_LIMIT = 20; // Keeps the list ergonomic and fast
+const TOURNAMENT_DISPLAY_LIMIT = 20;
 
 const safe = (v, fallback = "") =>
   v === undefined || v === null ? fallback : v;
+
+const cleanUrl = (url) => {
+  if (!url) return "";
+  if (/^javascript:/i.test(url)) return "";
+  return url.replace(/[\'"]/g, "");
+};
 
 export async function initBookingConcierge() {
   const els = {
@@ -31,20 +36,32 @@ export async function initBookingConcierge() {
 
   if (!els.form) return;
 
-  // ---- 1. INSTANT RENDER (URL Parsing) ----------------------------------
+  if (els.form.dataset.initialized === "true") return;
+  els.form.dataset.initialized = "true";
+
   const params = new URLSearchParams(window.location.search);
   const fixtureParam = params.get("fixture");
 
-  const showSummary = () => els.summary.removeAttribute("hidden");
+  const showSummary = () => {
+    if (els.summary) els.summary.removeAttribute("hidden");
+  };
 
   const updateMatchUI = (info) => {
     showSummary();
-    els.summaryTitle.textContent = (info.slug || "").toUpperCase();
-    if (info.flagA) els.flagA.style.backgroundImage = `url('${info.flagA}')`;
-    if (info.flagB) els.flagB.style.backgroundImage = `url('${info.flagB}')`;
+    if (els.summaryTitle) els.summaryTitle.textContent = (info.slug || "").toUpperCase();
+    if (info.flagA && els.flagA) {
+      const clean = cleanUrl(info.flagA);
+      if (clean) els.flagA.style.backgroundImage = `url('${clean}')`;
+    }
+    if (info.flagB && els.flagB) {
+      const clean = cleanUrl(info.flagB);
+      if (clean) els.flagB.style.backgroundImage = `url('${clean}')`;
+    }
     const metaParts = [info.date, info.time].filter(Boolean);
-    els.summaryMeta.textContent = metaParts.join(" · ");
-    if (!els.zone.value) els.snapshot.setAttribute("hidden", "");
+    if (els.summaryMeta) els.summaryMeta.textContent = metaParts.join(" · ");
+    if (!els.zone || !els.zone.value) {
+      if (els.snapshot) els.snapshot.setAttribute("hidden", "");
+    }
   };
 
   if (fixtureParam) {
@@ -56,35 +73,39 @@ export async function initBookingConcierge() {
       flagB: params.get("flagB"),
     };
     updateMatchUI(matchInfo);
-    if (matchInfo.date) els.date.value = matchInfo.date;
-    if (matchInfo.time) els.time.value = matchInfo.time;
+    if (matchInfo.date && els.date) els.date.value = matchInfo.date;
+    if (matchInfo.time && els.time) els.time.value = matchInfo.time;
   }
 
   const updateZoneUI = (zoneValue) => {
     const data = ZONE_DATA[zoneValue];
     if (!data) return;
     showSummary();
-    els.snapshot.removeAttribute("hidden");
-    els.snapshotImg.src = data.img;
-    els.snapshotImg.alt = data.name;
-    els.snapshotLabel.textContent = data.name;
+    if (els.snapshot) els.snapshot.removeAttribute("hidden");
+    if (els.snapshotImg) {
+      els.snapshotImg.src = data.img;
+      els.snapshotImg.alt = data.name;
+    }
+    if (els.snapshotLabel) els.snapshotLabel.textContent = data.name;
   };
 
-  if (params.get("zone")) {
+  if (params.get("zone") && els.zone) {
     els.zone.value = params.get("zone");
     updateZoneUI(params.get("zone"));
   }
 
-  // ---- 2. LOADING STATE -------------------------------------------------
-  els.match.innerHTML = '<option value="" disabled selected>Loading fixtures...</option>';
+  if (els.match) {
+    els.match.innerHTML = '<option value="" disabled selected>Loading fixtures...</option>';
+  }
 
-  // ---- 3. SLICED POPULATION (Performance + Ergonomics) ------------------
   let matchData;
   try {
     matchData = await getMatchData();
   } catch (err) {
-    console.warn("Booking: Data load failed.");
-    els.match.innerHTML = '<option value="" disabled selected>Fixtures unavailable</option>';
+    console.warn("Booking: Data load failed.", err);
+    if (els.match) {
+      els.match.innerHTML = '<option value="" disabled selected>Fixtures unavailable</option>';
+    }
     return;
   }
 
@@ -96,20 +117,21 @@ export async function initBookingConcierge() {
     const teamA = safe(m.teamA?.name, "TBD");
     const teamB = safe(m.teamB?.name, "TBD");
     const slug = `${teamA} vs ${teamB}`;
-    
+
     if (seenSlugs.has(slug)) return null;
     seenSlugs.add(slug);
 
     const [datePart, timePart = ""] = m.datetimeIso.split("T");
     const d = new Date(m.datetimeIso);
-    const dateLabel = isNaN(d) ? "" : d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    // FIX: Added weekday to dropdown label for consistency with site cards
+    const dateLabel = isNaN(d) ? "" : d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 
     const opt = document.createElement("option");
     opt.value = JSON.stringify({
       slug, date: datePart, time: timePart.substring(0, 5),
       flagA: safe(m.teamA?.flag), flagB: safe(m.teamB?.flag)
     });
-    
+
     opt.textContent = `${teamA} v ${teamB} — ${dateLabel}`;
 
     if (fixtureParam && slug.toLowerCase() === fixtureParam.replace(/-/g, " ").toLowerCase()) {
@@ -118,9 +140,8 @@ export async function initBookingConcierge() {
     return opt;
   };
 
-  // PASS 1: England Fixtures (Unlimited - High Priority)
   const engArray = Array.isArray(matchData?.england) ? matchData.england : [];
-  if (engArray.length > 0) {
+  if (engArray.length > 0 && els.match) {
     const engGroup = document.createElement("optgroup");
     engGroup.label = ">> ENGLAND FIXTURES";
     engArray.forEach(m => {
@@ -130,13 +151,11 @@ export async function initBookingConcierge() {
     fragment.appendChild(engGroup);
   }
 
-  // PASS 2: Sliced Tournament Fixtures (Optimal UX)
   const tourneyArray = Array.isArray(matchData?.upcoming) ? matchData.upcoming : [];
-  if (tourneyArray.length > 0) {
+  if (tourneyArray.length > 0 && els.match) {
     const tourneyGroup = document.createElement("optgroup");
     tourneyGroup.label = `>> NEXT ${TOURNAMENT_DISPLAY_LIMIT} TOURNAMENT FIXTURES`;
-    
-    // We slice here to keep the dropdown physically short and mentally manageable
+
     tourneyArray.slice(0, TOURNAMENT_DISPLAY_LIMIT).forEach(m => {
       const opt = createOption(m);
       if (opt) tourneyGroup.appendChild(opt);
@@ -144,20 +163,26 @@ export async function initBookingConcierge() {
     fragment.appendChild(tourneyGroup);
   }
 
-  // Atomic Update
-  els.match.innerHTML = '<option value="" disabled selected hidden>Watching a specific match?</option>';
-  els.match.appendChild(fragment);
+  if (els.match) {
+    els.match.innerHTML = '<option value="" disabled selected hidden>Watching a specific match?</option>';
+    els.match.appendChild(fragment);
+  }
 
-  // ---- 4. LISTENERS -----------------------------------------------------
-  els.match.addEventListener("change", (e) => {
-    if (!e.target.value) return;
-    try {
-      const info = JSON.parse(e.target.value);
-      els.date.value = info.date;
-      els.time.value = info.time;
-      updateMatchUI(info);
-    } catch (err) {}
-  });
+  if (els.match) {
+    els.match.addEventListener("change", (e) => {
+      if (!e.target.value) return;
+      try {
+        const info = JSON.parse(e.target.value);
+        if (els.date) els.date.value = info.date;
+        if (els.time) els.time.value = info.time;
+        updateMatchUI(info);
+      } catch (err) {
+        console.warn("Booking: Failed to parse match selection", err);
+      }
+    });
+  }
 
-  els.zone.addEventListener("change", (e) => updateZoneUI(e.target.value));
+  if (els.zone) {
+    els.zone.addEventListener("change", (e) => updateZoneUI(e.target.value));
+  }
 }

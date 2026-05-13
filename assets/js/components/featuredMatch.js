@@ -10,8 +10,10 @@ export function renderFeaturedMatch(matchPayload) {
 
   const safe = (v) => (v === undefined || v === null ? "" : v);
 
+  // Signal loading state for assistive tech
+  card.setAttribute("aria-busy", "true");
+
   // 1. THE SELECTION LOGIC (England Priority)
-  // We prioritize the specialized England array. If empty, we fallback to general upcoming.
   const featured = (matchPayload.england && matchPayload.england.length > 0)
     ? matchPayload.england[0]
     : (matchPayload.upcoming && matchPayload.upcoming.length > 0)
@@ -46,26 +48,37 @@ export function renderFeaturedMatch(matchPayload) {
   };
 
   if (els.badge) els.badge.textContent = safe(featured.badge);
-  
+
   if (els.time) {
     els.time.textContent = `${dateFormatted}${dateFormatted && timeFormatted ? " · " : ""}${timeFormatted}`;
     if (safe(featured.datetimeIso)) els.time.setAttribute("datetime", safe(featured.datetimeIso));
   }
 
   if (els.nameA) els.nameA.textContent = safe(featured.teamA?.name);
-  if (els.flagA) els.flagA.style.backgroundImage = safe(featured.teamA?.flag) ? `url('${featured.teamA.flag}')` : "";
-  
+  if (els.flagA) {
+    const flagUrl = safe(featured.teamA?.flag);
+    els.flagA.style.backgroundImage = flagUrl ? `url('${flagUrl}')` : "";
+  }
+
   if (els.nameB) els.nameB.textContent = safe(featured.teamB?.name);
-  if (els.flagB) els.flagB.style.backgroundImage = safe(featured.teamB?.flag) ? `url('${featured.teamB.flag}')` : "";
+  if (els.flagB) {
+    const flagUrl = safe(featured.teamB?.flag);
+    els.flagB.style.backgroundImage = flagUrl ? `url('${flagUrl}')` : "";
+  }
 
   // 5. UX ENHANCEMENT: Contextual Button Logic
   if (els.bookingBtn) {
-    els.bookingBtn.href = buildBookingURL(featured);
-    
+    try {
+      els.bookingBtn.href = buildBookingURL(featured);
+    } catch (urlErr) {
+      console.warn("featuredMatch: buildBookingURL failed", urlErr);
+      els.bookingBtn.href = "#";
+    }
+
     const status = safe(featured.badge).toLowerCase();
     if (status === 'live') {
       els.bookingBtn.textContent = "Join the Atmosphere";
-      els.bookingBtn.classList.add('c-button--pulse'); // Optional CSS hook for live games
+      els.bookingBtn.classList.add('c-button--pulse');
     } else {
       els.bookingBtn.textContent = "Book a Table";
     }

@@ -682,6 +682,49 @@
 }
 
 /* =========================================================================
+   COMPONENT · LOADER & SPINNER
+   A universal state indicator for dynamic data fetches.
+   ========================================================================= */
+
+.c-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  color: var(--text-tertiary);
+  width: 100%;
+  list-style: none;
+}
+
+/* The Spinner: High-contrast brand highlight */
+.c-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--border-strong);
+  border-top-color: var(--accent-pitch); 
+  border-radius: var(--radius-full);
+  animation: spin 0.6s linear infinite;
+}
+
+/* Page-Specific Adjustments (Finesse) */
+.p-fixtures .c-loader {
+  padding-block: var(--space-12);
+  min-height: 40vh;
+}
+
+.c-fixtures-list .c-loader {
+  padding-block: var(--space-10);
+  min-height: 300px; 
+  background-color: rgba(255, 255, 255, 0.01);
+  border-radius: var(--radius-md);
+  /* border removed — invalid value */
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* =========================================================================
    COMPONENT · STATS BAND
    Venue-credibility moment. Numeric tiles, Pitch Green numerals, uppercase
    micro-labels. Auto-fits 2→3→4 columns by viewport.
@@ -1510,9 +1553,6 @@ body:not(.is-menu-open) .c-header__more svg line {
   display: none !important;
 }
 
-.c-zone-snapshot[hidden] {
-  display: none !important;
-}
 
 /* MOBILE ADAPTATION: Centered Stacking */
 @media (max-width: 436px) {
@@ -1588,4 +1628,124 @@ body:not(.is-menu-open) .c-header__more svg line {
   background-repeat: no-repeat;
   background-position: right var(--space-4) center;
   background-size: 16px;
+}
+
+/* =========================================================================
+   PAGE · FIXTURES
+   Namespace: .p-fixtures
+   ========================================================================= */
+
+.p-fixtures {
+  display: flex;
+  flex-direction: column;
+  /* SYNC WITH .p-home: --space-4 matches the primary site beat.
+     The l-page wrapper handles nav-bar clearance, so bottom is 0. */
+  padding-block: var(--space-4) 0;
+  gap: var(--space-8);
+}
+
+/* 1. Header & Cinematic Depth */
+.p-fixtures__header {
+  position: relative; /* Essential for the absolute divider */
+  text-align: center;
+  padding-bottom: var(--space-8); /* Increased for breathing room */
+}
+
+.p-fixtures__header-content {
+  position: relative;
+  z-index: var(--z-raised);
+}
+
+/* Atmospheric Divider: Aligns with the torn-edge/painterly aesthetic */
+.p-fixtures__divider {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40%; /* Narrower for a more "bespoke" look */
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    var(--accent-pitch), 
+    transparent
+  );
+  opacity: 0.3;
+}
+
+/* 2. Sticky Filter Navigation (Ergonomics) */
+.p-fixtures__filters {
+  position: sticky;
+  /* THE FIX: Must match total header clearance from layout.css */
+  top: calc(var(--header-height) + env(safe-area-inset-top)); 
+  z-index: var(--z-sticky);
+  background-color: var(--surface-base);
+  border-bottom: 1px solid var(--border-hairline);
+  
+  /* Edge-to-edge logic inside the l-page__content container */
+  margin-inline: calc(var(--space-4) * -1); 
+  padding: var(--space-3) var(--space-4);
+  
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.p-fixtures__filter-track {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 2px;
+}
+
+.p-fixtures__filter-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* 3. The Fixture List & Grouping */
+.p-fixtures__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10); /* Deep rhythmic gap between dates */
+  padding-block: var(--space-4) var(--space-12);
+  min-height: 40vh; /* Ensures footer doesn't jump up during load */
+}
+
+/* Sticky Date Headers: The secondary "Snap" point */
+.p-fixtures__date-header {
+  position: sticky;
+  /* Top = Header (approx 64px) + Filter Bar (approx 56px) */
+  top: calc(var(--header-height) + env(safe-area-inset-top) + 54px);
+  z-index: var(--z-raised);
+  background-color: var(--surface-base);
+  padding-block: var(--space-3);
+  margin-bottom: var(--space-2);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: var(--type-small);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+/* 4. England Priority Highlight (Contextual Glow) */
+.c-fixture-row--england {
+  position: relative;
+  background: linear-gradient(
+    90deg,
+    rgba(57, 255, 20, 0.04) 0%, /* Very subtle brand wash */
+    transparent 100%
+  );
+  border-left: 2px solid var(--accent-pitch);
+}
+
+/* 5. Tactical Footer Call-to-Action */
+.p-fixtures__footer {
+  padding-block: var(--space-12);
+  border-top: 1px solid var(--border-strong);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.01));
 }
