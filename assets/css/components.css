@@ -476,6 +476,25 @@
   color: var(--accent-mill);
 }
 
+.c-zones-teaser .c-zone-card {
+  position: relative;
+}
+
+.u-stretched-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.u-stretched-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+#carboncard, #terracecard {
+  scroll-margin-top: 80px; 
+}
 /* =========================================================================
    COMPONENT · LINK ACTION (inline tertiary links)
    ========================================================================= */
@@ -531,6 +550,7 @@
   flex-direction: column;
   gap: var(--space-1);
   min-width: 0;
+  padding-bottom: var(--space-10);
 }
 
 .c-section-header__text > * {
@@ -1055,7 +1075,8 @@ body:not(.is-menu-open) .c-header__more svg line {
 .c-zone-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16); /* Large gaps to separate 'Environments' */
+  gap: var(--space-16);
+  padding-bottom: var(--space-16); /* Large gaps to separate 'Environments' */
 }
 
 .c-zone-card {
