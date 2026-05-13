@@ -9,6 +9,7 @@ import { getMatchData } from "./lib/matchData.js";
 import { renderFeaturedMatch } from "./components/featuredMatch.js";
 import { renderUpcomingList } from "./components/upcomingMatches.js";
 import { initZoneSliders } from "./components/zoneSlider.js";
+import { initScrollVideos } from "./lib/video.js";
 
 const marqueeState = {
   mode: "countdown",
@@ -21,6 +22,7 @@ async function boot() {
   initMobileMenu();
   updateNavStates();
   initZoneSliders();
+  initScrollVideos();
 
   const marqueeRoot = document.querySelector('[data-component="marquee"]');
   if (marqueeRoot) initMarquee(marqueeRoot, marqueeState);

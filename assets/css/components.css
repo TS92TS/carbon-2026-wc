@@ -1083,7 +1083,11 @@ body:not(.is-menu-open) .c-header__more svg line {
 .c-zone-card__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(18,18,18,0.7) 0%, transparent 40%);
+  background: linear-gradient(
+    to top,
+    rgba(18, 18, 18, 0.7) 0%,
+    transparent 40%
+  );
   display: flex;
   align-items: flex-end;
   padding: var(--space-4);
@@ -1125,15 +1129,53 @@ body:not(.is-menu-open) .c-header__more svg line {
   letter-spacing: var(--tracking-tight);
 }
 
+/* =========================================================================
+   COMPONENT: ZONE META-DATA (The "Spec Row")
+   ========================================================================= */
+.c-zone-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3) var(--space-5);
+  margin-block: var(--space-2) var(--space-4);
+  padding-block: var(--space-3);
+  border-top: 1px solid var(--border-hairline);
+  list-style: none;
+  padding-left: 0;
+}
+
+.c-zone-meta__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--type-tiny); /* Keep it small and scannable */
+  color: var(
+    --text-muted
+  ); /* Darker than regular text, sits in the background */
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* Size and color the SVG icons */
+.c-zone-meta__item svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--accent-pitch); /* Tiny pop of neon green for branding */
+  opacity: 0.8;
+}
+
 /* Ergonomics: Thumb-friendly full-width buttons */
 .c-zone-card .c-button {
   width: 100%;
-  margin-top: var(--space-2);
 }
 
 .space-specs {
   justify-content: center;
   color: var(--text-secondary);
+}
+
+.c-visit__zones {
+  padding-bottom: var(--space-20);
 }
 
 /* =========================================================================
@@ -1147,18 +1189,18 @@ body:not(.is-menu-open) .c-header__more svg line {
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   height: 100%;
-  
+
   /* Hide scrollbars but keep functionality */
-  -ms-overflow-style: none;  /* IE/Edge */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 .c-zone-card__slider::-webkit-scrollbar {
-  display: none;             /* Chrome/Safari */
+  display: none; /* Chrome/Safari */
 }
 
 .c-zone-card__slider img {
-  flex: 0 0 100%;            /* Each image takes full width */
+  flex: 0 0 100%; /* Each image takes full width */
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1185,7 +1227,7 @@ body:not(.is-menu-open) .c-header__more svg line {
   height: 5px;
   background-color: rgba(255, 255, 255, 0.4);
   border-radius: var(--radius-full);
-  transition: 
+  transition:
     transform var(--duration-fast) var(--ease-out),
     background-color var(--duration-fast) var(--ease-out);
 }
@@ -1197,10 +1239,65 @@ body:not(.is-menu-open) .c-header__more svg line {
 }
 
 /* =========================================================================
-   REFINED ATMOSPHERE PORTAL
-   High-end cinematic reveal for the page finale.
+   COMPONENT: ZONE SLIDER (Native Swiper & Hints)
    ========================================================================= */
 
+/* 1. The Kinetic Nudge Animation (Recipe) */
+@keyframes swipeNudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-6%);
+  }
+  30% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulseChevron {
+  0%,
+  100% {
+    transform: translate(0, -50%);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(6px, -50%);
+    opacity: 0.9;
+  }
+}
+
+[data-component="zone-slider"] .c-zone-card__slider {
+  animation: swipeNudge 1.2s cubic-bezier(0.25, 1, 0.5, 1) 1.5s 1;
+}
+
+[data-component="zone-slider"] .c-zone-card__media::after {
+  content: "›";
+  position: absolute;
+  top: 50%;
+  right: var(--space-4);
+  transform: translateY(-50%);
+  font-size: 2.5rem;
+  font-family: var(--font-body);
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 3;
+  animation: pulseChevron 2s infinite ease-in-out;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+/* 5. Fade out permanently when user interacts */
+[data-component="zone-slider"].is-interacted .c-zone-card__media::after {
+  opacity: 0;
+  animation: none !important;
+  display: none;
+}
+/* =========================================================================
+   ATMOSPHERE PORTAL
+   ========================================================================= */
 .c-atmosphere-portal {
   width: 100vw;
   position: relative;
@@ -1211,12 +1308,31 @@ body:not(.is-menu-open) .c-header__more svg line {
   margin-top: var(--space-16);
   background-color: var(--surface-base);
   overflow: hidden;
+  border: none;
+  outline: none;
+  transform: translateZ(0);
+}
+
+.c-atmosphere-portal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 20vh;
+  background: linear-gradient(
+    to bottom,
+    var(--surface-base) 0%,
+    transparent 100%
+  );
+  z-index: 2;
+  pointer-events: none;
 }
 
 .c-atmosphere-portal__inner {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1.2; /* Taller on mobile for maximum 'App' immersion */
+  aspect-ratio: 1 / 1.2;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -1224,25 +1340,30 @@ body:not(.is-menu-open) .c-header__more svg line {
 
 @media (min-width: 768px) {
   .c-atmosphere-portal__inner {
-    aspect-ratio: 21 / 9; /* Ultra-wide cinematic on desktop */
+    aspect-ratio: 21 / 9;
   }
 }
 
 .c-atmosphere-portal__video {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset: -2px;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
   object-fit: cover;
-  filter: brightness(0.6) saturate(1.2); /* 'Color grading' the video via CSS */
+  transform: scale(1.01);
+  filter: brightness(0.6) saturate(1.2);
 }
 
-/* Subtle Vignette to draw eyes to center/bottom */
 .c-atmosphere-portal__vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, transparent 20%, rgba(18,18,18,0.8) 100%);
+  background: radial-gradient(
+    circle at center,
+    transparent 20%,
+    var(--surface-base) 120%
+  );
   pointer-events: none;
+  z-index: 1;
 }
 
 .c-atmosphere-portal__content {
@@ -1252,12 +1373,15 @@ body:not(.is-menu-open) .c-header__more svg line {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  /* Gentle glass effect for the text background */
-  background: linear-gradient(to top, var(--surface-base) 20%, transparent 100%);
+  background: linear-gradient(
+    to top,
+    var(--surface-base) 20%,
+    transparent 100%
+  );
 }
 
 .c-atmosphere-portal__text h2 {
-  font-size: clamp(3rem, 12vw, 5rem); /* Responsive fluid typography */
+  font-size: clamp(3rem, 12vw, 5rem);
   line-height: 0.85;
   letter-spacing: var(--tracking-tighter);
 }
