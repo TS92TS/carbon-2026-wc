@@ -1,4 +1,5 @@
 import { getMatchData } from "../lib/matchData.js";
+import { safeBackgroundUrl } from "../lib/urlHelpers.js";
 
 const IMG = new URL("../../img/", import.meta.url).href;
 
@@ -12,12 +13,6 @@ const TOURNAMENT_DISPLAY_LIMIT = 20;
 
 const safe = (v, fallback = "") =>
   v === undefined || v === null ? fallback : v;
-
-const cleanUrl = (url) => {
-  if (!url) return "";
-  if (/^javascript:/i.test(url)) return "";
-  return url.replace(/[\'"]/g, "");
-};
 
 export async function initBookingConcierge() {
   const els = {
@@ -43,6 +38,8 @@ export async function initBookingConcierge() {
 
   const params = new URLSearchParams(window.location.search);
   const fixtureParam = params.get("fixture");
+  const zoneParam = params.get("zone");
+  const guestsParam = params.get("guests");
 
   const showSummary = () => {
     if (els.summary) els.summary.removeAttribute("hidden");
@@ -52,20 +49,35 @@ export async function initBookingConcierge() {
     showSummary();
     if (els.summaryTitle)
       els.summaryTitle.textContent = (info.slug || "").toUpperCase();
-    if (info.flagA && els.flagA) {
-      const clean = cleanUrl(info.flagA);
-      if (clean) els.flagA.style.backgroundImage = `url('${clean}')`;
-    }
-    if (info.flagB && els.flagB) {
-      const clean = cleanUrl(info.flagB);
-      if (clean) els.flagB.style.backgroundImage = `url('${clean}')`;
-    }
+    if (els.flagA)
+      els.flagA.style.backgroundImage = safeBackgroundUrl(info.flagA);
+    if (els.flagB)
+      els.flagB.style.backgroundImage = safeBackgroundUrl(info.flagB);
     const metaParts = [info.date, info.time].filter(Boolean);
     if (els.summaryMeta) els.summaryMeta.textContent = metaParts.join(" · ");
     if (!els.zone || !els.zone.value) {
       if (els.snapshot) els.snapshot.setAttribute("hidden", "");
     }
   };
+
+  const updateZoneUI = (zoneValue) => {
+    const data = ZONE_DATA[zoneValue];
+    if (!data) return;
+    showSummary();
+    if (els.snapshot) els.snapshot.removeAttribute("hidden");
+    if (els.snapshotImg) {
+      els.snapshotImg.src = data.img;
+      els.snapshotImg.alt = data.name;
+    }
+    if (els.snapshotLabel) els.snapshotLabel.textContent = data.name;
+  };
+
+  // Apply zone BEFORE match so updateMatchUI's snapshot-hidden check sees the
+  // populated state and doesn't toggle the snapshot off then on again.
+  if (zoneParam && els.zone) {
+    els.zone.value = zoneParam;
+    updateZoneUI(zoneParam);
+  }
 
   if (fixtureParam) {
     const matchInfo = {
@@ -80,21 +92,11 @@ export async function initBookingConcierge() {
     if (matchInfo.time && els.time) els.time.value = matchInfo.time;
   }
 
-  const updateZoneUI = (zoneValue) => {
-    const data = ZONE_DATA[zoneValue];
-    if (!data) return;
-    showSummary();
-    if (els.snapshot) els.snapshot.removeAttribute("hidden");
-    if (els.snapshotImg) {
-      els.snapshotImg.src = data.img;
-      els.snapshotImg.alt = data.name;
+  if (guestsParam && els.guests) {
+    const n = parseInt(guestsParam, 10);
+    if (Number.isFinite(n) && n >= 1 && n <= 20) {
+      els.guests.value = String(n);
     }
-    if (els.snapshotLabel) els.snapshotLabel.textContent = data.name;
-  };
-
-  if (params.get("zone") && els.zone) {
-    els.zone.value = params.get("zone");
-    updateZoneUI(params.get("zone"));
   }
 
   if (els.match) {
@@ -107,6 +109,14 @@ export async function initBookingConcierge() {
     matchData = await getMatchData();
   } catch (err) {
     console.warn("Booking: Data load failed.", err);
+    if (els.match) {
+      els.match.innerHTML =
+        '<option value="" disabled selected>Fixtures unavailable</option>';
+    }
+    return;
+  }
+
+  if (!matchData || matchData.status === "error") {
     if (els.match) {
       els.match.innerHTML =
         '<option value="" disabled selected>Fixtures unavailable</option>';

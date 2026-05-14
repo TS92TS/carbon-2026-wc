@@ -1,4 +1,4 @@
-import { buildBookingURL } from "../lib/urlHelpers.js";
+import { buildBookingURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
 
 let matchCache = null;
 const DISPLAY_LIMIT = 4;
@@ -115,8 +115,7 @@ function updateUI(matches, container) {
     teamA.className = "c-fixture-row__team";
     const flagA = document.createElement("span");
     flagA.className = "c-fixture-row__flag";
-    const flagAUrl = safe(match.teamA?.flag);
-    if (flagAUrl) flagA.style.backgroundImage = `url('${flagAUrl}')`;
+    flagA.style.backgroundImage = safeBackgroundUrl(match.teamA?.flag);
     teamA.appendChild(flagA);
     teamA.appendChild(document.createTextNode(safe(match.teamA?.name)));
 
@@ -129,8 +128,7 @@ function updateUI(matches, container) {
     teamB.className = "c-fixture-row__team";
     const flagB = document.createElement("span");
     flagB.className = "c-fixture-row__flag";
-    const flagBUrl = safe(match.teamB?.flag);
-    if (flagBUrl) flagB.style.backgroundImage = `url('${flagBUrl}')`;
+    flagB.style.backgroundImage = safeBackgroundUrl(match.teamB?.flag);
     teamB.appendChild(flagB);
     teamB.appendChild(document.createTextNode(safe(match.teamB?.name)));
 

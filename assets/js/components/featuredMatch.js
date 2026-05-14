@@ -1,4 +1,4 @@
-import { buildBookingURL } from "../lib/urlHelpers.js";
+import { buildBookingURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
 
 /**
  * Renders the primary Hero match card with England priority.
@@ -66,14 +66,12 @@ export function renderFeaturedMatch(matchPayload) {
 
   if (els.nameA) els.nameA.textContent = safe(featured.teamA?.name);
   if (els.flagA) {
-    const flagUrl = safe(featured.teamA?.flag);
-    els.flagA.style.backgroundImage = flagUrl ? `url('${flagUrl}')` : "";
+    els.flagA.style.backgroundImage = safeBackgroundUrl(featured.teamA?.flag);
   }
 
   if (els.nameB) els.nameB.textContent = safe(featured.teamB?.name);
   if (els.flagB) {
-    const flagUrl = safe(featured.teamB?.flag);
-    els.flagB.style.backgroundImage = flagUrl ? `url('${flagUrl}')` : "";
+    els.flagB.style.backgroundImage = safeBackgroundUrl(featured.teamB?.flag);
   }
 
   // 5. UX ENHANCEMENT: Contextual Button Logic

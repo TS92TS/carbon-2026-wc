@@ -10,19 +10,45 @@ export function initMobileMenu() {
 
   if (!menuBtn || !menuOverlay) return;
 
+  let savedScrollY = 0;
+
+  const openMenu = () => {
+    savedScrollY = window.scrollY;
+    body.classList.add("is-menu-open");
+    menuBtn.setAttribute("aria-expanded", "true");
+    menuOverlay.setAttribute("aria-hidden", "false");
+    // iOS-safe scroll lock: pin the body and restore on close.
+    body.style.position = "fixed";
+    body.style.top = `-${savedScrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+  };
+
+  const closeMenu = () => {
+    body.classList.remove("is-menu-open");
+    menuBtn.setAttribute("aria-expanded", "false");
+    menuOverlay.setAttribute("aria-hidden", "true");
+    body.style.position = "";
+    body.style.top = "";
+    body.style.left = "";
+    body.style.right = "";
+    body.style.width = "";
+    window.scrollTo(0, savedScrollY);
+  };
+
   menuBtn.addEventListener("click", () => {
-    const isOpen = body.classList.toggle("is-menu-open");
-    menuBtn.setAttribute("aria-expanded", isOpen);
-    menuOverlay.setAttribute("aria-hidden", !isOpen);
-    body.style.overflow = isOpen ? "hidden" : "";
+    body.classList.contains("is-menu-open") ? closeMenu() : openMenu();
   });
 
-  // Close menu when clicking a link
   menuOverlay.addEventListener("click", (e) => {
-    if (e.target.closest(".c-mobile-nav__link")) {
-      body.classList.remove("is-menu-open");
-      body.style.overflow = "";
-      menuBtn.setAttribute("aria-expanded", "false");
+    if (e.target.closest(".c-mobile-nav__link")) closeMenu();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && body.classList.contains("is-menu-open")) {
+      closeMenu();
+      menuBtn.focus();
     }
   });
 }

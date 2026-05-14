@@ -30,3 +30,21 @@ export function buildBookingURL(match) {
 
   return `${baseUrl}?${params.toString()}`;
 }
+
+/**
+ * Returns a CSS background-image value built from a URL, or "" if the URL is
+ * missing, malformed, or uses a non-http(s) scheme. Guards against CSS
+ * injection when applying user- or API-supplied URLs to style.backgroundImage.
+ * @param {string} raw
+ * @returns {string}
+ */
+export function safeBackgroundUrl(raw) {
+  if (!raw) return "";
+  try {
+    const u = new URL(raw, window.location.href);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return "";
+    return `url("${encodeURI(u.href).replace(/"/g, "%22")}")`;
+  } catch {
+    return "";
+  }
+}

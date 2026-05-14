@@ -1,4 +1,4 @@
-import { buildBookingURL } from "../lib/urlHelpers.js";
+import { buildBookingURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
 
 const safe = (v) => (v === undefined || v === null ? "" : v);
 
@@ -89,6 +89,8 @@ function setupFilters(nav, container) {
 /* ------------------------------------------------------------------ */
 function renderFixtures(matches, container, options = {}) {
   const { skipDateHeaders = false, isEnglandStrip = false } = options;
+  const isListContainer =
+    container.tagName === "UL" || container.tagName === "OL";
   container.innerHTML = "";
   container.setAttribute("aria-busy", "true");
 
@@ -146,7 +148,14 @@ function renderFixtures(matches, container, options = {}) {
     }
 
     dayMatches.forEach((match) => {
-      fragment.appendChild(createFixtureRow(match, { isEnglandStrip }));
+      const row = createFixtureRow(match, { isEnglandStrip });
+      if (isListContainer) {
+        const li = document.createElement("li");
+        li.appendChild(row);
+        fragment.appendChild(li);
+      } else {
+        fragment.appendChild(row);
+      }
     });
   });
 
@@ -201,8 +210,7 @@ function createFixtureRow(match, options = {}) {
     team.className = "c-fixture-row__team";
     const flag = document.createElement("span");
     flag.className = "c-fixture-row__flag";
-    const flagUrl = safe(teamData?.flag);
-    if (flagUrl) flag.style.backgroundImage = `url('${flagUrl}')`;
+    flag.style.backgroundImage = safeBackgroundUrl(teamData?.flag);
     team.appendChild(flag);
     team.appendChild(document.createTextNode(safe(teamData?.name)));
     return team;

@@ -14,14 +14,6 @@ import { initScrollVideos } from "./lib/video.js";
 import { initBookingConcierge } from "./components/booking.js";
 import { marqueeState } from "./data/content.js";
 
-// ---------------------------------------------------------------------------
-// Helper: England match booking CTA (move to ./components/booking.js when ready)
-// ---------------------------------------------------------------------------
-function initBookingCTA(englandMatchData) {
-  // TODO: wire to actual booking CTA component
-  console.log("Booking CTA initialized for England match:", englandMatchData);
-}
-
 async function boot() {
   // ---- 1. SHELL · always-on UI ------------------------------------------
   initMobileMenu();
@@ -105,11 +97,6 @@ async function boot() {
       featuredMatch.update(data);
       upcomingMatches.update(data);
       if (fullFixtures) initFixturesPage(data);
-
-      // Check for England matches to trigger booking CTA
-      if (data.england && data.england.length > 0) {
-        initBookingCTA(data.england[0]);
-      }
     } catch (err) {
       console.warn("App: Match data failed to load:", err);
       featuredMatch.renderError();
