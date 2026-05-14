@@ -48,6 +48,12 @@ export function initZonesPage() {
 
   banner.removeAttribute("hidden");
 
+  // 1b. Reveal the directional cue ("Now Pick Your Zone") that makes the
+  // next funnel step explicit. Independent of the banner so the cue can be
+  // safely omitted from any future page that doesn't need it.
+  const cue = document.getElementById("zone-cue");
+  if (cue) cue.removeAttribute("hidden");
+
   // 2. Propagate fixture context to every book.html link on the page.
   //    Existing query params on each link (e.g. ?zone=carbon) are preserved.
   const carry = new URLSearchParams();

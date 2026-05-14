@@ -154,6 +154,23 @@ export async function initBookingConcierge() {
       }
     });
 
+    // Select the value on focus so the user's first keypress replaces it —
+    // no manual delete of the default needed.
+    stepInput.addEventListener("focus", () => stepInput.select());
+
+    // Funnel cue: when both match and zone have been carried through from the
+    // upstream pages, the guest count is the only required field remaining.
+    // Apply a subtle highlight that auto-clears on first focus, so the cue
+    // never lingers once the user engages.
+    if (fixtureParam && zoneParam) {
+      stepper.classList.add("c-stepper--highlight");
+      stepper.addEventListener(
+        "focusin",
+        () => stepper.classList.remove("c-stepper--highlight"),
+        { once: true },
+      );
+    }
+
     syncStepperDisabled();
   }
 

@@ -449,6 +449,26 @@
   margin: 0;
 }
 
+/* Static "→" arrow appended to the home zone-teaser title, signalling that
+   the whole card is clickable (the link beneath is stretched via
+   .u-stretched-link). The arrow sits on the <h3>'s ::after — NOT on the
+   <a>'s ::after — to avoid colliding with .u-stretched-link::after, which
+   is already in use to create the card-wide click overlay. */
+.c-zones-teaser .c-zone-card__title::after {
+  content: "→";
+  display: inline-block;
+  margin-left: var(--space-2);
+  color: var(--accent-pitch);
+  font-weight: var(--weight-bold);
+  vertical-align: text-top;
+  line-height: 1;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.c-zones-teaser .c-zone-card:hover .c-zone-card__title::after {
+  transform: translateX(4px);
+}
+
 .c-zone-card__desc {
   font-size: var(--type-small);
   line-height: var(--leading-normal);
@@ -1135,6 +1155,25 @@ body:not(.is-menu-open) .c-header__more svg line {
   color: var(--accent-pitch-dim);
 }
 
+/* =========================================================================
+   COMPONENT · ZONE CUE
+   Subordinate heading shown by zonesPage.js when the user arrives at
+   zones.html via a fixture deep-link. Pairs with the fixture banner to
+   make the next step explicit: "you've chosen the match — now choose
+   where to watch it". Hidden by default; revealed alongside the banner.
+   ========================================================================= */
+.c-zone-cue {
+  margin: 0 0 var(--space-8);
+  font-family: var(--font-display);
+  font-size: var(--type-card-title);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-primary);
+  text-align: center;
+}
+
 /* --- The Feed --- */
 .c-zone-list {
   display: flex;
@@ -1361,8 +1400,10 @@ body:not(.is-menu-open) .c-header__more svg line {
   font-size: 2.5rem;
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
-  color: rgba(255, 255, 255, 0.8);
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  color: var(--accent-pitch-dim);
+  text-shadow:
+    0 0 12px rgba(57, 255, 20, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.55);
   pointer-events: none;
   z-index: var(--z-raised);
   animation: pulseChevron 2s infinite var(--ease-in-out);
@@ -1748,6 +1789,17 @@ body:not(.is-menu-open) .c-header__more svg line {
 
 .c-stepper:focus-within {
   border-color: var(--border-accent);
+}
+
+/* Subtle attention cue applied by booking.js when the user arrives at
+   book.html with BOTH match and zone pre-selected — the stepper is the only
+   required field remaining. JS removes the class on first interaction so
+   the cue never lingers once the user has engaged. */
+.c-stepper--highlight {
+  border-color: var(--border-accent);
+  box-shadow:
+    0 0 0 1px var(--border-accent),
+    0 6px 20px rgba(57, 255, 20, 0.14);
 }
 
 .c-stepper__btn {
