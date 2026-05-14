@@ -1013,6 +1013,128 @@ body:not(.is-menu-open) .c-header__more svg line {
   line-height: var(--leading-tight);
 }
 
+/* =========================================================================
+   COMPONENT · FIXTURE BANNER (zones page)
+   Mounted when the user arrives at zones.html with fixture context. Mirrors
+   the booking-summary glass-card treatment for visual continuity across the
+   funnel (Fixture → Zones → Book).
+   ========================================================================= */
+.c-fixture-banner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  margin-block: 0 var(--space-8);
+  background: rgba(30, 30, 30, 0.5);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--border-hairline);
+  border-top: 1px solid var(--border-accent);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-summary);
+  position: relative;
+  overflow: hidden;
+  animation: slideInDown var(--duration-deliberate) var(--ease-out);
+}
+
+/* Diagonal sheen — matches the summary card's signature highlight band. */
+.c-fixture-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    145deg,
+    transparent 0%,
+    transparent 30%,
+    rgba(57, 255, 20, 0.04) 32%,
+    rgba(57, 255, 20, 0.09) 45%,
+    rgba(197, 160, 89, 0.05) 50%,
+    rgba(57, 255, 20, 0.04) 55%,
+    transparent 58%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Soft blur orb — same Pitch/Mill radial as the summary, mirrored to the
+   opposite corner so two adjacent surfaces don't render identically. */
+.c-fixture-banner::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  right: -15%;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(
+    circle,
+    rgba(57, 255, 20, 0.18) 0%,
+    rgba(197, 160, 89, 0.06) 40%,
+    transparent 70%
+  );
+  filter: blur(50px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.c-fixture-banner__match {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.c-fixture-banner__flag {
+  width: 28px;
+  aspect-ratio: 3 / 2;
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-overlay);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.c-fixture-banner__slug {
+  font-family: var(--font-display);
+  font-size: var(--type-h3);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.c-fixture-banner__hint {
+  position: relative;
+  z-index: 2;
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.c-fixture-banner__change {
+  color: var(--accent-pitch);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.c-fixture-banner__change:hover {
+  color: var(--accent-pitch-dim);
+}
+
 /* --- The Feed --- */
 .c-zone-list {
   display: flex;
@@ -1604,6 +1726,86 @@ body:not(.is-menu-open) .c-header__more svg line {
   outline: none;
 }
 
+/* =========================================================================
+   COMPONENT · STEPPER
+   Numeric stepper with thumb-friendly +/- buttons. Native input retains form
+   semantics (name, required, min/max); buttons are the interaction surface.
+   ========================================================================= */
+.c-stepper {
+  display: grid;
+  grid-template-columns: var(--tap-min) 1fr var(--tap-min);
+  align-items: stretch;
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.c-stepper:hover {
+  border-color: var(--border-strong);
+}
+
+.c-stepper:focus-within {
+  border-color: var(--border-accent);
+}
+
+.c-stepper__btn {
+  font-family: var(--font-display);
+  font-size: var(--type-h2);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--text-primary);
+  background-color: transparent;
+  min-height: var(--tap-min);
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.c-stepper__btn:hover {
+  background-color: var(--surface-overlay);
+}
+
+.c-stepper__btn:active {
+  background-color: var(--surface-overlay);
+  color: var(--accent-pitch);
+  transform: scale(0.92);
+}
+
+.c-stepper__btn:disabled {
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+  background-color: transparent;
+  transform: none;
+}
+
+.c-stepper__input {
+  appearance: none;
+  -moz-appearance: textfield;
+  text-align: center;
+  border: none;
+  background-color: transparent;
+  min-height: var(--tap-min);
+  width: 100%;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: var(--type-body);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.c-stepper__input::-webkit-outer-spin-button,
+.c-stepper__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.c-stepper__input:focus {
+  outline: none;
+}
+
 /* Apply chevron to both Selects */
 #f-zone,
 #f-match {
@@ -1927,4 +2129,274 @@ body:not(.is-menu-open) .c-header__more svg line {
 .p-fixtures__footer > p {
   color: var(--text-secondary);
   font-size: var(--type-small);
+}
+
+/* =========================================================================
+   RESPONSIVE · STATS-GRID SYMMETRY GUARD (phablet range)
+   With exactly four stat tiles, the default auto-fit grid produces a 3+1
+   orphan at content widths 444px–595px (viewport ~476px–627px). This
+   range query pins the grid to a 2×2 symmetric layout across the phablet
+   range, eliminating the orphan without modifying the auto-fit fallback
+   at small-phone widths (<480px) or the explicit 4-col layout at tablet+
+   (≥768px below). Result: tiles render as 1×4 → 2×2 → 1×4 across all
+   viewports — symmetric at every breakpoint.
+   ========================================================================= */
+@media (min-width: 480px) and (max-width: 767px) {
+  .c-stats-band__list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* =========================================================================
+   RESPONSIVE · TABLET (≥768px)
+   Multi-column transitions, hero presence, breathing room. Mobile defaults
+   above this block are never mutated — only overridden inside the
+   media query so the mobile-first contract is preserved.
+   ========================================================================= */
+@media (min-width: 768px) {
+  /* ---- Shell ----------------------------------------------------------- */
+  .l-page__content {
+    padding-inline: var(--space-6);
+  }
+
+  /* ---- Hero — taller, more confident ---------------------------------- */
+  .c-hero {
+    min-height: 480px;
+    padding: var(--space-12) var(--space-6) var(--space-8);
+  }
+
+  .c-hero__content {
+    gap: var(--space-5);
+  }
+
+  .c-hero__subtitle {
+    font-size: var(--type-h3);
+  }
+
+  /* ---- Section vertical rhythm ---------------------------------------- */
+  .p-home,
+  .p-fixtures {
+    gap: var(--space-12);
+  }
+
+  /* ---- Featured match card ------------------------------------------- */
+  .c-match-card {
+    padding: var(--space-6);
+  }
+
+  .c-match-card__teams {
+    gap: var(--space-6);
+  }
+
+  .c-match-card__flag {
+    width: 72px;
+  }
+
+  /* ---- Zones teaser → 2-column ---------------------------------------- */
+  .c-zones-teaser__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
+  }
+
+  /* ---- Promo deals → 2-column grid (overrides mobile flex column) ----- */
+  .c-promo-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
+  }
+
+  .c-promo-item {
+    /* mobile capped at 500px to keep portrait composition; in 2-col grid
+       the cell controls width, so the cap is lifted */
+    max-width: none;
+  }
+
+  /* ---- Chip filters — centre when they fit (no need to scroll) -------- */
+  .c-chip-scroll__list {
+    justify-content: center;
+  }
+
+  /* ---- Stats band — explicit 4-col for symmetry --------------------- */
+  /* Replaces reliance on auto-fit so the four tiles render as a clean
+     1×4 row from tablet upward, regardless of how many auto-fit tracks
+     would have been generated at very wide viewports. */
+  .c-stats-band__list {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-4);
+  }
+
+  /* ---- Fixture filter bar — scale full-bleed inset to match page padding */
+  .p-fixtures__filters {
+    margin-inline: calc(var(--space-6) * -1);
+    padding-inline: var(--space-6);
+  }
+
+  /* ---- Booking page --------------------------------------------------- */
+  .p-booking {
+    max-width: 700px;
+  }
+
+  /* Stepper — uncapped on mobile (fills form group); on tablet+ a 240px
+     cap keeps the 1-digit counter from sprawling across the wider form */
+  .c-stepper {
+    max-width: 240px;
+  }
+
+  .c-fixture-banner {
+    padding: var(--space-5) var(--space-6);
+  }
+
+  /* ---- Zones page · cap zone-card width ------------------------------- */
+  /* Stops cards from sprawling across the tablet content area while
+     preserving the mobile portrait composition (media on top, content
+     beneath). Centred so the card sits axially within the page. */
+  .p-zones .c-zone-card {
+    max-width: 700px;
+    margin-inline: auto;
+  }
+
+  /* ---- Visit ---------------------------------------------------------- */
+  .c-visit__body {
+    gap: var(--space-8);
+  }
+}
+
+/* =========================================================================
+   RESPONSIVE · DESKTOP (≥1024px)
+   ========================================================================= */
+@media (min-width: 1024px) {
+  /* ---- Shell ---------------------------------------------------------- */
+  .l-page__content {
+    padding-inline: var(--space-8);
+  }
+
+  /* ---- Hero — landing-page presence ---------------------------------- */
+  .c-hero {
+    min-height: 600px;
+    padding: var(--space-16) var(--space-8) var(--space-12);
+  }
+
+  .c-hero__content {
+    max-width: 640px;
+    gap: var(--space-6);
+  }
+
+  /* ---- Bottom nav — constrain so 4 icons don't sprawl across 1200px --- */
+  .c-nav__list {
+    max-width: 560px;
+  }
+
+  /* ---- Section rhythm ------------------------------------------------- */
+  .p-home,
+  .p-fixtures {
+    gap: var(--space-16);
+  }
+
+  .c-section-header--hero {
+    margin-bottom: var(--space-12);
+  }
+
+  /* ---- Featured match flag ------------------------------------------- */
+  .c-match-card__flag {
+    width: 80px;
+  }
+
+  /* ---- Zones teaser --------------------------------------------------- */
+  .c-zones-teaser__grid {
+    gap: var(--space-8);
+  }
+
+  /* ---- Zone list (zones page) ---------------------------------------- */
+  .c-zone-list {
+    gap: var(--space-20);
+  }
+
+  /* ---- Zones page · feature-reveal layout ---------------------------- */
+  /* Cards stop stacking vertically (which would produce a ~3000px scroll
+     wall on desktop) and switch to a media-beside-content grid. Even-
+     indexed cards flip the media to the right side via `order`, producing
+     an editorial zigzag rhythm. Screen-reader / tab order is unchanged
+     because `order` is purely visual; DOM order stays media → content. */
+  .p-zones .c-zone-card {
+    max-width: none; /* lift the tablet cap */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+    align-items: center;
+  }
+
+  .p-zones .c-zone-card:nth-child(even) .c-zone-card__media {
+    order: 2;
+  }
+
+  /* Meta switches from centred (mobile portrait composition) to start-
+     aligned to match the side-by-side reading flow. */
+  .p-zones .c-zone-meta {
+    justify-content: flex-start;
+  }
+
+  /* CTA stops being full-width — sits as a real desktop button. */
+  .p-zones .c-zone-card .c-button {
+    width: auto;
+    min-width: 240px;
+    align-self: flex-start;
+  }
+
+  /* ---- Promo deals ---------------------------------------------------- */
+  .c-promo-list {
+    gap: var(--space-8);
+  }
+
+  /* ---- Stats ---------------------------------------------------------- */
+  .c-stat-tile {
+    padding: var(--space-6) var(--space-5);
+  }
+
+  .c-stats-band__list {
+    gap: var(--space-5);
+  }
+
+  /* ---- Fixture filter bar — scale inset to match page padding -------- */
+  .p-fixtures__filters {
+    margin-inline: calc(var(--space-8) * -1);
+    padding-inline: var(--space-8);
+  }
+
+  /* ---- Booking page --------------------------------------------------- */
+  .p-booking {
+    max-width: 720px;
+  }
+
+  .c-zone-snapshot__frame {
+    width: 140px;
+  }
+
+  /* ---- Visit ---------------------------------------------------------- */
+  .c-visit {
+    padding: var(--space-16) var(--space-8) var(--space-20);
+  }
+
+  .c-visit__body {
+    gap: var(--space-10);
+  }
+}
+
+/* =========================================================================
+   RESPONSIVE · WIDE DESKTOP (≥1280px)
+   Final breathing-room pass for very large viewports. Typography already
+   self-scales via clamp tokens; only layout chrome needs nudging.
+   ========================================================================= */
+@media (min-width: 1280px) {
+  .l-page__content {
+    padding-inline: var(--space-10);
+  }
+
+  .c-hero {
+    min-height: 680px;
+  }
+
+  .p-fixtures__filters {
+    margin-inline: calc(var(--space-10) * -1);
+    padding-inline: var(--space-10);
+  }
 }

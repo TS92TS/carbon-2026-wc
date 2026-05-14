@@ -1,9 +1,11 @@
 /**
- * Builds a parametric URL for the booking concierge.
- * @param {object} match - The match data object
+ * Internal: builds a `<base>?fixture=...&date=...&time=...&flagA=...&flagB=...`
+ * URL anchored at the given page. Shared by buildBookingURL + buildZonesURL.
+ * @param {string} baseUrl - target page (e.g. "book.html", "zones.html")
+ * @param {object} match - match data object (datetimeIso, teamA, teamB)
+ * @returns {string}
  */
-export function buildBookingURL(match) {
-  const baseUrl = "book.html";
+function buildMatchURL(baseUrl, match) {
   if (!match || !match.datetimeIso) return baseUrl;
 
   const dateObj = new Date(match.datetimeIso);
@@ -29,6 +31,27 @@ export function buildBookingURL(match) {
   });
 
   return `${baseUrl}?${params.toString()}`;
+}
+
+/**
+ * Builds a parametric URL for the booking concierge. Use this for CTAs that
+ * jump straight to the booking form (zone cards, hero "Book Now", etc.).
+ * @param {object} match
+ * @returns {string}
+ */
+export function buildBookingURL(match) {
+  return buildMatchURL("book.html", match);
+}
+
+/**
+ * Builds a parametric URL for the zones page, carrying the fixture forward
+ * so the user can compare zones with full match context. Use this for any
+ * CTA originating from a fixture row or featured-match card.
+ * @param {object} match
+ * @returns {string}
+ */
+export function buildZonesURL(match) {
+  return buildMatchURL("zones.html", match);
 }
 
 /**

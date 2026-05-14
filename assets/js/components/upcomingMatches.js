@@ -1,4 +1,4 @@
-import { buildBookingURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
+import { buildZonesURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
 
 let matchCache = null;
 const DISPLAY_LIMIT = 4;
@@ -94,11 +94,11 @@ function updateUI(matches, container) {
           minute: "2-digit",
         });
 
-    let bookingUrl = "#";
+    let bookingUrl = "zones.html";
     try {
-      bookingUrl = buildBookingURL(match);
+      bookingUrl = buildZonesURL(match);
     } catch (e) {
-      console.warn("upcomingMatches: buildBookingURL failed", e);
+      console.warn("upcomingMatches: buildZonesURL failed", e);
     }
 
     const li = document.createElement("li");

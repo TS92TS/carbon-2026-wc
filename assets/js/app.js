@@ -10,6 +10,7 @@ import { renderFeaturedMatch } from "./components/featuredMatch.js";
 import { renderUpcomingList } from "./components/upcomingMatches.js";
 import { initFixturesPage } from "./components/fixturesPage.js";
 import { initZoneSliders } from "./components/zoneSlider.js";
+import { initZonesPage } from "./components/zonesPage.js";
 import { initScrollVideos } from "./lib/video.js";
 import { initBookingConcierge } from "./components/booking.js";
 import { marqueeState } from "./data/content.js";
@@ -25,6 +26,10 @@ async function boot() {
   // ---- 2. PAGE-SPECIFIC · only run if the page has markers --------------
   if (document.querySelector('[data-component="zone-slider"]')) {
     initZoneSliders();
+  }
+
+  if (document.querySelector('[data-component="fixture-banner"]')) {
+    initZonesPage();
   }
 
   if (document.querySelector('[data-component="scroll-video"]')) {

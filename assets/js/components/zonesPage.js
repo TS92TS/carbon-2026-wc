@@ -1,0 +1,68 @@
+/* =========================================================================
+   COMPONENT · ZONES PAGE
+   When the user lands on zones.html via a fixture-row deep-link, this module:
+     1. Mounts a "you're booking for X match" banner above the zone list.
+     2. Enhances every <a href^="book.html"> on the page so the fixture
+        params are carried forward to the booking form.
+   When the user lands on zones.html with no fixture context, the function is
+   a no-op — the page works exactly as it always has.
+   ========================================================================= */
+
+import { safeBackgroundUrl } from "../lib/urlHelpers.js";
+
+const CARRY_KEYS = ["fixture", "date", "time", "flagA", "flagB"];
+
+function formatBannerDate(iso) {
+  if (!iso) return "";
+  const d = new Date(`${iso}T12:00:00`);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
+
+export function initZonesPage() {
+  const banner = document.querySelector('[data-component="fixture-banner"]');
+  if (!banner) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const fixture = params.get("fixture");
+  if (!fixture) return; // No fixture context — banner stays hidden, hrefs untouched.
+
+  // 1. Banner content
+  const slugEl = document.getElementById("banner-slug");
+  const metaEl = document.getElementById("banner-meta");
+  const flagAEl = document.getElementById("banner-flag-a");
+  const flagBEl = document.getElementById("banner-flag-b");
+
+  if (slugEl) slugEl.textContent = fixture.replace(/-/g, " ").toUpperCase();
+  if (metaEl) {
+    const parts = [formatBannerDate(params.get("date")), params.get("time")]
+      .filter(Boolean);
+    metaEl.textContent = parts.join(" · ");
+  }
+  if (flagAEl) flagAEl.style.backgroundImage = safeBackgroundUrl(params.get("flagA"));
+  if (flagBEl) flagBEl.style.backgroundImage = safeBackgroundUrl(params.get("flagB"));
+
+  banner.removeAttribute("hidden");
+
+  // 2. Propagate fixture context to every book.html link on the page.
+  //    Existing query params on each link (e.g. ?zone=carbon) are preserved.
+  const carry = new URLSearchParams();
+  CARRY_KEYS.forEach((k) => {
+    const v = params.get(k);
+    if (v) carry.set(k, v);
+  });
+
+  document.querySelectorAll('a[href^="book.html"]').forEach((a) => {
+    const href = a.getAttribute("href") || "book.html";
+    const queryStart = href.indexOf("?");
+    const existing = new URLSearchParams(
+      queryStart >= 0 ? href.slice(queryStart + 1) : "",
+    );
+    carry.forEach((v, k) => existing.set(k, v));
+    a.setAttribute("href", `book.html?${existing.toString()}`);
+  });
+}

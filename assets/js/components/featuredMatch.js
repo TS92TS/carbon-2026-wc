@@ -1,4 +1,4 @@
-import { buildBookingURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
+import { buildZonesURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
 
 /**
  * Renders the primary Hero match card with England priority.
@@ -77,10 +77,10 @@ export function renderFeaturedMatch(matchPayload) {
   // 5. UX ENHANCEMENT: Contextual Button Logic
   if (els.bookingBtn) {
     try {
-      els.bookingBtn.href = buildBookingURL(featured);
+      els.bookingBtn.href = buildZonesURL(featured);
     } catch (urlErr) {
-      console.warn("featuredMatch: buildBookingURL failed", urlErr);
-      els.bookingBtn.href = "#";
+      console.warn("featuredMatch: buildZonesURL failed", urlErr);
+      els.bookingBtn.href = "zones.html";
     }
 
     const status = safe(featured.badge).toLowerCase();

@@ -1,4 +1,4 @@
-import { buildBookingURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
+import { buildZonesURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
 
 const safe = (v) => (v === undefined || v === null ? "" : v);
 
@@ -186,11 +186,11 @@ function createFixtureRow(match, options = {}) {
         month: "short",
       });
 
-  let bookingUrl = "#";
+  let bookingUrl = "zones.html";
   try {
-    bookingUrl = buildBookingURL(match);
+    bookingUrl = buildZonesURL(match);
   } catch (e) {
-    console.warn("fixturesPage: buildBookingURL failed", e);
+    console.warn("fixturesPage: buildZonesURL failed", e);
   }
 
   const isEngland =

@@ -21,6 +21,7 @@ export async function initBookingConcierge() {
     zone: document.querySelector("#f-zone"),
     date: document.querySelector("#f-date"),
     time: document.querySelector("#f-time"),
+    guests: document.querySelector("#f-guests"),
     summary: document.querySelector("#booking-summary"),
     summaryTitle: document.querySelector("#summary-title"),
     summaryMeta: document.querySelector("#summary-meta"),
@@ -97,6 +98,63 @@ export async function initBookingConcierge() {
     if (Number.isFinite(n) && n >= 1 && n <= 20) {
       els.guests.value = String(n);
     }
+  }
+
+  // Stepper: must initialise BEFORE the await below so the +/- buttons remain
+  // functional even when match data is unavailable.
+  const stepper = document.querySelector('[data-component="stepper"]');
+  if (stepper) {
+    const stepInput = stepper.querySelector("input");
+    const stepBtns = stepper.querySelectorAll("[data-step]");
+    const stepMin = parseInt(stepInput.min, 10) || 1;
+    const stepMax = parseInt(stepInput.max, 10) || 20;
+
+    const syncStepperDisabled = () => {
+      const current = parseInt(stepInput.value, 10) || stepMin;
+      stepBtns.forEach((btn) => {
+        const delta = parseInt(btn.dataset.step, 10);
+        const next = current + delta;
+        btn.disabled = next < stepMin || next > stepMax;
+      });
+    };
+
+    stepper.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-step]");
+      if (!btn || btn.disabled) return;
+      const delta = parseInt(btn.dataset.step, 10);
+      const current = parseInt(stepInput.value, 10) || stepMin;
+      const next = Math.max(stepMin, Math.min(stepMax, current + delta));
+      if (next !== current) {
+        stepInput.value = String(next);
+        stepInput.dispatchEvent(new Event("change", { bubbles: true }));
+        syncStepperDisabled();
+      }
+    });
+
+    // Manual typing: strip non-digits as the user types but don't clamp yet
+    // (so they can transition through invalid intermediate states like "").
+    stepInput.addEventListener("input", () => {
+      const cleaned = stepInput.value.replace(/\D/g, "");
+      if (cleaned !== stepInput.value) stepInput.value = cleaned;
+      syncStepperDisabled();
+    });
+
+    // On blur, enforce min/max. Empty or sub-min snaps to min; over-max snaps
+    // to max. Avoids hostile mid-edit autocorrect.
+    stepInput.addEventListener("blur", () => {
+      const n = parseInt(stepInput.value, 10);
+      let clamped;
+      if (!Number.isFinite(n) || n < stepMin) clamped = stepMin;
+      else if (n > stepMax) clamped = stepMax;
+      else clamped = n;
+      if (String(clamped) !== stepInput.value) {
+        stepInput.value = String(clamped);
+        stepInput.dispatchEvent(new Event("change", { bubbles: true }));
+        syncStepperDisabled();
+      }
+    });
+
+    syncStepperDisabled();
   }
 
   if (els.match) {
