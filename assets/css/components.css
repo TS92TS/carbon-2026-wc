@@ -874,6 +874,13 @@
   display: flex;
   flex-direction: column;
 
+  /* Safety net for short viewports (iPhone SE, landscape phones): allow the
+     overlay to scroll if link list + footer exceed the viewport, so the
+     social row at the bottom is always reachable. overscroll-behavior keeps
+     the scroll contained — no chaining back to the (already-locked) body. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
   /* Initial hidden state */
   opacity: 0;
   visibility: hidden;
@@ -946,9 +953,49 @@
 }
 
 .c-mobile-nav__footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   border-top: 1px solid var(--border-hairline);
   padding-top: var(--space-6);
   color: var(--text-tertiary);
+}
+
+/* =========================================================================
+   COMPONENT · MOBILE-NAV SOCIALS
+   Horizontal row of icon-only links in the overlay footer. 44px tap targets
+   keep them comfortably hittable beside the dense link list above. Hover
+   shifts to Pitch Green so they read as interactive, matching the rest of
+   the brand's interaction language.
+   ========================================================================= */
+.c-mobile-nav__socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.c-mobile-nav__social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.c-mobile-nav__social:hover,
+.c-mobile-nav__social:focus-visible {
+  color: var(--accent-pitch);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.c-mobile-nav__social svg {
+  width: 22px;
+  height: 22px;
 }
 
 /* =========================================================================
