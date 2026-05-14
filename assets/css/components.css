@@ -919,15 +919,15 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-2);
 }
 
 .c-mobile-nav__link {
   display: flex; /* ensure tap target fills available width */
   align-items: center;
   min-height: var(--tap-min); /* 44px floor */
-  padding-block: var(--space-2);
-  font-size: var(--type-display);
+  padding-block: var(--space-1);
+  font-size: var(--type-hero);
   text-decoration: none;
   color: var(--text-tertiary); /* Dimmed when not active */
   transition: color var(--duration-fast) var(--ease-out);
@@ -981,7 +981,7 @@
   width: var(--tap-min);
   height: var(--tap-min);
   border-radius: var(--radius-md);
-  color: var(--text-secondary);
+  color: var(--accent-pitch-dim);
   transition:
     color var(--duration-fast) var(--ease-out),
     background-color var(--duration-fast) var(--ease-out);
@@ -994,8 +994,8 @@
 }
 
 .c-mobile-nav__social svg {
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
 }
 
 /* =========================================================================
@@ -2383,6 +2383,10 @@ body:not(.is-menu-open) .c-header__more svg line {
   /* ---- Bottom nav — constrain so 4 icons don't sprawl across 1200px --- */
   .c-nav__list {
     max-width: 560px;
+  }
+
+  .c-mobile-nav__link {
+    font-size: var(--type-display);
   }
 
   /* ---- Section rhythm ------------------------------------------------- */
