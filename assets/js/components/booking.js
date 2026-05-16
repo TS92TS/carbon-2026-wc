@@ -1,4 +1,4 @@
-import { getMatchData } from "../lib/matchData.js";
+import { getMatchData, formatMatchDateTime } from "../lib/matchData.js";
 import { safeBackgroundUrl } from "../lib/urlHelpers.js";
 
 const IMG = new URL("../../img/", import.meta.url).href;
@@ -203,35 +203,34 @@ export async function initBookingConcierge() {
   const fragment = document.createDocumentFragment();
 
   const createOption = (m) => {
-    if (!m?.datetimeIso) return null;
+    const fmt = formatMatchDateTime(m?.datetimeIso);
+    if (!fmt) return null;
+
     const teamA = safe(m.teamA?.name, "TBD");
     const teamB = safe(m.teamB?.name, "TBD");
     const slug = `${teamA} vs ${teamB}`;
 
-    if (seenSlugs.has(slug)) return null;
-    seenSlugs.add(slug);
-
-    const [datePart, timePart = ""] = m.datetimeIso.split("T");
-    const d = new Date(m.datetimeIso);
-    // FIX: Added weekday to dropdown label for consistency with site cards
-    const dateLabel = isNaN(d)
-      ? ""
-      : d.toLocaleDateString("en-GB", {
-          weekday: "short",
-          day: "numeric",
-          month: "short",
-        });
+    // Dedupe by teams + instant so the same fixture appearing in both the
+    // England and tournament arrays collapses, but a rematch (group + KO)
+    // remains addressable.
+    const dedupeKey = `${slug}@${fmt.iso}`;
+    if (seenSlugs.has(dedupeKey)) return null;
+    seenSlugs.add(dedupeKey);
 
     const opt = document.createElement("option");
+    // Value remains a stable, machine-parseable identifier for the booking
+    // engine. `date` / `time` are Europe/London — they populate the form's
+    // <input type="date"> / <input type="time"> and must agree with what the
+    // user just read in the option label.
     opt.value = JSON.stringify({
       slug,
-      date: datePart,
-      time: timePart.substring(0, 5),
+      date: fmt.dateInputValue,
+      time: fmt.time,
       flagA: safe(m.teamA?.flag),
       flagB: safe(m.teamB?.flag),
     });
 
-    opt.textContent = `${teamA} v ${teamB} — ${dateLabel}`;
+    opt.textContent = `${teamA} v ${teamB} — ${fmt.dateShort} · ${fmt.time}`;
 
     if (
       fixtureParam &&

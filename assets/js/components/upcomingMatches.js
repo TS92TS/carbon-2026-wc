@@ -1,4 +1,5 @@
 import { buildZonesURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
+import { formatMatchDateTime } from "../lib/matchData.js";
 
 let matchCache = null;
 const DISPLAY_LIMIT = 4;
@@ -78,21 +79,9 @@ function updateUI(matches, container) {
   const fragment = document.createDocumentFragment();
 
   limitedMatches.forEach((match) => {
-    const dateObj = new Date(safe(match.datetimeIso));
-    // FIX: Restored weekday to match previous site behaviour
-    const dateStr = isNaN(dateObj)
-      ? ""
-      : dateObj.toLocaleDateString("en-GB", {
-          weekday: "short",
-          day: "numeric",
-          month: "short",
-        });
-    const timeStr = isNaN(dateObj)
-      ? ""
-      : dateObj.toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+    const fmt = formatMatchDateTime(match.datetimeIso);
+    const dateStr = fmt ? fmt.dateShort : "";
+    const timeStr = fmt ? fmt.time : "";
 
     let bookingUrl = "zones.html";
     try {

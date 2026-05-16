@@ -1,6 +1,11 @@
+import { formatMatchDateTime } from "./matchData.js";
+
 /**
  * Internal: builds a `<base>?fixture=...&date=...&time=...&flagA=...&flagB=...`
  * URL anchored at the given page. Shared by buildBookingURL + buildZonesURL.
+ * The `date` and `time` params are emitted in Europe/London — they populate
+ * the booking form's <input type="date"> / <input type="time"> directly, so
+ * they must match what the user saw in the originating feed.
  * @param {string} baseUrl - target page (e.g. "book.html", "zones.html")
  * @param {object} match - match data object (datetimeIso, teamA, teamB)
  * @returns {string}
@@ -8,24 +13,17 @@
 function buildMatchURL(baseUrl, match) {
   if (!match || !match.datetimeIso) return baseUrl;
 
-  const dateObj = new Date(match.datetimeIso);
-  if (isNaN(dateObj.getTime())) return baseUrl;
+  const fmt = formatMatchDateTime(match.datetimeIso);
+  if (!fmt) return baseUrl;
 
   const teamA = match.teamA?.name || "tbd";
   const teamB = match.teamB?.name || "tbd";
   const slug = `${teamA}-vs-${teamB}`.toLowerCase().replace(/\s+/g, "-");
 
-  const date = dateObj.toISOString().split("T")[0];
-  const time = dateObj.toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-
   const params = new URLSearchParams({
     fixture: slug,
-    date: date,
-    time: time,
+    date: fmt.dateInputValue,
+    time: fmt.time,
     flagA: match.teamA?.flag || "",
     flagB: match.teamB?.flag || "",
   });

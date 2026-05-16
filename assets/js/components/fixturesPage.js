@@ -1,4 +1,5 @@
 import { buildZonesURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
+import { formatMatchDateTime } from "../lib/matchData.js";
 
 const safe = (v) => (v === undefined || v === null ? "" : v);
 
@@ -121,33 +122,33 @@ function renderFixtures(matches, container, options = {}) {
     (a, b) => new Date(a.datetimeIso) - new Date(b.datetimeIso),
   );
 
-  // 3. Single-pass partition by date
+  // 3. Single-pass partition by UK calendar date (Europe/London)
+  //    Using the raw ISO date here would mis-bucket late kick-offs that cross
+  //    midnight UTC but not midnight London (and vice versa).
   const groups = new Map();
   cleanMatches.forEach((m) => {
-    const dateKey = m.datetimeIso.split("T")[0];
-    if (!groups.has(dateKey)) groups.set(dateKey, []);
-    groups.get(dateKey).push(m);
+    const fmt = formatMatchDateTime(m.datetimeIso);
+    if (!fmt) return;
+    let bucket = groups.get(fmt.dateInputValue);
+    if (!bucket) {
+      bucket = { dateLong: fmt.dateLong, matches: [] };
+      groups.set(fmt.dateInputValue, bucket);
+    }
+    bucket.matches.push(m);
   });
 
   // 4. DocumentFragment build
   const fragment = document.createDocumentFragment();
 
-  groups.forEach((dayMatches, dateKey) => {
+  groups.forEach(({ dateLong, matches }) => {
     if (!skipDateHeaders) {
       const dateHeader = document.createElement("div");
       dateHeader.className = "p-fixtures__date-header";
-      const d = new Date(dateKey + "T12:00:00");
-      dateHeader.textContent = isNaN(d)
-        ? dateKey
-        : d.toLocaleDateString("en-GB", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          });
+      dateHeader.textContent = dateLong;
       fragment.appendChild(dateHeader);
     }
 
-    dayMatches.forEach((match) => {
+    matches.forEach((match) => {
       const row = createFixtureRow(match, { isEnglandStrip });
       if (isListContainer) {
         const li = document.createElement("li");
@@ -168,23 +169,10 @@ function renderFixtures(matches, container, options = {}) {
 /* ------------------------------------------------------------------ */
 function createFixtureRow(match, options = {}) {
   const { isEnglandStrip = false } = options;
-  const dateObj = new Date(safe(match.datetimeIso));
-
-  const timeStr = isNaN(dateObj)
-    ? ""
-    : dateObj.toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
+  const fmt = formatMatchDateTime(match.datetimeIso);
+  const timeStr = fmt ? fmt.time : "";
   // For England strip: include full date + day in meta
-  const dateStr = isNaN(dateObj)
-    ? ""
-    : dateObj.toLocaleDateString("en-GB", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-      });
+  const dateStr = fmt ? fmt.dateShort : "";
 
   let bookingUrl = "zones.html";
   try {

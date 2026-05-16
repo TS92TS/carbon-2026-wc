@@ -1,4 +1,5 @@
 import { buildZonesURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
+import { formatMatchDateTime } from "../lib/matchData.js";
 
 /**
  * Renders the primary Hero match card with England priority.
@@ -29,21 +30,10 @@ export function renderFeaturedMatch(matchPayload) {
     return;
   }
 
-  // 3. DATA PREPARATION (Optimized formatting)
-  const matchDate = new Date(safe(featured.datetimeIso));
-  const dateFormatted = isNaN(matchDate)
-    ? ""
-    : matchDate.toLocaleDateString("en-GB", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-      });
-  const timeFormatted = isNaN(matchDate)
-    ? ""
-    : matchDate.toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+  // 3. DATA PREPARATION — Europe/London via shared formatter
+  const fmt = formatMatchDateTime(featured.datetimeIso);
+  const dateFormatted = fmt ? fmt.dateShort : "";
+  const timeFormatted = fmt ? fmt.time : "";
 
   // 4. DOM INJECTION (Scoped Lookups)
   const els = {

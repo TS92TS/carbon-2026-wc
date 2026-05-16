@@ -9,18 +9,17 @@
    ========================================================================= */
 
 import { safeBackgroundUrl } from "../lib/urlHelpers.js";
+import { formatMatchDateTime } from "../lib/matchData.js";
 
 const CARRY_KEYS = ["fixture", "date", "time", "flagA", "flagB"];
 
+// The `date` URL param is already a Europe/London YYYY-MM-DD (emitted by
+// urlHelpers.buildMatchURL). Anchor it to noon UTC so the formatter's
+// London-tz conversion can never roll across a day boundary.
 function formatBannerDate(iso) {
   if (!iso) return "";
-  const d = new Date(`${iso}T12:00:00`);
-  if (isNaN(d)) return iso;
-  return d.toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
+  const fmt = formatMatchDateTime(`${iso}T12:00:00Z`);
+  return fmt ? fmt.dateShort : iso;
 }
 
 export function initZonesPage() {
