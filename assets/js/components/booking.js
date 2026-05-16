@@ -30,6 +30,7 @@ export async function initBookingConcierge() {
     snapshot: document.querySelector("#zone-snapshot"),
     snapshotImg: document.querySelector("#zone-snapshot-img"),
     snapshotLabel: document.querySelector("#zone-snapshot-label"),
+    policy: document.querySelector("#match-policy"),
   };
 
   if (!els.form) return;
@@ -54,7 +55,10 @@ export async function initBookingConcierge() {
       els.flagA.style.backgroundImage = safeBackgroundUrl(info.flagA);
     if (els.flagB)
       els.flagB.style.backgroundImage = safeBackgroundUrl(info.flagB);
-    const metaParts = [info.date, info.time].filter(Boolean);
+    // Prefer the readable label ("Mon 12 Jun") for parity with the dropdown
+    // text; fall back to the ISO date if a legacy caller omits it.
+    const dateText = info.dateLabel || info.date;
+    const metaParts = [dateText, info.time].filter(Boolean);
     if (els.summaryMeta) els.summaryMeta.textContent = metaParts.join(" · ");
     if (!els.zone || !els.zone.value) {
       if (els.snapshot) els.snapshot.setAttribute("hidden", "");
@@ -73,6 +77,60 @@ export async function initBookingConcierge() {
     if (els.snapshotLabel) els.snapshotLabel.textContent = data.name;
   };
 
+  /* -----------------------------------------------------------------------
+     STATE-DRIVEN LOCK
+     A fixture binds Date+Time to the canonical kickoff. `readonly` (NOT
+     `disabled`) preserves the values in the FormData payload for the Sheets
+     backend; the `.is-locked` class layers the visual + pointer-event lock.
+     ----------------------------------------------------------------------- */
+  const lockDateTime = () => {
+    if (els.date) {
+      els.date.setAttribute("readonly", "");
+      els.date.classList.add("is-locked");
+    }
+    if (els.time) {
+      els.time.setAttribute("readonly", "");
+      els.time.classList.add("is-locked");
+    }
+    if (els.policy) els.policy.removeAttribute("hidden");
+  };
+
+  /**
+   * Build the canonical {slug,date,time,flagA,flagB} info object and apply
+   * it to both the summary panel and the (now locked) form inputs. Single
+   * write-through point — guarantees the displayed text and the form values
+   * are sourced from the same `formatMatchDateTime` call.
+   */
+  const applyCanonicalMatch = (match) => {
+    const fmt = formatMatchDateTime(match.datetimeIso);
+    if (!fmt) return;
+    const info = {
+      slug: `${safe(match.teamA?.name, "TBD")} vs ${safe(match.teamB?.name, "TBD")}`,
+      date: fmt.dateInputValue,
+      time: fmt.time,
+      dateLabel: fmt.dateShort,
+      flagA: safe(match.teamA?.flag),
+      flagB: safe(match.teamB?.flag),
+    };
+    // Select the matching <option> by full value (slug + date + time) so the
+    // rematch case resolves to the exact canonical entry. Skipped silently
+    // if the dropdown hasn't been populated yet — callers always invoke
+    // after population.
+    if (els.match) {
+      const target = JSON.stringify(info);
+      for (const opt of els.match.options) {
+        if (opt.value === target) {
+          opt.selected = true;
+          break;
+        }
+      }
+    }
+    if (els.date) els.date.value = info.date;
+    if (els.time) els.time.value = info.time;
+    updateMatchUI(info);
+    lockDateTime();
+  };
+
   // Apply zone BEFORE match so updateMatchUI's snapshot-hidden check sees the
   // populated state and doesn't toggle the snapshot off then on again.
   if (zoneParam && els.zone) {
@@ -80,18 +138,9 @@ export async function initBookingConcierge() {
     updateZoneUI(zoneParam);
   }
 
-  if (fixtureParam) {
-    const matchInfo = {
-      slug: fixtureParam.replace(/-/g, " "),
-      date: params.get("date"),
-      time: params.get("time"),
-      flagA: params.get("flagA"),
-      flagB: params.get("flagB"),
-    };
-    updateMatchUI(matchInfo);
-    if (matchInfo.date && els.date) els.date.value = matchInfo.date;
-    if (matchInfo.time && els.time) els.time.value = matchInfo.time;
-  }
+  // NOTE: URL `date`/`time` params are intentionally NOT applied here. Any
+  // value the user could craft (?date=2099-01-01&time=14:00) is ignored;
+  // the canonical kickoff is sourced from matchData below.
 
   if (guestsParam && els.guests) {
     const n = parseInt(guestsParam, 10);
@@ -226,18 +275,18 @@ export async function initBookingConcierge() {
       slug,
       date: fmt.dateInputValue,
       time: fmt.time,
+      dateLabel: fmt.dateShort,
       flagA: safe(m.teamA?.flag),
       flagB: safe(m.teamB?.flag),
     });
 
     opt.textContent = `${teamA} v ${teamB} — ${fmt.dateShort} · ${fmt.time}`;
 
-    if (
-      fixtureParam &&
-      slug.toLowerCase() === fixtureParam.replace(/-/g, " ").toLowerCase()
-    ) {
-      opt.selected = true;
-    }
+    // NOTE: Auto-selecting here on slug-only match would pick the wrong
+    // option in the rematch case (group + KO with identical teams).
+    // Selection is performed centrally in applyCanonicalMatch using the full
+    // canonical value (slug + date + time), guaranteeing dropdown text and
+    // form values agree.
     return opt;
   };
 
@@ -267,19 +316,78 @@ export async function initBookingConcierge() {
   }
 
   if (els.match) {
+    // Single disabled+hidden placeholder — the dropdown is required, so the
+    // user must pick a real fixture. No "general booking" escape hatch:
+    // every reservation must be bound to a specific kickoff.
     els.match.innerHTML =
-      '<option value="" disabled selected hidden>Watching a specific match?</option>';
+      '<option value="" disabled selected hidden>Select your match...</option>';
     els.match.appendChild(fragment);
+  }
+
+  /* -----------------------------------------------------------------------
+     CANONICAL LOOKUP — closes the URL-tampering vector. The URL contributes
+     ONLY `fixture` (slug) as a routing hint; `date`/`time` URL params are
+     treated as untrusted disambiguation hints at most. The authoritative
+     kickoff is always derived from matchData via formatMatchDateTime.
+     ----------------------------------------------------------------------- */
+  const findCanonicalMatch = (data, fixtureSlug, hintDate) => {
+    if (!fixtureSlug) return null;
+    const norm = fixtureSlug.toLowerCase();
+    const pool = [
+      ...(Array.isArray(data.england) ? data.england : []),
+      ...(Array.isArray(data.upcoming) ? data.upcoming : []),
+    ];
+    const candidates = pool.filter((m) => {
+      const slug = `${m.teamA?.name || ""}-vs-${m.teamB?.name || ""}`
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+      return slug === norm;
+    });
+    if (candidates.length <= 1) return candidates[0] || null;
+    // Rematch case (group + KO with same teams): use the URL date param ONLY
+    // as a tie-breaker against the matchData calendar. If it doesn't match,
+    // fall back to chronological order — never trust the URL outright.
+    if (hintDate) {
+      const dateMatch = candidates.find(
+        (m) => formatMatchDateTime(m.datetimeIso)?.dateInputValue === hintDate,
+      );
+      if (dateMatch) return dateMatch;
+    }
+    return candidates.sort(
+      (a, b) => new Date(a.datetimeIso) - new Date(b.datetimeIso),
+    )[0];
+  };
+
+  if (fixtureParam) {
+    const canonical = findCanonicalMatch(
+      matchData,
+      fixtureParam,
+      params.get("date"),
+    );
+    if (canonical) {
+      // Selects the exact matching <option> (rematch-safe via full-value
+      // equality), overwrites any URL-supplied date/time with the canonical
+      // kickoff, and engages the lock.
+      applyCanonicalMatch(canonical);
+    }
+    // If lookup failed (stale link, removed fixture), do nothing — the form
+    // stays unlocked and the user can pick from the dropdown.
   }
 
   if (els.match) {
     els.match.addEventListener("change", (e) => {
-      if (!e.target.value) return;
+      const raw = e.target.value;
+      // Placeholder cannot fire change (disabled+hidden), but a defensive
+      // guard keeps the handler total in case of future markup changes.
+      if (!raw) return;
       try {
-        const info = JSON.parse(e.target.value);
+        const info = JSON.parse(raw);
+        // Forcibly overwrite — prevents desync if the user had previously
+        // typed a custom date and only afterwards picked a match.
         if (els.date) els.date.value = info.date;
         if (els.time) els.time.value = info.time;
         updateMatchUI(info);
+        lockDateTime();
       } catch (err) {
         console.warn("Booking: Failed to parse match selection", err);
       }

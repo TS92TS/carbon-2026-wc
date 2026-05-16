@@ -1814,6 +1814,64 @@ body:not(.is-menu-open) .c-header__more svg line {
   outline: none;
 }
 
+/* Locked state — set by booking.js when a fixture is selected and the
+   date/time are pinned to canonical kickoff. We deliberately do NOT use the
+   `disabled` attribute (it strips values from the FormData payload); the
+   `readonly` attribute keeps the values submittable while pointer-events
+   prevents the native pickers from opening. */
+.c-form-input.is-locked {
+  background-color: var(--surface-base);
+  border-color: var(--border-hairline);
+  opacity: 0.7;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.c-form-input.is-locked:focus-visible {
+  outline: none;
+  border-color: var(--border-hairline);
+}
+
+/* Label suffix — JS only toggles one class on the input; :has() lets the
+   sibling caption pick up the lock state. Accent green tracks the rest of
+   the lock-state language. */
+.c-form-group:has(.c-form-input.is-locked) > .u-caption::after {
+  content: " · LOCKED";
+  color: var(--accent-pitch);
+  letter-spacing: var(--tracking-widest);
+}
+
+/* Policy micro-copy beneath the date/time row. Hidden by default; revealed
+   by booking.js whenever a fixture is selected. Left-edge accent + small
+   padlock make the rationale legible at a glance without competing with
+   the primary form controls. */
+.c-policy-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-left: 2px solid var(--accent-pitch);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+  line-height: var(--leading-snug);
+}
+
+.c-policy-note[hidden] {
+  display: none;
+}
+
+.c-policy-note__icon {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  color: var(--accent-pitch);
+}
+
 /* =========================================================================
    COMPONENT · STEPPER
    Numeric stepper with thumb-friendly +/- buttons. Native input retains form
