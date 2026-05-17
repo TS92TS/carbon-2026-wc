@@ -1,25 +1,115 @@
 import { buildZonesURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
-import { formatMatchDateTime } from "../lib/matchData.js";
+import {
+  formatMatchDateTime,
+  getLondonWeekday,
+  isKnockoutMatch,
+  getDetailedStageLabel,
+} from "../lib/matchData.js";
 
 let matchCache = null;
 const DISPLAY_LIMIT = 4;
 
-export function renderUpcomingList(data) {
-  const container = document.getElementById("upcoming-fixtures-list");
-  const filterNav = document.getElementById("fixture-filters");
-  if (!container || !data) return;
+// Mirrors fixturesPage.js — must stay in lockstep with the filter chips
+// rendered in fixtures.html and index.html. Any new filter key needs to be
+// added here AND in fixturesPage.js until we lift this to a shared module.
+const VALID_FILTERS = new Set(["all", "england", "knockout", "weekend"]);
 
+/**
+ * Render the upcoming fixtures feed.
+ * Automatically hooks URL state data to preserve filter intent across page jumps.
+ */
+export function renderUpcomingList(data) {
+  const filterNav = document.getElementById("fixture-filters");
+
+  // DEFENSIVE FALLBACK: Check common container IDs to support multi-page deployments safely
+  const container =
+    document.getElementById("upcoming-fixtures-list") ||
+    document.getElementById("fixtures-list") ||
+    document.getElementById("all-fixtures-container");
+
+  if (!data) return;
   matchCache = data;
+
+  // === INTENT STATE RESOLUTION CASCADE ===
+  const params = new URLSearchParams(window.location.search);
+  const urlFilter = params.get("filter");
+  const htmlDefault = filterNav ? filterNav.dataset.defaultFilter : null;
+  let activeFilter = urlFilter || htmlDefault || "england";
+  // Hostile or stale ?filter=… values are rejected so the chip-active
+  // state, the URL, and the rendered list never desync.
+  if (!VALID_FILTERS.has(activeFilter)) {
+    activeFilter = "england";
+  }
 
   if (filterNav && !filterNav.dataset.initialized) {
     setupFilters(filterNav, container);
     filterNav.dataset.initialized = "true";
   }
 
-  const initialList = Array.isArray(matchCache.upcoming)
+  // Synchronize visual state of the chips and map outbound link query targets
+  if (filterNav) {
+    syncChipStates(filterNav, activeFilter);
+  }
+
+  // Render list elements only if a matching display grid exists on the active DOM
+  if (container) {
+    const initialList = getFilteredList(activeFilter);
+    updateUI(initialList, container);
+  }
+}
+
+/**
+ * Pure data mapping selector to avoid code duplication between load and click states
+ */
+function getFilteredList(filter) {
+  if (!matchCache) return [];
+  const upcoming = Array.isArray(matchCache.upcoming)
     ? matchCache.upcoming
     : [];
-  updateUI(initialList, container);
+  const england = Array.isArray(matchCache.england) ? matchCache.england : [];
+
+  switch (filter) {
+    case "all":
+      return upcoming;
+    case "england":
+      return england;
+    case "knockout":
+      return upcoming.filter(isKnockoutMatch);
+    case "weekend":
+      return upcoming.filter((m) => {
+        const w = getLondonWeekday(m?.datetimeIso);
+        return w === "Saturday" || w === "Sunday";
+      });
+    default:
+      return upcoming;
+  }
+}
+
+/**
+ * Synchronizes the utility classes and intercepts cross-page anchor configurations
+ */
+function syncChipStates(nav, activeFilter) {
+  nav.querySelectorAll("[data-filter]").forEach((chip) => {
+    const isActive = chip.dataset.filter === activeFilter;
+    chip.classList.toggle("c-chip--active", isActive);
+    chip.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
+
+  // === OUTBOUND INTENT BRIDGE ===
+  // Automatically serializes the active state onto all navigation anchors pointing to the schedule
+  document
+    .querySelectorAll('a[href^="fixtures.html"], a[href*="/fixtures.html"]')
+    .forEach((link) => {
+      try {
+        const url = new URL(link.getAttribute("href"), window.location.origin);
+        url.searchParams.set("filter", activeFilter);
+        // Keeps path signatures relative to the file root execution shell
+        link.setAttribute("href", url.pathname.split("/").pop() + url.search);
+      } catch (e) {
+        // Passive safety catch for structural variations
+        link.href = `fixtures.html?filter=${activeFilter}`;
+      }
+    });
 }
 
 function setupFilters(nav, container) {
@@ -27,36 +117,27 @@ function setupFilters(nav, container) {
     const btn = e.target.closest("[data-filter]");
     if (!btn) return;
 
-    nav.querySelectorAll(".c-chip").forEach((c) => {
-      c.classList.remove("c-chip--active");
-      c.setAttribute("aria-pressed", "false");
-    });
-    btn.classList.add("c-chip--active");
-    btn.setAttribute("aria-pressed", "true");
+    const rawFilter = btn.dataset.filter;
+    const filter = VALID_FILTERS.has(rawFilter) ? rawFilter : "england";
 
-    const filter = btn.dataset.filter;
-    let listToDisplay = [];
-
-    if (filter === "all") {
-      listToDisplay = matchCache.upcoming;
-    } else if (filter === "england") {
-      listToDisplay = matchCache.england;
-    } else if (filter === "knockout") {
-      listToDisplay = (
-        Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []
-      ).filter((m) => m.badge && m.badge.toLowerCase().includes("knockout"));
-    } else if (filter === "weekend") {
-      listToDisplay = (
-        Array.isArray(matchCache.upcoming) ? matchCache.upcoming : []
-      ).filter((m) => {
-        const d = new Date(m.datetimeIso);
-        if (isNaN(d.getTime())) return false;
-        const day = d.getDay();
-        return day === 0 || day === 6;
-      });
+    // === STATEFUL URL SYNCHRONIZATION ===
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set("filter", filter);
+      window.history.replaceState(null, "", url.toString());
+    } catch (historyErr) {
+      console.warn(
+        "upcomingMatches: Failed to replaceState URL parameters",
+        historyErr,
+      );
     }
 
-    updateUI(listToDisplay || [], container);
+    syncChipStates(nav, filter);
+
+    if (container) {
+      const listToDisplay = getFilteredList(filter);
+      updateUI(listToDisplay, container);
+    }
   });
 }
 
@@ -83,8 +164,6 @@ function updateUI(matches, container) {
     const dateStr = fmt ? fmt.dateShort : "";
     const timeStr = fmt ? fmt.time : "";
 
-    // 3-hour cut-off — bookable rows are anchors, locked rows are inert
-    // <div>s carrying a "Walk-ins Only" badge in place of the arrow.
     const isBookable = match.isBookable === true;
     let row;
     if (isBookable) {
@@ -101,6 +180,10 @@ function updateUI(matches, container) {
     }
     row.className = `c-fixture-row${isBookable ? "" : " c-fixture-row--locked"}`;
 
+    const nameA = safe(match.teamA?.name).trim();
+    const nameB = safe(match.teamB?.name).trim();
+    const isAnonymous = nameA === "" && nameB === "";
+
     const teamsDiv = document.createElement("div");
     teamsDiv.className = "c-fixture-row__teams";
 
@@ -111,7 +194,7 @@ function updateUI(matches, container) {
     flagA.className = "c-fixture-row__flag";
     flagA.style.backgroundImage = safeBackgroundUrl(match.teamA?.flag);
     teamA.appendChild(flagA);
-    teamA.appendChild(document.createTextNode(safe(match.teamA?.name)));
+    teamA.appendChild(document.createTextNode(isAnonymous ? "TBD" : nameA));
 
     const vs = document.createElement("span");
     vs.className = "c-fixture-row__vs";
@@ -124,7 +207,7 @@ function updateUI(matches, container) {
     flagB.className = "c-fixture-row__flag";
     flagB.style.backgroundImage = safeBackgroundUrl(match.teamB?.flag);
     teamB.appendChild(flagB);
-    teamB.appendChild(document.createTextNode(safe(match.teamB?.name)));
+    teamB.appendChild(document.createTextNode(isAnonymous ? "TBD" : nameB));
 
     teamsDiv.appendChild(teamA);
     teamsDiv.appendChild(vs);
@@ -133,7 +216,9 @@ function updateUI(matches, container) {
     const metaDiv = document.createElement("div");
     metaDiv.className = "c-fixture-row__meta";
     const timeEl = document.createElement("time");
-    timeEl.textContent = `${dateStr} · ${timeStr}`;
+
+    const stageLabel = getDetailedStageLabel(match);
+    timeEl.textContent = `${dateStr} · ${timeStr} · ${stageLabel}`;
     metaDiv.appendChild(timeEl);
 
     row.appendChild(teamsDiv);

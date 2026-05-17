@@ -86,7 +86,6 @@
   color: var(--text-secondary);
   box-shadow: none;
   cursor: not-allowed;
-  pointer-events: none;
 }
 
 .c-button--muted:hover {
@@ -152,7 +151,7 @@
 .c-hero__caption {
   font-size: var(--type-small);
   font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-widest);
+  letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
   color: var(--accent-pitch);
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
@@ -1792,6 +1791,28 @@ body:not(.is-menu-open) .c-header__more svg line {
     transform var(--duration-base) var(--ease-out);
 }
 
+/* ZONE SNAPSHOT — Image Load Failure Fallback State
+   Triggers when booking.js appends the state class to the parent container */
+.c-zone-snapshot--failed #zone-snapshot-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  background-color: var(--surface-overlay);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: var(--type-h3);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  color: var(--accent-pitch);
+  letter-spacing: var(--tracking-wide);
+
+  /* Defensive styling: Ensure the text fills out the box beautifully */
+  width: 100%;
+  padding: var(--space-4, 1rem);
+  box-sizing: border-box;
+}
+
 .c-booking-summary:hover .c-zone-snapshot__img {
   opacity: 1;
   transform: scale(1.02);
@@ -1901,6 +1922,23 @@ body:not(.is-menu-open) .c-header__more svg line {
   content: " · LOCKED";
   color: var(--accent-pitch);
   letter-spacing: var(--tracking-widest);
+}
+
+/* -------------------------------------------------------------------------
+   FORM INPUT STATES — Locked Match Context (Readonly Safeguard)
+   ------------------------------------------------------------------------- */
+input[readonly].is-locked,
+select[readonly].is-locked {
+  /* Defeats the iOS Safari touch-tap vector completely */
+  pointer-events: none;
+  background-color: var(--surface-subtle, #1a1a1a);
+  color: var(--text-muted, #a0a0a0);
+  border-color: var(--border-muted, #2a2a2a);
+  /* Visual cue that the field is secure, not broken */
+  cursor: not-allowed;
+  /* Suppress iOS system default callouts */
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 /* Policy micro-copy beneath the date/time row. Hidden by default; revealed
@@ -2369,7 +2407,8 @@ body:has(.c-booking-form #f-match:valid):has(.c-booking-form #f-zone:valid)
   padding-block: var(--space-4) 0;
   gap: var(--space-8);
   /* Exposed for sticky date-header calculations:
-     tap-min (44px) + filter padding (12px*2) + track pad (2px) + border (1px) */
+     filter padding (12px × 2) + chip min-height (44px) +
+     track scroll-padding (2px) + bottom border (1px) = 71px → 72. */
   --filter-bar-height: 72px;
 }
 
@@ -2415,7 +2454,9 @@ body:has(.c-booking-form #f-match:valid):has(.c-booking-form #f-zone:valid)
   opacity: 0.3;
 }
 
-/* 2. Sticky Filter Navigation — glassmorphism shell cohesion */
+/* 2. Sticky Filter Navigation — glassmorphism shell cohesion.
+   Single chip row pinned beneath the page header. Horizontally scrollable
+   so the four category chips never wrap or hide on narrow viewports. */
 .p-fixtures__filters {
   position: sticky;
   top: calc(var(--header-height) + env(safe-area-inset-top));
@@ -2423,7 +2464,7 @@ body:has(.c-booking-form #f-match:valid):has(.c-booking-form #f-zone:valid)
   background-color: rgba(18, 18, 18, 0.85);
   backdrop-filter: var(--blur-glass);
   -webkit-backdrop-filter: var(--blur-glass);
-  border-top: 1px solid var(--border-hairline); /* ← added */
+  border-top: 1px solid var(--border-hairline);
   border-bottom: 1px solid var(--border-hairline);
   margin-inline: calc(var(--space-4) * -1);
   padding: var(--space-3) var(--space-4);
@@ -2451,27 +2492,116 @@ body:has(.c-booking-form #f-match:valid):has(.c-booking-form #f-zone:valid)
   min-height: 40vh;
 }
 
-/* 4. Sticky Date Headers — secondary snap point */
-.p-fixtures__date-header {
-  position: sticky;
-  top: calc(
-    var(--header-height) + env(safe-area-inset-top) + var(--filter-bar-height)
-  );
-  z-index: var(--z-raised);
-  padding-block: var(--space-3) var(--space-2);
-  margin-top: var(--space-8);
-  font-family: var(--font-display);
-  font-size: var(--type-caption);
-  font-weight: var(--weight-bold);
-  letter-spacing: var(--tracking-widest);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  background-color: var(--surface-base);
-  border-bottom: 1px solid var(--border-hairline);
+/* 4. Tournament-Stage Accordions
+   The fixtures-list partitions matches by tournament stage (Group MD1/2/3,
+   R32, R16, QF, SF, 3rd Place, Final). Each stage is a native <details>
+   so collapse/expand needs no JS and survives no-script environments. The
+   summary is sticky beneath the page header + filter bar so the user
+   always sees which bracket they're scrolling through. The earliest
+   upcoming stage is opened by default at render time. */
+.p-fixtures__stage-group {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color var(--duration-fast) var(--ease-out);
 }
 
-.p-fixtures__date-header:first-child {
-  margin-top: 0;
+.p-fixtures__stage-group:hover {
+  border-color: var(--border-strong);
+}
+
+.p-fixtures__stage-group[open] {
+  border-color: var(--border-accent);
+}
+
+/* Summary uses a 2×2 grid so every accordion renders with identical
+   geometry regardless of name/meta content length: title row, meta row
+   beneath, chevron pinned to a right column spanning both. No more
+   horizontal "shifting" between buckets, no flex-baseline drift.
+   Sticky positioning was removed — multi-stage sticky hand-offs caused
+   the title to visually replace match rows during scroll transitions. */
+.p-fixtures__stage-summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: var(--space-3);
+  row-gap: var(--space-1);
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+  padding: var(--space-4) var(--space-5);
+  min-height: var(--tap-min);
+  background-color: var(--surface-raised);
+  border-bottom: 1px solid transparent;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+
+.p-fixtures__stage-summary::-webkit-details-marker {
+  display: none;
+}
+
+.p-fixtures__stage-summary::after {
+  content: "▾";
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: center;
+  color: var(--accent-pitch);
+  font-size: var(--type-small);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.p-fixtures__stage-group[open] > .p-fixtures__stage-summary {
+  background-color: var(--surface-overlay);
+  border-bottom-color: var(--border-hairline);
+}
+
+.p-fixtures__stage-group[open] > .p-fixtures__stage-summary::after {
+  transform: rotate(180deg);
+}
+
+.p-fixtures__stage-name {
+  grid-column: 1;
+  grid-row: 1;
+  font-family: var(--font-display);
+  font-size: var(--type-h3);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-primary);
+  line-height: var(--leading-tight);
+  /* Truncation safety: long labels ellipsize within their grid cell
+     rather than pushing the chevron or overlapping the meta row. */
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.p-fixtures__stage-meta {
+  grid-column: 1;
+  grid-row: 2;
+  font-family: var(--font-body);
+  font-size: var(--type-tiny);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--accent-pitch-dim);
+  /* Same truncation safety as the name row. */
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.p-fixtures__stage-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background-color: var(--surface-base);
 }
 
 /* 5. England Priority Highlight */

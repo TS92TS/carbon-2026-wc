@@ -8,9 +8,13 @@ import { formatMatchDateTime } from "./matchData.js";
  * they must match what the user saw in the originating feed.
  * @param {string} baseUrl - target page (e.g. "book.html", "zones.html")
  * @param {object} match - match data object (datetimeIso, teamA, teamB)
+ * @param {object} [extras] - additional params to fold in (e.g. {zone}).
+ *   Spread AFTER the base params so callers can override but in practice
+ *   the use case is additive: Path B's fixturesPage skips zones.html by
+ *   building a book.html URL that carries the user's already-picked zone.
  * @returns {string}
  */
-function buildMatchURL(baseUrl, match) {
+function buildMatchURL(baseUrl, match, extras = {}) {
   if (!match || !match.datetimeIso) return baseUrl;
 
   const fmt = formatMatchDateTime(match.datetimeIso);
@@ -26,6 +30,7 @@ function buildMatchURL(baseUrl, match) {
     time: fmt.time,
     flagA: match.teamA?.flag || "",
     flagB: match.teamB?.flag || "",
+    ...extras,
   });
 
   return `${baseUrl}?${params.toString()}`;
@@ -33,12 +38,14 @@ function buildMatchURL(baseUrl, match) {
 
 /**
  * Builds a parametric URL for the booking concierge. Use this for CTAs that
- * jump straight to the booking form (zone cards, hero "Book Now", etc.).
+ * jump straight to the booking form once both fixture AND zone are known
+ * (Path B's skip-the-middle case). Pass `{ zone: "<slug>" }` in extras.
  * @param {object} match
+ * @param {object} [extras]
  * @returns {string}
  */
-export function buildBookingURL(match) {
-  return buildMatchURL("book.html", match);
+export function buildBookingURL(match, extras) {
+  return buildMatchURL("book.html", match, extras);
 }
 
 /**

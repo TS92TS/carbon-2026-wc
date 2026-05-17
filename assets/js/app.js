@@ -37,7 +37,14 @@ async function boot() {
   }
 
   if (document.getElementById("booking-form")) {
-    initBookingConcierge();
+    // Fire-and-forget by design — booking init runs in parallel with the
+    // data-fetch branch below. The `.catch` is a safety net for any
+    // exception thrown OUTSIDE the function's internal try/catch (a future
+    // submit-handler bug, a synchronous throw before the try block, etc.)
+    // so it never surfaces as an unhandled Promise rejection.
+    initBookingConcierge().catch((err) =>
+      console.warn("App: Booking init failed:", err),
+    );
   }
 
   // ---- 3. DATA · only fetch on pages that need it -----------------------

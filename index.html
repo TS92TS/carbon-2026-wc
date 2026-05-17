@@ -119,7 +119,7 @@
               Guaranteed seats, pitch-side sound and match day menus — every
               match.
             </p>
-            <a href="book.html" class="c-button c-button--primary">
+            <a href="fixtures.html" class="c-button c-button--primary">
               Book Now
             </a>
           </div>
@@ -174,8 +174,14 @@
             </div>
 
             <footer class="c-match-card__footer">
+              <!-- Static fallback href routes to fixtures.html so a no-JS
+                   visitor (or a tap during the pre-hydration race window)
+                   lands inside the funnel rather than on the gated
+                   book.html. featuredMatch.js overwrites this href with
+                   the canonical buildZonesURL(featured) target at render
+                   time when the match is bookable. -->
               <a
-                href="book.html"
+                href="fixtures.html"
                 class="c-button c-button--block c-button--primary"
                 data-match-target="booking-link"
               >
@@ -195,23 +201,24 @@
           </header>
 
           <nav class="c-chip-scroll" aria-label="Filter fixtures">
-            <ul class="c-chip-scroll__list" id="fixture-filters" role="list">
+            <ul
+              class="c-chip-scroll__list"
+              id="fixture-filters"
+              data-default-filter="england"
+              role="list"
+            >
               <li>
                 <button
                   class="c-chip c-chip--active"
                   aria-pressed="true"
-                  data-filter="all"
-                >
-                  All Games
-                </button>
-              </li>
-              <li>
-                <button
-                  class="c-chip"
-                  aria-pressed="false"
                   data-filter="england"
                 >
                   England
+                </button>
+              </li>
+              <li>
+                <button class="c-chip" aria-pressed="false" data-filter="all">
+                  Other Games
                 </button>
               </li>
               <li>
@@ -540,7 +547,7 @@
           </a>
         </li>
         <li>
-          <a class="c-nav__item" href="book.html">
+          <a class="c-nav__item" href="fixtures.html" data-nav-role="funnel">
             <svg class="c-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M3 8 A2 2 0 0 1 5 6 L19 6 A2 2 0 0 1 21 8 L21 10 A2 2 0 0 0 21 14 L21 16 A2 2 0 0 1 19 18 L5 18 A2 2 0 0 1 3 16 L3 14 A2 2 0 0 0 3 10 Z"
@@ -585,7 +592,10 @@
             >
           </li>
           <li>
-            <a href="book.html" class="c-mobile-nav__link u-display"
+            <a
+              href="fixtures.html"
+              class="c-mobile-nav__link u-display"
+              data-nav-role="funnel"
               >Book a Bench</a
             >
           </li>

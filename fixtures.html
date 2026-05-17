@@ -110,6 +110,30 @@
           <div class="p-fixtures__divider" aria-hidden="true"></div>
         </header>
 
+        <!-- Zone-aware funnel banner — mounted by fixturesPage.js when the
+             user arrives via Path B (zone-first) with ?zone=<slug>. Stays
+             hidden during regular fixture browsing so the page reads as a
+             general-purpose schedule when there's no booking intent. -->
+        <aside
+          id="zone-banner"
+          class="c-fixture-banner"
+          data-component="zone-banner"
+          aria-labelledby="zone-banner-name"
+          hidden
+        >
+          <div class="c-fixture-banner__match">
+            <span id="zone-banner-name" class="c-fixture-banner__slug"></span>
+          </div>
+          <div class="c-fixture-banner__hint">
+            <span class="u-caption u-accent"
+              >Step 2 of 3 · Pick your match</span
+            >
+            <a href="zones.html" class="c-fixture-banner__change u-caption"
+              >Change zone</a
+            >
+          </div>
+        </aside>
+
         <!-- 2. Stats Band — tournament scope -->
         <section class="c-stats-band c-section" aria-labelledby="stats-heading">
           <header class="c-section-header">
@@ -149,7 +173,6 @@
               <p class="u-caption u-accent">Priority</p>
               <h2 id="england-heading">England Fixtures</h2>
             </div>
-            <a href="book.html" class="c-link-action">Book England</a>
           </header>
           <ul
             class="c-fixtures-list"
@@ -176,15 +199,23 @@
           <nav
             class="p-fixtures__filters"
             id="fixture-filters"
-            aria-label="Filter match schedule"
+            data-default-filter="all"
+            aria-label="Browse fixtures"
           >
-            <div class="p-fixtures__filter-track">
+            <div
+              class="p-fixtures__filter-track"
+              role="group"
+              aria-label="Browse fixtures by category"
+            >
               <button
                 class="c-chip c-chip--active"
                 data-filter="all"
                 aria-pressed="true"
               >
                 All Games
+              </button>
+              <button class="c-chip" data-filter="england" aria-pressed="false">
+                England
               </button>
               <button
                 class="c-chip"
@@ -256,11 +287,12 @@
           </ul>
         </section>
 
-        <!-- 6. Tactical Footer CTA -->
+        <!-- 6. Tactical Footer CTA — offers Path B (zone-first) to anyone who
+             scrolled past every fixture without picking one. -->
         <footer class="p-fixtures__footer">
-          <p class="u-text-secondary u-small">Watching with a group?</p>
-          <a href="book.html" class="c-button c-button--ghost">
-            Book a Bench
+          <p class="u-text-secondary u-small">Want to see where you'll sit?</p>
+          <a href="zones.html" class="c-button c-button--ghost">
+            Browse the Space
           </a>
         </footer>
 
@@ -374,7 +406,7 @@
           </a>
         </li>
         <li>
-          <a class="c-nav__item" href="book.html">
+          <a class="c-nav__item" href="fixtures.html" data-nav-role="funnel">
             <svg class="c-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M3 8 A2 2 0 0 1 5 6 L19 6 A2 2 0 0 1 21 8 L21 10 A2 2 0 0 0 21 14 L21 16 A2 2 0 0 1 19 18 L5 18 A2 2 0 0 1 3 16 L3 14 A2 2 0 0 0 3 10 Z"
@@ -413,7 +445,10 @@
             >
           </li>
           <li>
-            <a href="book.html" class="c-mobile-nav__link u-display"
+            <a
+              href="fixtures.html"
+              class="c-mobile-nav__link u-display"
+              data-nav-role="funnel"
               >Book a Bench</a
             >
           </li>

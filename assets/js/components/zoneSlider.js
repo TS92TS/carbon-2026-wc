@@ -13,6 +13,14 @@ export function initZoneSliders() {
 
     if (!scrollContainer || !paginationContainer) return;
 
+    // Idempotency gate — sits AFTER the structural null check so a
+    // malformed slider doesn't get marked initialised and lose its chance
+    // to recover on a future re-init. Re-running this on a well-formed
+    // slider would otherwise stack duplicate scroll/touch/mouse listeners
+    // and rebuild the dot pagination from scratch.
+    if (slider.dataset.zoneSliderInitialized === "true") return;
+    slider.dataset.zoneSliderInitialized = "true";
+
     const images = scrollContainer.querySelectorAll("img");
     const imageCount = images.length;
 

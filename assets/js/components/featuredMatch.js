@@ -1,5 +1,8 @@
 import { buildZonesURL, safeBackgroundUrl } from "../lib/urlHelpers.js";
-import { formatMatchDateTime } from "../lib/matchData.js";
+import {
+  formatMatchDateTime,
+  getDetailedStageLabel,
+} from "../lib/matchData.js";
 
 /**
  * Renders the primary Hero match card with England priority.
@@ -46,7 +49,8 @@ export function renderFeaturedMatch(matchPayload) {
     bookingBtn: card.querySelector('[data-match-target="booking-link"]'),
   };
 
-  if (els.badge) els.badge.textContent = safe(featured.badge);
+  // 1. Swap general category string for high-fidelity round names
+  if (els.badge) els.badge.textContent = getDetailedStageLabel(featured);
 
   if (els.time) {
     els.time.textContent = `${dateFormatted}${dateFormatted && timeFormatted ? " · " : ""}${timeFormatted}`;
@@ -54,12 +58,17 @@ export function renderFeaturedMatch(matchPayload) {
       els.time.setAttribute("datetime", safe(featured.datetimeIso));
   }
 
-  if (els.nameA) els.nameA.textContent = safe(featured.teamA?.name);
+  // 2. Identify anonymous fixtures and safeguard the text layout from collapsing
+  const nameA = safe(featured.teamA?.name).trim();
+  const nameB = safe(featured.teamB?.name).trim();
+  const isAnonymous = nameA === "" && nameB === "";
+
+  if (els.nameA) els.nameA.textContent = isAnonymous ? "TBD" : nameA;
   if (els.flagA) {
     els.flagA.style.backgroundImage = safeBackgroundUrl(featured.teamA?.flag);
   }
 
-  if (els.nameB) els.nameB.textContent = safe(featured.teamB?.name);
+  if (els.nameB) els.nameB.textContent = isAnonymous ? "TBD" : nameB;
   if (els.flagB) {
     els.flagB.style.backgroundImage = safeBackgroundUrl(featured.teamB?.flag);
   }
@@ -87,15 +96,17 @@ export function renderFeaturedMatch(matchPayload) {
         els.bookingBtn.classList.remove("c-button--pulse");
       }
     } else {
-      // Inside the 3-hour cut-off — remove navigation, downgrade to a
-      // walk-ins notice. removeAttribute("href") strips link semantics
-      // entirely so screen readers + keyboard nav both treat it as a
-      // non-interactive label.
-      els.bookingBtn.removeAttribute("href");
-      els.bookingBtn.setAttribute("aria-disabled", "true");
+      // Inside the 3-hour cut-off — online booking is closed, but rather
+      // than burning the click impression on a dead-end label, route the
+      // button to the venue phone so the user has a clear next step.
+      // Muted styling differentiates it visually from the live "Book a
+      // Table" CTA; the tel: scheme triggers the dialler on mobile and
+      // is harmless on desktop (browser shows a "Call?" affordance).
+      els.bookingBtn.href = "tel:+441449674674";
+      els.bookingBtn.removeAttribute("aria-disabled");
       els.bookingBtn.classList.remove("c-button--pulse");
       els.bookingBtn.classList.add("c-button--muted");
-      els.bookingBtn.textContent = "Walk-ins Only";
+      els.bookingBtn.textContent = "Walk-ins · Call 01449 674674";
     }
   }
 

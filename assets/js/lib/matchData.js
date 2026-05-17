@@ -2,6 +2,128 @@
 const API_URL = "https://carbon-sports-api.pages.dev/api/get-next-match";
 const STORAGE_KEY = "carbon_match_data_cache";
 
+// Cache evaluation thresholds for resilient offline fault tolerance
+const CACHE_STALE_THRESH_MS = 24 * 60 * 60 * 1000; // 24 Hours (Soft Warning Flag)
+const CACHE_ANCIENT_THRESH_MS = 5 * 24 * 60 * 60 * 1000; // 5 Days (Hard Expiration Gate)
+
+// =========================================================================
+// === CRO INSURANCE POLICY: HIGH-AVAILABILITY STATIC EMERGENCY FALLBACK ===
+// Executed strictly during total cache blackout conditions (Incognito / Outage)
+// Preserves critical funnel conversion paths with true whitelisted names and IDs.
+// =========================================================================
+// NOTE: `updatedAt` is intentionally NOT baked in here — see the fallback
+// branch in fetchMatchData() where it's stamped lazily with `Date.now()`
+// at serve-time. A frozen module-load timestamp would lie about freshness
+// in long-lived sessions (kiosks, PWAs, idle tabs that survive for hours).
+const FALLBACK_DATA = {
+  status: "upcoming",
+  _source: "static_fallback",
+  _isOffline: true,
+  upcoming: [
+    {
+      id: "fallback_2026_eng_md1",
+      datetimeIso: "2026-06-12T19:00:00+01:00",
+      teamA: {
+        name: "England",
+        tla: "ENG",
+        flag: "https://crests.football-data.org/770.svg",
+      },
+      teamB: { name: "TBD", tla: "TBD", flag: "" },
+      badge: "Group Stage",
+    },
+    {
+      id: "fallback_2026_eng_md2",
+      datetimeIso: "2026-06-18T19:00:00+01:00",
+      teamA: {
+        name: "England",
+        tla: "ENG",
+        flag: "https://crests.football-data.org/770.svg",
+      },
+      teamB: { name: "TBD", tla: "TBD", flag: "" },
+      badge: "Group Stage",
+    },
+    {
+      id: "fallback_2026_eng_md3",
+      datetimeIso: "2026-06-24T19:00:00+01:00",
+      teamA: {
+        name: "England",
+        tla: "ENG",
+        flag: "https://crests.football-data.org/770.svg",
+      },
+      teamB: { name: "TBD", tla: "TBD", flag: "" },
+      badge: "Group Stage",
+    },
+    {
+      id: "fallback_2026_wc_final",
+      datetimeIso: "2026-07-19T20:00:00+01:00",
+      teamA: { name: "TBD", tla: "TBD", flag: "" },
+      teamB: { name: "TBD", tla: "TBD", flag: "" },
+      badge: "Final",
+    },
+  ],
+  england: [
+    {
+      id: "fallback_2026_eng_md1",
+      datetimeIso: "2026-06-12T19:00:00+01:00",
+      teamA: {
+        name: "England",
+        tla: "ENG",
+        flag: "https://crests.football-data.org/770.svg",
+      },
+      teamB: { name: "TBD", tla: "TBD", flag: "" },
+      badge: "Group Stage",
+    },
+    {
+      id: "fallback_2026_eng_md2",
+      datetimeIso: "2026-06-18T19:00:00+01:00",
+      teamA: {
+        name: "England",
+        tla: "ENG",
+        flag: "https://crests.football-data.org/770.svg",
+      },
+      teamB: { name: "TBD", tla: "TBD", flag: "" },
+      badge: "Group Stage",
+    },
+    {
+      id: "fallback_2026_eng_md3",
+      datetimeIso: "2026-06-24T19:00:00+01:00",
+      teamA: {
+        name: "England",
+        tla: "ENG",
+        flag: "https://crests.football-data.org/770.svg",
+      },
+      teamB: { name: "TBD", tla: "TBD", flag: "" },
+      badge: "Group Stage",
+    },
+  ],
+};
+
+/**
+ * Evaluates the actual freshness context of stored match payloads.
+ * Returns an object detailing whether data should be completely rejected or simply flagged.
+ */
+function evaluateCacheAge(parsedData) {
+  if (!parsedData || typeof parsedData !== "object") return { isValid: false };
+
+  const timestamp = parsedData.updatedAt || parsedData._cachedAt;
+  if (!timestamp) return { isValid: false };
+
+  const ageMs = Date.now() - new Date(timestamp).getTime();
+
+  // Guard against corrupted system clocks returning values from the deep future
+  if (!Number.isFinite(ageMs) || ageMs < 0) return { isValid: false };
+
+  if (ageMs >= CACHE_ANCIENT_THRESH_MS) {
+    return { isValid: false, isStale: true, isAncient: true };
+  }
+
+  return {
+    isValid: true,
+    isStale: ageMs >= CACHE_STALE_THRESH_MS,
+    isAncient: false,
+  };
+}
+
 /* -------------------------------------------------------------------------
    BOOKING CUTOFF
    Operations policy: online reservations close strictly 3 hours before
@@ -393,11 +515,11 @@ const fmtParts = new Intl.DateTimeFormat(UK_LOCALE, {
  * Returns `null` for missing/invalid input — callers should treat this as "skip".
  * @param {string} iso - e.g. "2026-06-11T20:00:00+01:00" or "2026-06-11T19:00:00Z"
  * @returns {null | {
- *   dateShort: string,        // "Thu 11 Jun" — feed rows, dropdown labels
- *   dateLong: string,         // "Thursday 11 June" — sticky date headers
- *   time: string,             // "20:00" — 24h Europe/London
- *   dateInputValue: string,   // "2026-06-11" — populates <input type="date">
- *   iso: string               // pass-through original
+ * dateShort: string,        // "Thu 11 Jun" — feed rows, dropdown labels
+ * dateLong: string,         // "Thursday 11 June" — sticky date headers
+ * time: string,             // "20:00" — 24h Europe/London
+ * dateInputValue: string,   // "2026-06-11" — populates <input type="date">
+ * iso: string               // pass-through original
  * }}
  */
 export function formatMatchDateTime(iso) {
@@ -418,7 +540,30 @@ export function formatMatchDateTime(iso) {
 }
 
 /**
- * Fetch match data withlocalStorage fallback.
+ * Long-form weekday of `iso` in Europe/London (e.g. "Saturday").
+ * Returns "" for missing/invalid input — string comparison against expected
+ * day names then yields false, matching the fail-closed posture of every
+ * other classifier in this module. Reuses the pre-allocated London
+ * formatter via `readLondonParts`; no new Intl allocations per call.
+ */
+export function getLondonWeekday(iso) {
+  if (!iso) return "";
+  const parts = readLondonParts(iso);
+  return parts ? parts.weekday : "";
+}
+
+/**
+ * Single classification authority for "is this a knockout fixture?".
+ * Wraps the internal `getStage(match)` + `isKnockoutStage(stage)` pipeline
+ * used by the viability rules engine, so UI filter chips and the
+ * trading-day rules cannot drift apart on what counts as a knockout.
+ */
+export function isKnockoutMatch(match) {
+  return isKnockoutStage(getStage(match));
+}
+
+/**
+ * Fetch match data with localStorage fallback.
  * The Worker handles all retry/caching logic; the frontend trusts 200 or falls back.
  */
 export async function getMatchData() {
@@ -433,7 +578,7 @@ export async function getMatchData() {
   }
 }
 
-async function fetchMatchData() {
+export async function fetchMatchData() {
   try {
     const response = await fetch(API_URL, {
       method: "GET",
@@ -474,24 +619,182 @@ async function fetchMatchData() {
 
     return filterViableMatches(stampBookable(enrichedData));
   } catch (error) {
-    console.warn("MatchData Lib: Falling back to local cache", error.message);
+    console.warn(
+      "MatchData Lib: Falling back to local cache due to network fault",
+      error.message,
+    );
 
     try {
       const cached = localStorage.getItem(STORAGE_KEY);
       if (cached) {
         const parsed = JSON.parse(cached);
-        return filterViableMatches(
-          stampBookable({
-            ...parsed,
-            _source: "local_cache",
-            _isOffline: true,
-          }),
-        );
+        const cacheStatus = evaluateCacheAge(parsed);
+
+        if (cacheStatus.isValid) {
+          // Serve the data gracefully while soft-flagging stale conditions for layout handling
+          return filterViableMatches(
+            stampBookable({
+              ...parsed,
+              _source: "local_cache",
+              _isOffline: true,
+              _isStale: cacheStatus.isStale,
+            }),
+          );
+        } else if (cacheStatus.isAncient) {
+          // Purge stale keys to keep timelines free from legacy drift configurations
+          localStorage.removeItem(STORAGE_KEY);
+          console.warn(
+            "MatchData Lib: Purged ancient tournament cache safely from local memory",
+          );
+        }
       }
     } catch (cacheErr) {
-      console.warn("MatchData Lib: Cache read/parse failed", cacheErr.message);
+      console.warn(
+        "MatchData Lib: Internal cache extraction parser failed",
+        cacheErr.message,
+      );
     }
 
-    return { status: "error", error: error.message, _source: "none" };
+    // =========================================================================
+    // === LAST RESORT: STATIC FALLBACK DATA INTERCEPT ===
+    // This executes only if the network is down AND local memory is non-existent/purged
+    // =========================================================================
+    console.warn(
+      "MatchData Lib: Total cache miss blackout. Serving static fallback matrix.",
+    );
+    return filterViableMatches(
+      stampBookable({
+        ...FALLBACK_DATA,
+        _isBlackoutActive: true,
+        updatedAt: new Date().toISOString(),
+      }),
+    );
   }
+}
+
+/**
+ * "Major Tournament Milestones" classifier — R16 through Final + 3rd-place
+ * play-off. Group stage + R32 are deliberately excluded: these are the
+ * high-yield fixtures we surface at the top of the booking dropdown and
+ * use to populate the milestone-curated optgroup. Built on top of
+ * `getDetailedStageLabel` so the two stay in lockstep — one label authority.
+ */
+const MILESTONE_LABELS = new Set([
+  "ROUND OF 16",
+  "QUARTER-FINAL",
+  "SEMI-FINAL",
+  "WORLD CUP FINAL",
+  "3rd Place Play-Off",
+]);
+
+export function isMilestoneMatch(match) {
+  return MILESTONE_LABELS.has(getDetailedStageLabel(match));
+}
+
+/**
+ * Canonical stage-group classifier for the fixtures-page accordion view.
+ * Returns a `{ key, label, order }` triplet so the rendering layer can
+ * bucket matches into the right accordion, sort buckets in tournament
+ * progression order, and display the user-friendly label.
+ *
+ * Group Stage is sub-divided into Matchdays 1–3 (by London calendar date)
+ * so the largest single bucket never holds more than one round of group
+ * fixtures (24 games max instead of 72).
+ *
+ * The `order` field is decoupled from chronology so a UI that wants
+ * tournament-order even when a feed mis-sorts matches can rely on it.
+ * In practice firstKickoff and order both produce the same sequence.
+ */
+export function getStageGroup(match) {
+  const label = getDetailedStageLabel(match);
+
+  switch (label) {
+    case "WORLD CUP FINAL":
+      return { key: "final", label: "World Cup Final", order: 90 };
+    case "3rd Place Play-Off":
+      return { key: "third-place", label: "3rd Place Play-Off", order: 80 };
+    case "SEMI-FINAL":
+      return { key: "semi-final", label: "Semi-Finals", order: 70 };
+    case "QUARTER-FINAL":
+      return { key: "quarter-final", label: "Quarter-Finals", order: 60 };
+    case "ROUND OF 16":
+      return { key: "round-of-16", label: "Round of 16", order: 50 };
+    case "ROUND OF 32":
+      return { key: "round-of-32", label: "Round of 32", order: 40 };
+    case "Knockout Stage":
+      // Defensive bucket — match flagged knockout but date didn't slot
+      // into a known range. Stays grouped between R32 and group stage.
+      return { key: "knockout-misc", label: "Knockout Stage", order: 35 };
+  }
+
+  // Group Stage — sub-divided by matchday window (Europe/London calendar)
+  const fmt = formatMatchDateTime(match?.datetimeIso);
+  if (!fmt) {
+    return { key: "group-stage", label: "Group Stage", order: 10 };
+  }
+  const d = fmt.dateInputValue;
+  if (d <= "2026-06-17") {
+    return { key: "group-md1", label: "Group Stage · Matchday 1", order: 11 };
+  }
+  if (d <= "2026-06-24") {
+    return { key: "group-md2", label: "Group Stage · Matchday 2", order: 12 };
+  }
+  if (d <= "2026-06-27") {
+    return { key: "group-md3", label: "Group Stage · Matchday 3", order: 13 };
+  }
+  // Fallback for any group-flagged match outside the matchday windows.
+  return { key: "group-stage", label: "Group Stage", order: 10 };
+}
+
+/**
+ * Resolves the authoritative tournament phase name.
+ * Prioritizes the edge-server's pre-calculated stage metadata, with a
+ * defensive Europe/London timezone decoder as a local fallback.
+ */
+export function getDetailedStageLabel(match) {
+  // Path A: Direct server-authoritative mapping pass-through
+  if (match?.stageLabel) {
+    return match.stageLabel.toUpperCase();
+  }
+
+  // Path B: Safe UI fallback layer
+  if (!match?.badge || !match.badge.toLowerCase().includes("knockout")) {
+    return "Group Stage";
+  }
+  if (!match.datetimeIso) return "Knockout Stage";
+
+  const date = new Date(match.datetimeIso);
+  if (isNaN(date.getTime())) return "Knockout Stage";
+
+  // Use Intl to decode the exact calendar day visible to customers in London
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+  });
+
+  const parts = formatter.formatToParts(date);
+  const p = Object.create(null);
+  for (const part of parts) p[part.type] = part.value;
+
+  const day = parseInt(p.day, 10);
+  const month = parseInt(p.month, 10);
+  const year = parseInt(p.year, 10);
+
+  // High-fidelity local calendar safety net
+  if (year === 2026 && month === 7) {
+    if (day === 19) return "WORLD CUP FINAL";
+    if (day === 18) return "3rd Place Play-Off";
+    if (day === 14 || day === 15) return "SEMI-FINAL";
+    if (day >= 9 && day <= 11) return "QUARTER-FINAL";
+    if (day >= 4 && day <= 7) return "ROUND OF 16";
+  }
+  if (year === 2026) {
+    if ((month === 6 && day >= 28) || (month === 7 && day <= 3)) {
+      return "ROUND OF 32";
+    }
+  }
+
+  return "Knockout Stage";
 }

@@ -10,6 +10,13 @@ export function initMobileMenu() {
 
   if (!menuBtn || !menuOverlay) return;
 
+  // Idempotency gate — without this, a re-bootstrap (HMR, late hydration,
+  // future test harness) would stack duplicate click + document-level
+  // keydown listeners. The Escape handler is document-scoped and globally
+  // visible, so a second binding means double-closing + double-focusing.
+  if (menuBtn.dataset.menuInitialized === "true") return;
+  menuBtn.dataset.menuInitialized = "true";
+
   let savedScrollY = 0;
 
   const openMenu = () => {
