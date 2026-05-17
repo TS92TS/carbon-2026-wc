@@ -174,20 +174,30 @@ function createFixtureRow(match, options = {}) {
   // For England strip: include full date + day in meta
   const dateStr = fmt ? fmt.dateShort : "";
 
-  let bookingUrl = "zones.html";
-  try {
-    bookingUrl = buildZonesURL(match);
-  } catch (e) {
-    console.warn("fixturesPage: buildZonesURL failed", e);
-  }
-
   const isEngland =
     safe(match.teamA?.name).toLowerCase() === "england" ||
     safe(match.teamB?.name).toLowerCase() === "england";
 
-  const a = document.createElement("a");
-  a.className = `c-fixture-row${isEngland ? " c-fixture-row--england" : ""}`;
-  a.href = bookingUrl;
+  // 3-hour cut-off: row is interactive only when match.isBookable is true.
+  // Non-bookable rows render as a <div> (no <a>) carrying a "Walk-ins Only"
+  // badge in place of the navigation arrow.
+  const isBookable = match.isBookable === true;
+  let row;
+  if (isBookable) {
+    let bookingUrl = "zones.html";
+    try {
+      bookingUrl = buildZonesURL(match);
+    } catch (e) {
+      console.warn("fixturesPage: buildZonesURL failed", e);
+    }
+    row = document.createElement("a");
+    row.href = bookingUrl;
+  } else {
+    row = document.createElement("div");
+  }
+  row.className = `c-fixture-row${isEngland ? " c-fixture-row--england" : ""}${
+    isBookable ? "" : " c-fixture-row--locked"
+  }`;
 
   // Teams
   const teamsDiv = document.createElement("div");
@@ -235,26 +245,34 @@ function createFixtureRow(match, options = {}) {
     metaDiv.appendChild(badge);
   }
 
-  // Arrow
-  const arrowSvg = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "svg",
-  );
-  arrowSvg.setAttribute("class", "c-fixture-row__arrow");
-  arrowSvg.setAttribute("viewBox", "0 0 24 24");
-  arrowSvg.setAttribute("fill", "none");
-  arrowSvg.setAttribute("stroke", "currentColor");
-  arrowSvg.setAttribute("stroke-width", "2.5");
-  arrowSvg.setAttribute("stroke-linecap", "round");
-  arrowSvg.setAttribute("stroke-linejoin", "round");
+  row.appendChild(teamsDiv);
+  row.appendChild(metaDiv);
 
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("d", "M9 18l6-6-6-6");
-  arrowSvg.appendChild(path);
+  if (isBookable) {
+    // Arrow CTA — same grid cell that the walk-ins badge will occupy when
+    // the row is locked, so the column 2 layout stays identical.
+    const arrowSvg = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "svg",
+    );
+    arrowSvg.setAttribute("class", "c-fixture-row__arrow");
+    arrowSvg.setAttribute("viewBox", "0 0 24 24");
+    arrowSvg.setAttribute("fill", "none");
+    arrowSvg.setAttribute("stroke", "currentColor");
+    arrowSvg.setAttribute("stroke-width", "2.5");
+    arrowSvg.setAttribute("stroke-linecap", "round");
+    arrowSvg.setAttribute("stroke-linejoin", "round");
 
-  a.appendChild(teamsDiv);
-  a.appendChild(metaDiv);
-  a.appendChild(arrowSvg);
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M9 18l6-6-6-6");
+    arrowSvg.appendChild(path);
+    row.appendChild(arrowSvg);
+  } else {
+    const lockBadge = document.createElement("span");
+    lockBadge.className = "c-badge c-badge--muted c-fixture-row__lock-badge";
+    lockBadge.textContent = "Walk-ins Only";
+    row.appendChild(lockBadge);
+  }
 
-  return a;
+  return row;
 }

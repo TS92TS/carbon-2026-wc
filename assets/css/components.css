@@ -76,6 +76,24 @@
   width: 100%;
 }
 
+/* Muted — non-interactive look for fixtures inside the 3-hour booking
+   cut-off. Drops the green glow + hover, sets cursor:not-allowed, and
+   relies on the consumer to also drop `href`/`aria-disabled="true"` so it
+   can't be activated. Visually still button-shaped so it occupies the same
+   slot in the layout as the active CTA it replaces. */
+.c-button--muted {
+  background-color: var(--surface-overlay);
+  color: var(--text-secondary);
+  box-shadow: none;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.c-button--muted:hover {
+  background-color: var(--surface-overlay);
+  box-shadow: none;
+}
+
 /* =========================================================================
    COMPONENT · HERO
    Full-bleed media block. Math is parent-padding-independent.
@@ -326,6 +344,14 @@
 .c-badge--mill {
   background-color: rgba(197, 160, 89, 0.14);
   color: var(--accent-mill);
+}
+
+/* Muted variant — used by the 3-hour booking cut-off to label fixtures
+   that have closed online reservations but remain visible in the feed. */
+.c-badge--muted {
+  background-color: var(--surface-overlay);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-hairline);
 }
 
 /* =========================================================================
@@ -812,6 +838,8 @@
   row-gap: var(--space-2);
   font-size: var(--type-small);
   margin: 0;
+  border-top: 1px dashed var(--border-hairline);
+  padding-top: var(--space-3);
 }
 
 .c-visit__hours dt {
@@ -827,6 +855,16 @@
   margin: 0;
   font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
+}
+
+.c-visit__hourscopy {
+  margin: 0;
+  padding-top: var(--space-3);
+  font-size: var(--type-tiny);
+  line-height: var(--leading-normal);
+  font-style: italic;
+  color: var(--text-secondary);
+  opacity: 0.75;
 }
 
 .c-visit__links {
@@ -1444,7 +1482,7 @@ body:not(.is-menu-open) .c-header__more svg line {
   top: 50%;
   right: var(--space-4);
   transform: translateY(-50%);
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
   color: var(--accent-pitch-dim);
@@ -1576,8 +1614,7 @@ body:not(.is-menu-open) .c-header__more svg line {
   box-shadow: var(--shadow-summary), var(--glow-pitch);
 }
 
-/* 1. The Summary Card (Refined Split Layout) */
-/* 1. The Summary Card */
+/* 1. The Summary Card — stacked receipt of two full-width rows. */
 .c-booking-summary {
   background: rgba(30, 30, 30, 0.5);
   backdrop-filter: blur(20px) saturate(140%);
@@ -1592,6 +1629,10 @@ body:not(.is-menu-open) .c-header__more svg line {
   box-shadow: var(--shadow-summary);
   transition: box-shadow var(--duration-base) var(--ease-out);
   animation: slideInDown var(--duration-deliberate) var(--ease-out);
+  /* Inner layout: vertical column of caption + match row + zone row. */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 @keyframes slideInDown {
@@ -1642,27 +1683,54 @@ body:not(.is-menu-open) .c-header__more svg line {
   z-index: 0;
 }
 
-.c-booking-summary__layout {
+/* Caption sits above both rows as the panel header. */
+.c-booking-summary__caption {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+}
+
+/* Each row: defined flex container with the data left, "Change" link right.
+   Subtle hairline separator between rows; cleared on the last child so the
+   panel doesn't carry a dangling border above the form. */
+.c-booking-summary__row {
   position: relative;
   z-index: 2;
   display: flex;
-  flex-wrap: nowrap;
-  justify-content: space-between;
   align-items: center;
-  gap: clamp(var(--space-3), 4vw, var(--space-5));
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-hairline);
 }
 
-.c-booking-summary__info {
+.c-booking-summary__row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+/* Data side of each row.
+   - column by default (match: flags+title stacked above meta)
+   - --row modifier flips to horizontal for the zone (thumbnail + label)
+   - min-width:0 lets the title truncate inside without bursting the row */
+.c-booking-summary__data {
   flex: 1 1 auto;
-  min-width: min-content;
-  overflow: hidden;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.c-booking-summary__data--row {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .c-booking-summary__match {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-1);
   min-width: 0;
 }
 
@@ -1673,25 +1741,26 @@ body:not(.is-menu-open) .c-header__more svg line {
 }
 
 .c-booking-summary #summary-title {
-  font-size: clamp(1.5rem, 6vw, 3rem);
+  font-size: clamp(1.5rem, 6vw, 2.5rem);
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+  margin: 0;
 }
 
-/* 2. Zone Visual Anchor — Miniature glass card */
-.c-zone-snapshot {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-2);
-  flex-shrink: 0;
+#summary-meta {
+  margin: 0;
 }
 
+/* 2. Zone visual anchor — sits inline with its label inside the zone row.
+   The frame and image styling are preserved; layout properties move to the
+   row engine above. */
 .c-zone-snapshot__frame {
   position: relative;
-  width: clamp(90px, 26vw, 120px);
+  flex: 0 0 auto;
+  width: clamp(72px, 22vw, 96px);
   aspect-ratio: 16 / 10;
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -1735,39 +1804,32 @@ body:not(.is-menu-open) .c-header__more svg line {
   text-transform: uppercase;
   letter-spacing: var(--tracking-widest);
   line-height: var(--leading-tight);
-  text-align: right;
+  min-width: 0;
 }
 
 [hidden] {
   display: none !important;
 }
 
-/* Very small screens only: cinematic stack */
+/* Very small screens — tighten gaps and shrink the title scale so the row
+   never overflows even at extreme widths. The change link stays unshrunk
+   (its tap target is protected by flex:0 0 auto). */
 @media (max-width: 370px) {
-  .c-booking-summary__layout {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-6);
-    text-align: center;
+  .c-booking-summary {
+    gap: var(--space-3);
   }
 
-  .c-booking-summary__match {
-    justify-content: center;
+  .c-booking-summary__row {
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
   }
 
-  .c-zone-snapshot {
-    align-items: stretch;
-    width: 100%;
+  .c-booking-summary #summary-title {
+    font-size: clamp(1.25rem, 5vw, 1.75rem);
   }
 
   .c-zone-snapshot__frame {
-    width: 100%;
-    aspect-ratio: 21 / 9;
-    max-height: 160px;
-  }
-
-  #zone-snapshot-label {
-    text-align: center;
+    width: clamp(56px, 18vw, 72px);
   }
 }
 
@@ -1870,6 +1932,143 @@ body:not(.is-menu-open) .c-header__more svg line {
   height: 14px;
   margin-top: 2px;
   color: var(--accent-pitch);
+}
+
+/* =========================================================================
+   WAYFINDING · STEP PROGRESSION
+   The booking page hero, lede, and submit button each ship two copies of
+   their text — `.p-booking__step-default` for the entry state and
+   `.p-booking__step-final` for the all-locked, ready-to-submit state. The
+   :has() rules below flip them based on form validity, with zero JS state
+   to keep in sync. `<select required>` whose placeholder option carries
+   value="" is :invalid until a real fixture/zone is picked, so :valid on
+   both selects is a precise proxy for "user has everything they need".
+   ========================================================================= */
+.p-booking__step-default {
+  display: inline;
+}
+
+.p-booking__step-final {
+  display: none;
+}
+
+body:has(.c-booking-form #f-match:valid):has(.c-booking-form #f-zone:valid)
+  .p-booking__step-default {
+  display: none;
+}
+
+body:has(.c-booking-form #f-match:valid):has(.c-booking-form #f-zone:valid)
+  .p-booking__step-final {
+  display: inline;
+}
+
+/* Tighten the gap between "Secure Your" and the swappable suffix word so the
+   transition Spot ↔ Bench reads as a single heading, not two glued strings. */
+.p-booking__step-default + .p-booking__step-final,
+.p-booking__step-final + .p-booking__step-default {
+  margin-left: 0;
+}
+
+/* =========================================================================
+   ZONES PAGE · STEP-2 CUE
+   The existing #zone-cue heading now carries a small caption above the
+   display text. Caption inherits u-caption + u-accent treatment but is
+   forced to its own line for clean two-tier hierarchy.
+   ========================================================================= */
+.c-zone-cue__step {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--type-caption);
+  font-family:
+    Inter,
+    Big Shoulders,
+    Arial;
+}
+
+.c-zone-cue__heading {
+  display: block;
+  font-size: var(--type-h2);
+}
+
+/* =========================================================================
+   BOOKING SUMMARY · CHANGE LINK
+   Secondary text-style action — underlined muted caption that sits inside
+   each receipt row. Deliberately NOT styled as a button so it never
+   competes with the primary "Confirm Guests & Book" CTA. Tap-target is a
+   full 44px tall via min-height + padding; flex:0 0 auto keeps the
+   underline-text un-shrunk so the hit-zone survives long match names.
+   ========================================================================= */
+.c-booking-summary__change {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  font-family: var(--font-body);
+  font-size: var(--type-caption);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  padding: var(--space-2) 0;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.c-booking-summary__change:hover,
+.c-booking-summary__change:focus-visible {
+  color: var(--accent-pitch);
+}
+
+/* =========================================================================
+   BOOKING FORM · RECEIPT MODE
+   When the form has been satisfied on its locked dimensions (match + zone
+   both :valid), the duplicated form fields are removed from the visual
+   flow — the summary panel above becomes the receipt of record. The guest
+   stepper is promoted to the page's primary action surface.
+
+   The locked inputs remain in the DOM (display:none does NOT strip them
+   from FormData per HTML §4.10.21.4 — only `disabled` does), so the
+   submission payload still carries match, zone, date, time, and guests.
+   ========================================================================= */
+.c-booking-form:has(#f-match:valid):has(#f-zone:valid)
+  .c-form-group:has(> #f-match),
+.c-booking-form:has(#f-match:valid):has(#f-zone:valid)
+  .c-form-group:has(> #f-zone),
+.c-booking-form:has(#f-match:valid):has(#f-zone:valid) .c-form-row {
+  display: none;
+}
+
+/* The guest stepper inherits the same attention-glow used by the funnel
+   arrival cue. JS still removes that JS-driven highlight on first focus,
+   but the receipt-mode glow persists for the duration of the visit. */
+.c-booking-form:has(#f-match:valid):has(#f-zone:valid) .c-stepper {
+  border-color: var(--border-accent);
+  box-shadow:
+    0 0 0 1px var(--border-accent),
+    0 6px 20px rgba(57, 255, 20, 0.14);
+}
+
+/* =========================================================================
+   MOBILE ERGONOMICS · KEYBOARD CLEARANCE
+   When the on-screen keyboard opens (guest input focused), the browser
+   scrolls the focused element into view. scroll-margin-bottom keeps the
+   submit button from being flush against the keyboard's top edge once the
+   user has typed and is reaching for "Reserve / Confirm".
+   ========================================================================= */
+.c-booking-form .c-button[type="submit"] {
+  scroll-margin-bottom: var(--space-12);
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 768px) {
+  /* Extra bottom buffer below the form so the submit button can always
+     scroll above the bottom nav + virtual keyboard without clipping. */
+  .c-booking-form {
+    padding-bottom: var(--space-12);
+  }
 }
 
 /* =========================================================================
@@ -2090,6 +2289,32 @@ body:not(.is-menu-open) .c-header__more svg line {
 
 .c-fixture-row:hover .c-fixture-row__arrow {
   transform: translateX(4px);
+}
+
+/* Locked row — match is inside the 3-hour booking cut-off. Rendered as a
+   <div> (not <a>) by the JS feed; this rule strips the interactive
+   affordances so the look matches the lack of behaviour. The "Walk-ins
+   Only" badge takes the same grid slot the arrow occupies on bookable
+   rows, keeping the two row variants pixel-aligned in the feed. */
+.c-fixture-row--locked {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.c-fixture-row--locked:hover {
+  border-color: var(--border-hairline);
+  background-color: var(--surface-raised);
+}
+
+.c-fixture-row--locked:active {
+  transform: none;
+}
+
+.c-fixture-row__lock-badge {
+  grid-row: 1 / -1;
+  grid-column: 2;
+  align-self: center;
+  flex-shrink: 0;
 }
 
 /* =========================================================================

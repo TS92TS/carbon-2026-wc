@@ -94,22 +94,34 @@
       <div class="l-page__content p-booking">
         <header class="c-section-header c-section-header--hero">
           <div class="c-section-header__text">
-            <p class="u-caption u-accent">Reservations</p>
+            <p class="u-caption u-accent">
+              <span class="p-booking__step-default">Reservations</span>
+              <span class="p-booking__step-final">Final Step of 3</span>
+            </p>
             <h1 class="u-display">
-              Secure Your <span class="u-accent">Spot</span>
+              Secure Your
+              <span class="u-accent p-booking__step-default">Spot</span
+              ><span class="u-accent p-booking__step-final">Bench</span>
             </h1>
             <p class="u-dim p-booking__lede">
-              Reserve your table in seconds. Guaranteed seating, your chosen
-              zone, ready for kick-off.
+              <span class="p-booking__step-default"
+                >Reserve your table in seconds. Guaranteed seating, your chosen
+                zone, ready for kick-off.</span
+              >
+              <span class="p-booking__step-final"
+                >One more step — confirm your guest count and lock in your
+                table.</span
+              >
             </p>
           </div>
           <div class="p-fixtures__divider" aria-hidden="true"></div>
         </header>
 
         <div id="booking-summary" class="c-booking-summary" hidden>
-          <div class="c-booking-summary__layout">
-            <div class="c-booking-summary__info">
-              <p class="u-caption">Your Selection</p>
+          <p class="c-booking-summary__caption u-caption">Your Selection</p>
+
+          <div class="c-booking-summary__row">
+            <div class="c-booking-summary__data">
               <div class="c-booking-summary__match">
                 <span id="summary-flag-a" class="c-fixture-row__flag"></span>
                 <h3 id="summary-title" class="u-display">Reservation</h3>
@@ -117,8 +129,20 @@
               </div>
               <p id="summary-meta" class="u-caption u-accent"></p>
             </div>
+            <a
+              id="summary-change-match"
+              href="fixtures.html"
+              class="c-booking-summary__change"
+              >Change match</a
+            >
+          </div>
 
-            <div id="zone-snapshot" class="c-zone-snapshot" hidden>
+          <div
+            id="zone-snapshot"
+            class="c-booking-summary__row c-zone-snapshot"
+            hidden
+          >
+            <div class="c-booking-summary__data c-booking-summary__data--row">
               <div class="c-zone-snapshot__frame">
                 <img
                   id="zone-snapshot-img"
@@ -129,6 +153,12 @@
               </div>
               <span id="zone-snapshot-label" class="u-caption"></span>
             </div>
+            <a
+              id="summary-change-zone"
+              href="zones.html"
+              class="c-booking-summary__change"
+              >Change zone</a
+            >
           </div>
         </div>
 
@@ -242,7 +272,10 @@
             type="submit"
             class="c-button c-button--primary c-button--block"
           >
-            Reserve My Bench &rarr;
+            <span class="p-booking__step-default">Reserve My Bench &rarr;</span>
+            <span class="p-booking__step-final"
+              >Confirm Guests &amp; Book &rarr;</span
+            >
           </button>
         </form>
       </div>

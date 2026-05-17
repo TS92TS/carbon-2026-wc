@@ -66,19 +66,36 @@ export function renderFeaturedMatch(matchPayload) {
 
   // 5. UX ENHANCEMENT: Contextual Button Logic
   if (els.bookingBtn) {
-    try {
-      els.bookingBtn.href = buildZonesURL(featured);
-    } catch (urlErr) {
-      console.warn("featuredMatch: buildZonesURL failed", urlErr);
-      els.bookingBtn.href = "zones.html";
-    }
-
     const status = safe(featured.badge).toLowerCase();
-    if (status === "live") {
-      els.bookingBtn.textContent = "Join the Atmosphere";
-      els.bookingBtn.classList.add("c-button--pulse");
+    const isBookable = featured.isBookable === true;
+
+    if (isBookable) {
+      try {
+        els.bookingBtn.href = buildZonesURL(featured);
+      } catch (urlErr) {
+        console.warn("featuredMatch: buildZonesURL failed", urlErr);
+        els.bookingBtn.href = "zones.html";
+      }
+      els.bookingBtn.removeAttribute("aria-disabled");
+      els.bookingBtn.classList.remove("c-button--muted");
+
+      if (status === "live") {
+        els.bookingBtn.textContent = "Join the Atmosphere";
+        els.bookingBtn.classList.add("c-button--pulse");
+      } else {
+        els.bookingBtn.textContent = "Book a Table";
+        els.bookingBtn.classList.remove("c-button--pulse");
+      }
     } else {
-      els.bookingBtn.textContent = "Book a Table";
+      // Inside the 3-hour cut-off — remove navigation, downgrade to a
+      // walk-ins notice. removeAttribute("href") strips link semantics
+      // entirely so screen readers + keyboard nav both treat it as a
+      // non-interactive label.
+      els.bookingBtn.removeAttribute("href");
+      els.bookingBtn.setAttribute("aria-disabled", "true");
+      els.bookingBtn.classList.remove("c-button--pulse");
+      els.bookingBtn.classList.add("c-button--muted");
+      els.bookingBtn.textContent = "Walk-ins Only";
     }
   }
 

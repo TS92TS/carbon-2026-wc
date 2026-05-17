@@ -31,6 +31,7 @@ export async function initBookingConcierge() {
     snapshotImg: document.querySelector("#zone-snapshot-img"),
     snapshotLabel: document.querySelector("#zone-snapshot-label"),
     policy: document.querySelector("#match-policy"),
+    changeZone: document.querySelector("#summary-change-zone"),
   };
 
   if (!els.form) return;
@@ -96,6 +97,25 @@ export async function initBookingConcierge() {
   };
 
   /**
+   * Keeps the "Change zone" link pointing at zones.html with the current
+   * fixture context attached, so users who want to revisit zones don't lose
+   * their match selection. Mirrors the shape produced by urlHelpers'
+   * `buildZonesURL` without re-importing match objects we no longer hold.
+   */
+  const syncChangeZoneHref = (info) => {
+    if (!els.changeZone || !info) return;
+    const slug = (info.slug || "").toLowerCase().replace(/\s+/g, "-");
+    const params = new URLSearchParams({
+      fixture: slug,
+      date: info.date || "",
+      time: info.time || "",
+      flagA: info.flagA || "",
+      flagB: info.flagB || "",
+    });
+    els.changeZone.href = `zones.html?${params.toString()}`;
+  };
+
+  /**
    * Build the canonical {slug,date,time,flagA,flagB} info object and apply
    * it to both the summary panel and the (now locked) form inputs. Single
    * write-through point — guarantees the displayed text and the form values
@@ -128,6 +148,7 @@ export async function initBookingConcierge() {
     if (els.date) els.date.value = info.date;
     if (els.time) els.time.value = info.time;
     updateMatchUI(info);
+    syncChangeZoneHref(info);
     lockDateTime();
   };
 
@@ -290,7 +311,13 @@ export async function initBookingConcierge() {
     return opt;
   };
 
-  const engArray = Array.isArray(matchData?.england) ? matchData.england : [];
+  // Bookable-only views. Matches inside the 3-hour cut-off (or already
+  // played) remain in the source arrays for the UI feed but are excluded
+  // from this form's reservation surface — the back-end no longer accepts
+  // bookings for them.
+  const engArray = (
+    Array.isArray(matchData?.england) ? matchData.england : []
+  ).filter((m) => m?.isBookable);
   if (engArray.length > 0 && els.match) {
     const engGroup = document.createElement("optgroup");
     engGroup.label = ">> ENGLAND FIXTURES";
@@ -301,9 +328,9 @@ export async function initBookingConcierge() {
     fragment.appendChild(engGroup);
   }
 
-  const tourneyArray = Array.isArray(matchData?.upcoming)
-    ? matchData.upcoming
-    : [];
+  const tourneyArray = (
+    Array.isArray(matchData?.upcoming) ? matchData.upcoming : []
+  ).filter((m) => m?.isBookable);
   if (tourneyArray.length > 0 && els.match) {
     const tourneyGroup = document.createElement("optgroup");
     tourneyGroup.label = `>> NEXT ${TOURNAMENT_DISPLAY_LIMIT} TOURNAMENT FIXTURES`;
@@ -333,10 +360,15 @@ export async function initBookingConcierge() {
   const findCanonicalMatch = (data, fixtureSlug, hintDate) => {
     if (!fixtureSlug) return null;
     const norm = fixtureSlug.toLowerCase();
+    // Pool intentionally filters to bookable matches only. A stale link
+    // like ?fixture=…&date=… opened inside the 3-hour cut-off resolves to
+    // null here, which short-circuits applyCanonicalMatch and leaves the
+    // form in its default empty state — the user can still pick another
+    // (bookable) fixture from the dropdown.
     const pool = [
       ...(Array.isArray(data.england) ? data.england : []),
       ...(Array.isArray(data.upcoming) ? data.upcoming : []),
-    ];
+    ].filter((m) => m?.isBookable);
     const candidates = pool.filter((m) => {
       const slug = `${m.teamA?.name || ""}-vs-${m.teamB?.name || ""}`
         .toLowerCase()
@@ -387,6 +419,7 @@ export async function initBookingConcierge() {
         if (els.date) els.date.value = info.date;
         if (els.time) els.time.value = info.time;
         updateMatchUI(info);
+        syncChangeZoneHref(info);
         lockDateTime();
       } catch (err) {
         console.warn("Booking: Failed to parse match selection", err);
