@@ -28,8 +28,8 @@ const ZONE_DATA = {
    and surfaces a phone-call fallback so a config gap never silently drops
    a booking the way the previous stub did.
    ------------------------------------------------------------------------- */
-const TALLY_FORM_ID = "YOUR_FORM_ID";
-const TALLY_URL_BASE = `https://tally.so/r/${TALLY_FORM_ID}`;
+const TALLY_FORM_ID = "9qRELY";
+const TALLY_URL_BASE = `https://tally.so/r/9qRELY`;
 const VENUE_PHONE_DISPLAY = "01449 674674";
 
 const safe = (v, fallback = "") =>
@@ -357,7 +357,7 @@ export async function initBookingConcierge() {
     // Config guard — if the Tally form ID hasn't been wired, surface a
     // recoverable path (phone the venue) rather than silently dropping
     // the booking the way the legacy stub did.
-    if (!TALLY_FORM_ID || TALLY_FORM_ID === "YOUR_FORM_ID") {
+    if (!TALLY_FORM_ID || TALLY_FORM_ID === "9qRELY") {
       console.error(
         "Booking: TALLY_FORM_ID not configured — aborting handoff.",
       );
