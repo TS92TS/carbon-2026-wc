@@ -563,6 +563,23 @@ export function isKnockoutMatch(match) {
 }
 
 /**
+ * Resolve a team's 3-letter abbreviation for compact list-row rendering.
+ * The football-data API exposes `tla` for every World Cup qualifier; this
+ * helper degrades gracefully for fallback / anonymous fixtures:
+ *   1. Prefer the API-supplied TLA (already uppercase, e.g. "ENG", "BRA")
+ *   2. Fall back to the first three letters of the team name, uppercased
+ *   3. "TBD" for fully anonymous knockout placeholders
+ * Returned strings are always uppercase and never empty.
+ */
+export function tlaOf(team) {
+  const tla = (team?.tla ?? "").trim();
+  if (tla) return tla.toUpperCase();
+  const name = (team?.name ?? "").trim();
+  if (name) return name.slice(0, 3).toUpperCase();
+  return "TBD";
+}
+
+/**
  * Fetch match data with localStorage fallback.
  * The Worker handles all retry/caching logic; the frontend trusts 200 or falls back.
  */

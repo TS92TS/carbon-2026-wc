@@ -298,7 +298,11 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-/* Team name in body font (semibold, uppercase, tracked) — no overflow on long names */
+/* Featured hero card team name — full name always, no truncation. The
+   card has vertical room for long names ("Bosnia and Herzegovina") to
+   wrap to a second line; `text-wrap: balance` distributes characters
+   evenly across the wrap (graceful no-op on older browsers). The hero
+   is a promotional surface — abbreviating here would lose impact. */
 .c-match-card__name {
   font-family: var(--font-body);
   font-weight: var(--weight-semibold);
@@ -308,9 +312,8 @@
   color: var(--text-primary);
   text-align: center;
   width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  text-wrap: balance;
 }
 
 .c-match-card__vs {
@@ -1118,6 +1121,71 @@ body:not(.is-menu-open) .c-header__more svg line {
 }
 
 /* =========================================================================
+   COMPONENT · FUNNEL HINT
+   Transient notice surfaced by lib/funnelHint.js when the book.html gate
+   redirected the user with a context message. Auto-dismisses; remains
+   inert (hidden) on direct visits with no stashed hint. The component
+   is placed at the top of the page content so it reads as page-level
+   feedback rather than tied to any particular section.
+   ========================================================================= */
+.c-funnel-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-block: 0 var(--space-6);
+  background: rgba(57, 255, 20, 0.06);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+}
+
+.c-funnel-hint[hidden] {
+  display: none;
+}
+
+.c-funnel-hint__icon {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+  background-color: var(--border-accent);
+  color: var(--text-on-accent);
+  font-weight: 700;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.c-funnel-hint__text {
+  flex: 1;
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.c-funnel-hint__dismiss {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color 120ms ease, background-color 120ms ease;
+}
+
+.c-funnel-hint__dismiss:hover,
+.c-funnel-hint__dismiss:focus-visible {
+  color: var(--text-primary);
+  background-color: var(--surface-overlay);
+  outline: none;
+}
+
+/* =========================================================================
    COMPONENT · FIXTURE BANNER (zones page)
    Mounted when the user arrives at zones.html with fixture context. Mirrors
    the booking-summary glass-card treatment for visual continuity across the
@@ -1182,13 +1250,17 @@ body:not(.is-menu-open) .c-header__more svg line {
   z-index: 0;
 }
 
+/* Banner match block — mirrors the booking-summary title pattern: the
+   container is a block, flags + slug flow inline-block / inline so when
+   the slug wraps the flags follow the text positions instead of being
+   stranded at the flex-allocated box edges. This also applies cleanly
+   when fixturesPage's zone-banner uses the same class for a flag-less
+   "MAIN BAR" label — the layout collapses to a centered text block. */
 .c-fixture-banner__match {
   position: relative;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
+  display: block;
+  text-align: center;
   min-width: 0;
 }
 
@@ -1200,21 +1272,34 @@ body:not(.is-menu-open) .c-header__more svg line {
   background-size: cover;
   background-position: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.c-fixture-banner__match #banner-flag-a {
+  margin-right: var(--space-2);
+}
+
+.c-fixture-banner__match #banner-flag-b {
+  margin-left: var(--space-2);
 }
 
 .c-fixture-banner__slug {
   font-family: var(--font-display);
-  font-size: var(--type-h3);
+  font-size: clamp(1.125rem, 5vw, var(--type-h3));
   font-weight: var(--weight-bold);
-  line-height: 1;
+  line-height: 1.2;
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
+  /* Inline flow — the slug shares a text stream with the flags so the
+     two flags always sit adjacent to the text on whichever line they
+     fall on. `text-wrap: balance` distributes line breaks evenly when
+     the slug spans multiple lines. */
+  display: inline;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+  vertical-align: middle;
 }
 
 .c-fixture-banner__hint {
@@ -1726,27 +1811,57 @@ body:not(.is-menu-open) .c-header__more svg line {
   gap: var(--space-3);
 }
 
+/* Match summary title — the h3 itself is the wrapper, with flag spans
+   and a text span flowing INSIDE as inline-block / inline. This ties the
+   flags to the text positions on every line, eliminating the flex
+   orphan-on-wrap problem the previous layout had. The whole title block
+   reads as a single text stream: "[🇪🇳]ENGLAND VS BRAZIL[🇧🇷]". */
 .c-booking-summary__match {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
+  display: block;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  /* Explicit line-height matches the inner #summary-title's value so the
+     line box height stays predictable when the title wraps. Without
+     this, the h3 inherits its line-height from the body (~1.5), and a
+     wrapped line would render taller than the tighter typography
+     intent. */
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-primary);
 }
 
 .c-booking-summary .c-fixture-row__flag {
   width: 24px;
   height: 16px;
-  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.c-booking-summary #summary-flag-a {
+  margin-right: var(--space-2);
+}
+
+.c-booking-summary #summary-flag-b {
+  margin-left: var(--space-2);
 }
 
 .c-booking-summary #summary-title {
-  font-size: clamp(1.5rem, 6vw, 2.5rem);
-  line-height: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-  margin: 0;
+  /* Inline so the h3 flows as a continuous text stream with the flags;
+     wrapping happens at word boundaries within the available container
+     width, never at flex-allocated sub-widths that could squeeze the
+     text into a narrow column. Clamp floor lowered to 1rem so common
+     titles ("ENGLAND VS BRAZIL") fit single-line even on a 320px
+     viewport — only the genuinely-long names ("Bosnia and Herzegovina
+     vs Costa Rica") wrap, and they wrap cleanly at spaces. */
+  display: inline;
+  font-size: clamp(1rem, 5.5vw, 2.5rem);
+  line-height: 1.2;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+  vertical-align: middle;
 }
 
 #summary-meta {
@@ -1832,9 +1947,12 @@ body:not(.is-menu-open) .c-header__more svg line {
   display: none !important;
 }
 
-/* Very small screens — tighten gaps and shrink the title scale so the row
-   never overflows even at extreme widths. The change link stays unshrunk
-   (its tap target is protected by flex:0 0 auto). */
+/* Very small screens — tighten panel gaps and shrink the zone snapshot
+   so the booking-summary row never overflows at extreme widths. The
+   title font-size is intentionally NOT overridden here: the base clamp
+   already scales to ~17.6px at 320px, and the inline-flow layout
+   eliminates the flex-allocated narrow-box constraint that previously
+   forced an additional font-size reduction at this breakpoint. */
 @media (max-width: 370px) {
   .c-booking-summary {
     gap: var(--space-3);
@@ -1843,10 +1961,6 @@ body:not(.is-menu-open) .c-header__more svg line {
   .c-booking-summary__row {
     gap: var(--space-3);
     padding-bottom: var(--space-3);
-  }
-
-  .c-booking-summary #summary-title {
-    font-size: clamp(1.25rem, 5vw, 1.75rem);
   }
 
   .c-zone-snapshot__frame {
@@ -1973,41 +2087,6 @@ select[readonly].is-locked {
 }
 
 /* =========================================================================
-   WAYFINDING · STEP PROGRESSION
-   The booking page hero, lede, and submit button each ship two copies of
-   their text — `.p-booking__step-default` for the entry state and
-   `.p-booking__step-final` for the all-locked, ready-to-submit state. The
-   :has() rules below flip them based on form validity, with zero JS state
-   to keep in sync. `<select required>` whose placeholder option carries
-   value="" is :invalid until a real fixture/zone is picked, so :valid on
-   both selects is a precise proxy for "user has everything they need".
-   ========================================================================= */
-.p-booking__step-default {
-  display: inline;
-}
-
-.p-booking__step-final {
-  display: none;
-}
-
-body:has(.c-booking-form #f-match:valid):has(.c-booking-form #f-zone:valid)
-  .p-booking__step-default {
-  display: none;
-}
-
-body:has(.c-booking-form #f-match:valid):has(.c-booking-form #f-zone:valid)
-  .p-booking__step-final {
-  display: inline;
-}
-
-/* Tighten the gap between "Secure Your" and the swappable suffix word so the
-   transition Spot ↔ Bench reads as a single heading, not two glued strings. */
-.p-booking__step-default + .p-booking__step-final,
-.p-booking__step-final + .p-booking__step-default {
-  margin-left: 0;
-}
-
-/* =========================================================================
    ZONES PAGE · STEP-2 CUE
    The existing #zone-cue heading now carries a small caption above the
    display text. Caption inherits u-caption + u-accent treatment but is
@@ -2062,27 +2141,14 @@ body:has(.c-booking-form #f-match:valid):has(.c-booking-form #f-zone:valid)
 
 /* =========================================================================
    BOOKING FORM · RECEIPT MODE
-   When the form has been satisfied on its locked dimensions (match + zone
-   both :valid), the duplicated form fields are removed from the visual
-   flow — the summary panel above becomes the receipt of record. The guest
-   stepper is promoted to the page's primary action surface.
-
-   The locked inputs remain in the DOM (display:none does NOT strip them
-   from FormData per HTML §4.10.21.4 — only `disabled` does), so the
-   submission payload still carries match, zone, date, time, and guests.
+   Funnel architecture: book.html is gated by booking.js so it only ever
+   renders for users with valid fixture + zone context. There are no
+   interactive match/zone/date/time form inputs — those become hidden
+   inputs populated from the URL — and the stepper is the only visible
+   field. The receipt-mode glow on the stepper signals "this is the only
+   action left" for the user's full visit.
    ========================================================================= */
-.c-booking-form:has(#f-match:valid):has(#f-zone:valid)
-  .c-form-group:has(> #f-match),
-.c-booking-form:has(#f-match:valid):has(#f-zone:valid)
-  .c-form-group:has(> #f-zone),
-.c-booking-form:has(#f-match:valid):has(#f-zone:valid) .c-form-row {
-  display: none;
-}
-
-/* The guest stepper inherits the same attention-glow used by the funnel
-   arrival cue. JS still removes that JS-driven highlight on first focus,
-   but the receipt-mode glow persists for the duration of the visit. */
-.c-booking-form:has(#f-match:valid):has(#f-zone:valid) .c-stepper {
+.c-booking-form .c-stepper {
   border-color: var(--border-accent);
   box-shadow:
     0 0 0 1px var(--border-accent),
@@ -2200,15 +2266,6 @@ body:has(.c-booking-form #f-match:valid):has(.c-booking-form #f-zone:valid)
   outline: none;
 }
 
-/* Apply chevron to both Selects */
-#f-zone,
-#f-match {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right var(--space-4) center;
-  background-size: 16px;
-}
-
 /* =========================================================================
    COMPONENT · FIXTURES LIST
    Shared across home teaser and full fixtures page.
@@ -2276,6 +2333,30 @@ body:has(.c-booking-form #f-match:valid):has(.c-booking-form #f-zone:valid)
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Responsive name/TLA toggle. Both variants render into the DOM; CSS
+   chooses which is visible by viewport width. `display: none` removes
+   the hidden variant from the accessibility tree as well as the visual
+   flow, so screen readers only ever hear one. Below 600px the row is
+   cramped — flag + 3-letter TLA + VS keeps everything on a single line
+   without ellipsizing mid-word. At 600px+ the full team name takes
+   over since the row has room. */
+.c-fixture-row__name {
+  display: inline;
+}
+
+.c-fixture-row__tla {
+  display: none;
+}
+
+@media (max-width: 599px) {
+  .c-fixture-row__name {
+    display: none;
+  }
+  .c-fixture-row__tla {
+    display: inline;
+  }
 }
 
 .c-fixture-row__flag {
@@ -2512,7 +2593,7 @@ body:has(.c-booking-form #f-match:valid):has(.c-booking-form #f-zone:valid)
 }
 
 .p-fixtures__stage-group[open] {
-  border-color: var(--border-accent);
+  border-color: var(--border-strong);
 }
 
 /* Summary uses a 2×2 grid so every accordion renders with identical

@@ -4,6 +4,7 @@ import {
   getLondonWeekday,
   isKnockoutMatch,
   getDetailedStageLabel,
+  tlaOf,
 } from "../lib/matchData.js";
 
 let matchCache = null;
@@ -187,27 +188,41 @@ function updateUI(matches, container) {
     const teamsDiv = document.createElement("div");
     teamsDiv.className = "c-fixture-row__teams";
 
-    // Team A
-    const teamA = document.createElement("span");
-    teamA.className = "c-fixture-row__team";
-    const flagA = document.createElement("span");
-    flagA.className = "c-fixture-row__flag";
-    flagA.style.backgroundImage = safeBackgroundUrl(match.teamA?.flag);
-    teamA.appendChild(flagA);
-    teamA.appendChild(document.createTextNode(isAnonymous ? "TBD" : nameA));
+    // Build a team cell with both full name AND TLA in the DOM. CSS
+    // toggles which is visible by viewport (TLA below 600px, full name
+    // above) so list rows stay readable on phones without ellipsizing
+    // long names mid-word. Keeping both variants in the DOM avoids any
+    // re-render on resize; `display: none` strips the hidden variant
+    // from the accessibility tree too.
+    const buildTeam = (teamData, displayName) => {
+      const team = document.createElement("span");
+      team.className = "c-fixture-row__team";
+
+      const flag = document.createElement("span");
+      flag.className = "c-fixture-row__flag";
+      flag.style.backgroundImage = safeBackgroundUrl(teamData?.flag);
+      team.appendChild(flag);
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "c-fixture-row__name";
+      nameSpan.textContent = displayName;
+      team.appendChild(nameSpan);
+
+      const tlaSpan = document.createElement("span");
+      tlaSpan.className = "c-fixture-row__tla";
+      tlaSpan.textContent = tlaOf(teamData);
+      team.appendChild(tlaSpan);
+
+      return team;
+    };
+
+    const teamA = buildTeam(match.teamA, isAnonymous ? "TBD" : nameA);
 
     const vs = document.createElement("span");
     vs.className = "c-fixture-row__vs";
     vs.textContent = "VS";
 
-    // Team B
-    const teamB = document.createElement("span");
-    teamB.className = "c-fixture-row__team";
-    const flagB = document.createElement("span");
-    flagB.className = "c-fixture-row__flag";
-    flagB.style.backgroundImage = safeBackgroundUrl(match.teamB?.flag);
-    teamB.appendChild(flagB);
-    teamB.appendChild(document.createTextNode(isAnonymous ? "TBD" : nameB));
+    const teamB = buildTeam(match.teamB, isAnonymous ? "TBD" : nameB);
 
     teamsDiv.appendChild(teamA);
     teamsDiv.appendChild(vs);

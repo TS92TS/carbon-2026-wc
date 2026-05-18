@@ -94,39 +94,43 @@
       <div class="l-page__content p-booking">
         <header class="c-section-header c-section-header--hero">
           <div class="c-section-header__text">
-            <p class="u-caption u-accent">
-              <span class="p-booking__step-default">Reservations</span>
-              <span class="p-booking__step-final">Final Step of 3</span>
-            </p>
+            <p class="u-caption u-accent">Final Step of 3</p>
             <h1 class="u-display">
-              Secure Your
-              <span class="u-accent p-booking__step-default">Spot</span
-              ><span class="u-accent p-booking__step-final">Bench</span>
+              Secure Your <span class="u-accent">Bench</span>
             </h1>
             <p class="u-dim p-booking__lede">
-              <span class="p-booking__step-default"
-                >Reserve your table in seconds. Guaranteed seating, your chosen
-                zone, ready for kick-off.</span
-              >
-              <span class="p-booking__step-final"
-                >One more step — confirm your guest count and lock in your
-                table.</span
-              >
+              One more step — confirm your guest count and lock in your table.
             </p>
           </div>
           <div class="p-fixtures__divider" aria-hidden="true"></div>
         </header>
 
+        <!-- Booking summary — locked match + zone display. booking.js
+             reveals this after the synchronous funnel-gate passes and
+             async validation confirms the fixture is still bookable.
+             Hidden in static HTML to avoid pre-gate flash on bad URLs. -->
         <div id="booking-summary" class="c-booking-summary" hidden>
           <p class="c-booking-summary__caption u-caption">Your Selection</p>
 
           <div class="c-booking-summary__row">
             <div class="c-booking-summary__data">
-              <div class="c-booking-summary__match">
-                <span id="summary-flag-a" class="c-fixture-row__flag"></span>
-                <h3 id="summary-title" class="u-display">Reservation</h3>
-                <span id="summary-flag-b" class="c-fixture-row__flag"></span>
-              </div>
+              <!-- Match title — flags nest INSIDE the h3 as inline-block
+                   siblings of the title text span so they stay adjacent to
+                   the text on any line. With the prior flex layout, when
+                   the title wrapped at narrow widths the h3 still occupied
+                   the full flex-allocated width and flag B looked orphaned
+                   far to the right. Inline flow ties flags directly to the
+                   text positions: flag A leads, flag B trails, regardless
+                   of how many lines the title wraps to. -->
+              <h3 class="c-booking-summary__match"><span
+                  id="summary-flag-a"
+                  class="c-fixture-row__flag"
+                ></span><span id="summary-title" class="u-display"
+                  >Reservation</span
+                ><span
+                  id="summary-flag-b"
+                  class="c-fixture-row__flag"
+                ></span></h3>
               <p id="summary-meta" class="u-caption u-accent"></p>
             </div>
             <a
@@ -162,50 +166,16 @@
           </div>
         </div>
 
+        <!-- Booking form — `guests` is the only interactive field. The
+             other four (fixture, date, time, zone) ride as hidden inputs
+             populated from the URL by booking.js after the gate validates
+             them. Field `name=` attributes are case-sensitive and match
+             the live Tally form's hidden-field names exactly. -->
         <form id="booking-form" class="c-booking-form">
-          <div class="c-form-group">
-            <label for="f-match" class="u-caption">Your Match</label>
-            <select name="match" id="f-match" class="c-form-input" required>
-              <option value="" disabled selected hidden>
-                Select your match...
-              </option>
-            </select>
-          </div>
-
-          <div class="c-form-group">
-            <label for="f-zone" class="u-caption">Preferred Zone</label>
-            <select name="zone" id="f-zone" class="c-form-input" required>
-              <option value="" disabled selected hidden>
-                Select a Zone...
-              </option>
-              <option value="carbon">Main Bar</option>
-              <option value="terrace">The Mill Terrace</option>
-              <option value="booth">VIP Booths</option>
-            </select>
-          </div>
-
-          <div class="c-form-row">
-            <div class="c-form-group">
-              <label for="f-date" class="u-caption">Date</label>
-              <input
-                type="date"
-                name="date"
-                id="f-date"
-                class="c-form-input"
-                required
-              />
-            </div>
-            <div class="c-form-group">
-              <label for="f-time" class="u-caption">Time</label>
-              <input
-                type="time"
-                name="time"
-                id="f-time"
-                class="c-form-input"
-                required
-              />
-            </div>
-          </div>
+          <input type="hidden" name="fixture" id="f-fixture" value="" />
+          <input type="hidden" name="date" id="f-date" value="" />
+          <input type="hidden" name="time" id="f-time" value="" />
+          <input type="hidden" name="zone" id="f-zone" value="" />
 
           <p
             id="match-policy"
@@ -272,10 +242,7 @@
             type="submit"
             class="c-button c-button--primary c-button--block"
           >
-            <span class="p-booking__step-default">Reserve My Bench &rarr;</span>
-            <span class="p-booking__step-final"
-              >Confirm Guests &amp; Book &rarr;</span
-            >
+            Confirm Guests &amp; Book &rarr;
           </button>
         </form>
       </div>

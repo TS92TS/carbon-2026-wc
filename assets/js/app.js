@@ -13,12 +13,18 @@ import { initZoneSliders } from "./components/zoneSlider.js";
 import { initZonesPage } from "./components/zonesPage.js";
 import { initScrollVideos } from "./lib/video.js";
 import { initBookingConcierge } from "./components/booking.js";
+import { consumeFunnelHint } from "./lib/funnelHint.js";
 import { marqueeState } from "./data/content.js";
 
 async function boot() {
   // ---- 1. SHELL · always-on UI ------------------------------------------
   initMobileMenu();
   updateNavStates();
+
+  // Surface (and clear) any redirect hint left behind by the book.html
+  // gate. Bails silently on pages without a #funnel-hint element or
+  // when sessionStorage holds no hint.
+  consumeFunnelHint();
 
   const marqueeRoot = document.querySelector('[data-component="marquee"]');
   if (marqueeRoot) initMarquee(marqueeRoot, marqueeState);

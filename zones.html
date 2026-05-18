@@ -107,6 +107,28 @@
 
     <main class="l-page" id="main">
       <div class="l-page__content p-zones">
+        <!-- Funnel hint — surfaced + cleared by lib/funnelHint.js when the
+             book.html gate redirected the user here with a context message
+             (e.g. "Pick a zone to continue your booking."). Auto-dismisses
+             after a short window; click-to-dismiss also wired. -->
+        <div
+          id="funnel-hint"
+          class="c-funnel-hint"
+          role="status"
+          aria-live="polite"
+          hidden
+        >
+          <span class="c-funnel-hint__icon" aria-hidden="true">!</span>
+          <p class="c-funnel-hint__text"></p>
+          <button
+            type="button"
+            class="c-funnel-hint__dismiss"
+            aria-label="Dismiss notification"
+          >
+            &times;
+          </button>
+        </div>
+
         <header class="c-section-header c-section-header--hero">
           <div class="c-section-header__text">
             <p class="u-caption u-accent">Explore Carbon</p>

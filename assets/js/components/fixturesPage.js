@@ -9,6 +9,7 @@ import {
   isKnockoutMatch,
   getDetailedStageLabel,
   getStageGroup,
+  tlaOf,
 } from "../lib/matchData.js";
 
 const safe = (v) => (v === undefined || v === null ? "" : v);
@@ -400,15 +401,29 @@ function createFixtureRow(match, options = {}) {
   const makeTeam = (teamData) => {
     const team = document.createElement("span");
     team.className = "c-fixture-row__team";
+
     const flag = document.createElement("span");
     flag.className = "c-fixture-row__flag";
     flag.style.backgroundImage = safeBackgroundUrl(teamData?.flag);
     team.appendChild(flag);
 
-    const teamName = safe(teamData?.name).trim();
-    const displayName = teamName !== "" ? teamName : "TBD";
+    // Full name AND TLA both ride in the DOM. CSS toggles which is shown
+    // by viewport width: TLA below 600px (rows are cramped, full names
+    // would ellipsize mid-word), full name at 600px+. `display: none` on
+    // the hidden variant removes it from the accessibility tree as well
+    // as the visual flow, so screen readers only hear one.
+    const fullName = safe(teamData?.name).trim() || "TBD";
 
-    team.appendChild(document.createTextNode(displayName));
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "c-fixture-row__name";
+    nameSpan.textContent = fullName;
+    team.appendChild(nameSpan);
+
+    const tlaSpan = document.createElement("span");
+    tlaSpan.className = "c-fixture-row__tla";
+    tlaSpan.textContent = tlaOf(teamData);
+    team.appendChild(tlaSpan);
+
     return team;
   };
 
