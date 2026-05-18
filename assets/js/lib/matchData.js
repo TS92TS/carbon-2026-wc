@@ -563,6 +563,73 @@ export function isKnockoutMatch(match) {
 }
 
 /**
+ * Single source of truth for "this fixture has no confirmed teams yet."
+ * Both empty strings ("") and the literal "TBD" placeholder are treated
+ * as anonymous so the helper works against the football-data API's
+ * raw response AND the static fallback dataset. Renderers use this to
+ * switch to the milestone presentation (trophy emblem + stage label)
+ * instead of showing empty flag boxes around redundant TBD VS TBD text.
+ */
+export function isAnonymousMatch(match) {
+  const nameA = (match?.teamA?.name ?? "").trim().toUpperCase();
+  const nameB = (match?.teamB?.name ?? "").trim().toUpperCase();
+  return (nameA === "" || nameA === "TBD") && (nameB === "" || nameB === "TBD");
+}
+
+/**
+ * Title-case rewrites of the canonical UPPERCASE stage labels used in the
+ * UI. Reserved for non-UI display contexts (Tally confirmation emails,
+ * Google Sheets booking-ledger rows) where SHOUTY all-caps reads as
+ * unprofessional. The UI surfaces keep using `getDetailedStageLabel`
+ * directly (the all-caps version pairs with the display-font
+ * typography); these are strictly for human-readable form submission.
+ */
+const STAGE_LABEL_DISPLAY = {
+  "GROUP STAGE": "Group Stage",
+  "ROUND OF 32": "Round of 32",
+  "ROUND OF 16": "Round of 16",
+  "QUARTER-FINAL": "Quarter-Final",
+  "SEMI-FINAL": "Semi-Final",
+  "WORLD CUP FINAL": "World Cup Final",
+  "3rd Place Play-Off": "3rd Place Play-Off",
+  "Knockout Stage": "Knockout Stage",
+};
+
+/**
+ * Build a human-readable fixture identifier suitable for the Tally form
+ * payload (confirmation email + Google Sheets booking ledger). This is
+ * NOT the URL slug — slugs stay machine-parseable (`england-vs-brazil`,
+ * `tbd-vs-tbd`) for routing through fixtures → zones → book and for
+ * `findBookableMatch` slug normalisation. This helper exists strictly
+ * for the form-submission boundary, where humans (the customer and the
+ * venue) will be reading the value.
+ *
+ *   - Anonymous fixtures (TBD vs TBD knockout placeholders) return the
+ *     title-case stage label: "World Cup Final", "Quarter-Final", etc.
+ *     The user booked the event; "tbd-vs-tbd" was never what they
+ *     thought they were booking.
+ *   - Confirmed fixtures return "TeamA vs TeamB" with proper case from
+ *     the API ("England vs Brazil", not "england-vs-brazil") so the
+ *     confirmation email reads naturally.
+ *
+ * Once a previously-anonymous knockout match has its teams confirmed by
+ * the football-data API, the next bookings automatically take the
+ * "TeamA vs TeamB" path. Historical bookings made while the match was
+ * TBD keep their booking-time label ("World Cup Final") in the Tally
+ * record — correct event-ticketing semantics: the email confirms what
+ * the customer booked at the moment they booked it.
+ */
+export function formatFixtureDisplay(match) {
+  if (isAnonymousMatch(match)) {
+    const raw = getDetailedStageLabel(match);
+    return STAGE_LABEL_DISPLAY[raw] || raw || "Knockout Match";
+  }
+  const nameA = (match?.teamA?.name ?? "").trim() || "TBD";
+  const nameB = (match?.teamB?.name ?? "").trim() || "TBD";
+  return `${nameA} vs ${nameB}`;
+}
+
+/**
  * Resolve a team's 3-letter abbreviation for compact list-row rendering.
  * The football-data API exposes `tla` for every World Cup qualifier; this
  * helper degrades gracefully for fallback / anonymous fixtures:

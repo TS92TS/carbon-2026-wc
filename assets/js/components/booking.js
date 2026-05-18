@@ -2,8 +2,16 @@ import {
   getMatchData,
   formatMatchDateTime,
   getDetailedStageLabel,
+  isAnonymousMatch,
+  formatFixtureDisplay,
 } from "../lib/matchData.js";
 import { safeBackgroundUrl } from "../lib/urlHelpers.js";
+
+/* Trophy emblem for the milestone (TBD) summary variant — inline SVG so
+   it inherits `currentColor`. Same path data as fixturesPage.js /
+   upcomingMatches.js / featuredMatch.js so the trophy reads as the same
+   visual identity across every TBD surface end-to-end. */
+const TROPHY_SVG_MARKUP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>`;
 
 const IMG = new URL("../../img/", import.meta.url).href;
 
@@ -61,26 +69,56 @@ function redirectToFunnel(destination, hintMessage) {
 
 /**
  * Find a still-bookable match in matchData whose team slug matches
- * `fixtureSlug`. Uses the same normalization as urlHelpers.buildMatchURL
- * so URLs emitted by fixtures/zones pages round-trip cleanly. Returns
- * `null` for stale links (passed fixture / withdrawn fixture / inside
- * the 3-hour cut-off).
+ * `fixtureSlug`. Two subtleties:
+ *
+ *   1. SLUG NORMALISATION must mirror urlHelpers.buildMatchURL exactly —
+ *      both use `"tbd"` (NOT `""`) as the empty-team fallback. Previously
+ *      this side used `""`, producing `"-vs-"`, which never matched the
+ *      `"tbd-vs-tbd"` slugs emitted by the URL builder, leaving every
+ *      anonymous knockout fixture un-bookable from the gate.
+ *
+ *   2. AMBIGUOUS SLUGS: all anonymous TBD vs TBD knockout fixtures share
+ *      the same slug, so the date hint from the URL is required to pick
+ *      the specific kickoff the user clicked. Without the hint we'd
+ *      always return the earliest TBD match regardless of which one the
+ *      user actually selected on fixtures.html. When the hint is present
+ *      and matches a candidate's Europe/London date, that candidate wins;
+ *      otherwise we fall back to chronological order so something
+ *      bookable is still returned for non-ambiguous slugs.
+ *
+ * Returns `null` for stale links (passed fixture / withdrawn fixture /
+ * inside the 3-hour cut-off).
  */
-function findBookableMatch(matchData, fixtureSlug) {
+function findBookableMatch(matchData, fixtureSlug, hintDate) {
   if (!fixtureSlug || !matchData) return null;
   const norm = fixtureSlug.toLowerCase();
   const pool = [
     ...(Array.isArray(matchData.england) ? matchData.england : []),
     ...(Array.isArray(matchData.upcoming) ? matchData.upcoming : []),
   ].filter((m) => m?.isBookable);
-  return (
-    pool.find((m) => {
-      const slug = `${m.teamA?.name || ""}-vs-${m.teamB?.name || ""}`
-        .toLowerCase()
-        .replace(/\s+/g, "-");
-      return slug === norm;
-    }) || null
-  );
+
+  const candidates = pool.filter((m) => {
+    const teamA = (m.teamA?.name ?? "").trim() || "tbd";
+    const teamB = (m.teamB?.name ?? "").trim() || "tbd";
+    const slug = `${teamA}-vs-${teamB}`.toLowerCase().replace(/\s+/g, "-");
+    return slug === norm;
+  });
+
+  if (candidates.length === 0) return null;
+  if (candidates.length === 1) return candidates[0];
+
+  // Multiple matches share the slug (ambiguous "tbd-vs-tbd" or a rare
+  // legitimate rematch). Disambiguate by the URL's date hint when present;
+  // otherwise return the earliest so something is still bookable.
+  if (hintDate) {
+    const byDate = candidates.find(
+      (m) => formatMatchDateTime(m.datetimeIso)?.dateInputValue === hintDate,
+    );
+    if (byDate) return byDate;
+  }
+  return candidates
+    .slice()
+    .sort((a, b) => Date.parse(a.datetimeIso) - Date.parse(b.datetimeIso))[0];
 }
 
 export async function initBookingConcierge() {
@@ -203,7 +241,14 @@ export async function initBookingConcierge() {
     return;
   }
 
-  const match = findBookableMatch(matchData, fixtureParam);
+  // Date hint disambiguates ambiguous slugs (TBD vs TBD shared across N
+  // knockout fixtures). The URL's `date` param is the user's actual click
+  // target — pass it so the lookup picks the right kickoff.
+  const match = findBookableMatch(
+    matchData,
+    fixtureParam,
+    urlParams.get("date"),
+  );
   if (!match) {
     redirectToFunnel(
       `fixtures.html?zone=${encodeURIComponent(zoneParam)}`,
@@ -225,7 +270,7 @@ export async function initBookingConcierge() {
       ALL GATES PASSED — populate the page
       ----------------------------------------------------------------------- */
   populateSummary(match, fmt, zoneParam);
-  populateHiddenInputs(fixtureParam, fmt, zoneParam);
+  populateHiddenInputs(match, fmt, zoneParam);
   wireChangeLinks(match, fmt, fixtureParam, zoneParam);
   initStepper();
 
@@ -250,27 +295,62 @@ function populateSummary(match, fmt, zoneSlug) {
   const policy = document.getElementById("match-policy");
   const zoneInfo = ZONE_DATA[zoneSlug];
 
-  if (summary) summary.removeAttribute("hidden");
+  // Single source of truth for "no confirmed teams yet" — drives both
+  // the title fallback (stage label instead of "TBD VS TBD") AND the
+  // flag treatment (trophy emblem replaces the two empty grey flag
+  // rectangles that would otherwise frame the title).
+  const isAnonymous = isAnonymousMatch(match);
+
+  if (summary) {
+    summary.removeAttribute("hidden");
+    summary.classList.toggle("c-booking-summary--milestone", isAnonymous);
+  }
   if (snapshot) snapshot.removeAttribute("hidden");
   if (policy) policy.removeAttribute("hidden");
 
   if (titleEl) {
-    const nameA = safe(match.teamA?.name).trim() || "TBD";
-    const nameB = safe(match.teamB?.name).trim() || "TBD";
-    const slug = `${nameA} VS ${nameB}`;
-    // Anonymous knockout fixtures (TBD vs TBD) surface the milestone label
-    // ("WORLD CUP FINAL") instead of a confusing slug.
-    const isAnonymous = nameA === "TBD" && nameB === "TBD";
-    const stageLabel = getDetailedStageLabel(match);
-    titleEl.textContent = isAnonymous && stageLabel ? stageLabel : slug;
+    if (isAnonymous) {
+      const stageLabel = getDetailedStageLabel(match);
+      titleEl.textContent = stageLabel || "KNOCKOUT MATCH";
+    } else {
+      const nameA = safe(match.teamA?.name).trim() || "TBD";
+      const nameB = safe(match.teamB?.name).trim() || "TBD";
+      titleEl.textContent = `${nameA} VS ${nameB}`;
+    }
   }
 
   if (metaEl) {
     metaEl.textContent = [fmt.dateShort, fmt.time].filter(Boolean).join(" · ");
   }
 
-  if (flagA) flagA.style.backgroundImage = safeBackgroundUrl(match.teamA?.flag);
-  if (flagB) flagB.style.backgroundImage = safeBackgroundUrl(match.teamB?.flag);
+  if (isAnonymous) {
+    // Replace the two empty flag boxes with a single trophy emblem
+    // inserted in-line with the title. Flag A becomes the emblem host
+    // (preserves DOM order: emblem · title · [hidden]); flag B is
+    // hidden via display:none. Idempotent — re-running populateSummary
+    // on the same anonymous match won't double-insert because we
+    // overwrite flagA's innerHTML wholesale.
+    if (flagA) {
+      flagA.style.backgroundImage = "";
+      flagA.classList.add("c-booking-summary__flag-trophy");
+      flagA.innerHTML = TROPHY_SVG_MARKUP;
+    }
+    if (flagB) flagB.style.display = "none";
+  } else {
+    // Restore standard flag rendering — explicit "" clears any prior
+    // milestone-mode display:none so the same elements can re-render
+    // for a confirmed-team match on a hot reload.
+    if (flagA) {
+      flagA.classList.remove("c-booking-summary__flag-trophy");
+      flagA.innerHTML = "";
+      flagA.style.display = "";
+      flagA.style.backgroundImage = safeBackgroundUrl(match.teamA?.flag);
+    }
+    if (flagB) {
+      flagB.style.display = "";
+      flagB.style.backgroundImage = safeBackgroundUrl(match.teamB?.flag);
+    }
+  }
 
   if (snapshotImg && zoneInfo) {
     // onerror bound BEFORE src (race-safe). The zone is locked on this
@@ -289,18 +369,37 @@ function populateSummary(match, fmt, zoneSlug) {
 
 /**
  * Write the four URL-sourced values into their hidden inputs so the form
- * submit handler can forward them via FormData. The fifth field (guests)
- * is owned by the stepper and is left untouched.
+ * submit handler can forward them via FormData → Tally. The fifth field
+ * (guests) is owned by the stepper and is left untouched.
+ *
+ * IMPORTANT — display values, not slugs.
+ * The URL slug (e.g. `england-vs-brazil`, `tbd-vs-tbd`) and the zone
+ * slug (`carbon`/`terrace`/`booth`) are routing/normalisation primitives
+ * — they need to stay machine-parseable for `findBookableMatch`, the
+ * cross-page funnel URLs, and for matchData lookups. But the moment the
+ * form is submitted, the payload is one-way: it lands in a confirmation
+ * email and a Google Sheets row that humans (the customer and the
+ * venue) will read.
+ *
+ * So at this boundary we substitute:
+ *   `fixture` → `formatFixtureDisplay(match)`  →  "World Cup Final"
+ *                                                or "England vs Brazil"
+ *   `zone`    → `ZONE_DATA[zoneSlug].name`     →  "Main Bar" (not "carbon")
+ *
+ * The URL flow, the booking gate, and the in-page summary remain
+ * unchanged. Once a TBD knockout's teams are confirmed by the API,
+ * subsequent bookings automatically pick up the new team-pair display
+ * without any code change here.
  */
-function populateHiddenInputs(fixtureSlug, fmt, zoneSlug) {
+function populateHiddenInputs(match, fmt, zoneSlug) {
   const setInput = (id, value) => {
     const el = document.getElementById(id);
     if (el) el.value = value;
   };
-  setInput("f-fixture", fixtureSlug);
+  setInput("f-fixture", formatFixtureDisplay(match));
   setInput("f-date", fmt.dateInputValue);
   setInput("f-time", fmt.time);
-  setInput("f-zone", zoneSlug);
+  setInput("f-zone", ZONE_DATA[zoneSlug]?.name || zoneSlug);
 }
 
 /**

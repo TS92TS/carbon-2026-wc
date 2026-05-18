@@ -87,12 +87,29 @@ button {
   padding: 0;
   color: inherit;
   -webkit-tap-highlight-color: transparent;
+  /* `manipulation` disables the browser's double-tap-to-zoom heuristic
+     on this element and eliminates the ~300 ms click delay that ships
+     with that heuristic. Rapid successive taps (e.g. stepping guest
+     count from 2 → 8) now register as separate, instant clicks instead
+     of triggering a viewport zoom. Page-level pinch-zoom remains
+     intact, so accessibility/users-with-low-vision are not affected. */
+  touch-action: manipulation;
 }
 
 a {
   color: inherit;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Stage-accordion summaries (fixtures.html `<details><summary>`) and any
+   custom role="button" host elements get the same treatment so rapid
+   open/close taps stay instant and never trigger viewport zoom. */
+summary,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 p,

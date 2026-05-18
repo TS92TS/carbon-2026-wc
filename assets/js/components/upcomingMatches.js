@@ -5,7 +5,13 @@ import {
   isKnockoutMatch,
   getDetailedStageLabel,
   tlaOf,
+  isAnonymousMatch,
 } from "../lib/matchData.js";
+
+/* Trophy emblem for the milestone (TBD) row variant — inline SVG so it
+   inherits `currentColor`. Mirrors the markup used in fixturesPage.js
+   so both list contexts render identical TBD rows. */
+const TROPHY_SVG_MARKUP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>`;
 
 let matchCache = null;
 const DISPLAY_LIMIT = 4;
@@ -179,64 +185,105 @@ function updateUI(matches, container) {
     } else {
       row = document.createElement("div");
     }
-    row.className = `c-fixture-row${isBookable ? "" : " c-fixture-row--locked"}`;
+    const isAnonymous = isAnonymousMatch(match);
 
-    const nameA = safe(match.teamA?.name).trim();
-    const nameB = safe(match.teamB?.name).trim();
-    const isAnonymous = nameA === "" && nameB === "";
+    row.className = [
+      "c-fixture-row",
+      isBookable ? "" : "c-fixture-row--locked",
+      isAnonymous ? "c-fixture-row--milestone" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
 
-    const teamsDiv = document.createElement("div");
-    teamsDiv.className = "c-fixture-row__teams";
+    // ---- Leading content: teams OR milestone block ----
+    let leadingDiv;
+    if (isAnonymous) {
+      // TBD knockout fixture — trophy emblem + stage label as headline,
+      // "Teams TBC" as transparent status. No empty flag boxes.
+      leadingDiv = document.createElement("div");
+      leadingDiv.className = "c-fixture-row__milestone";
 
-    // Build a team cell with both full name AND TLA in the DOM. CSS
-    // toggles which is visible by viewport (TLA below 600px, full name
-    // above) so list rows stay readable on phones without ellipsizing
-    // long names mid-word. Keeping both variants in the DOM avoids any
-    // re-render on resize; `display: none` strips the hidden variant
-    // from the accessibility tree too.
-    const buildTeam = (teamData, displayName) => {
-      const team = document.createElement("span");
-      team.className = "c-fixture-row__team";
+      const emblem = document.createElement("span");
+      emblem.className = "c-fixture-row__milestone-emblem";
+      emblem.innerHTML = TROPHY_SVG_MARKUP;
+      leadingDiv.appendChild(emblem);
 
-      const flag = document.createElement("span");
-      flag.className = "c-fixture-row__flag";
-      flag.style.backgroundImage = safeBackgroundUrl(teamData?.flag);
-      team.appendChild(flag);
+      const textBlock = document.createElement("span");
+      textBlock.className = "c-fixture-row__milestone-text";
 
-      const nameSpan = document.createElement("span");
-      nameSpan.className = "c-fixture-row__name";
-      nameSpan.textContent = displayName;
-      team.appendChild(nameSpan);
+      const stage = document.createElement("span");
+      stage.className = "c-fixture-row__milestone-stage";
+      stage.textContent = getDetailedStageLabel(match);
+      textBlock.appendChild(stage);
 
-      const tlaSpan = document.createElement("span");
-      tlaSpan.className = "c-fixture-row__tla";
-      tlaSpan.textContent = tlaOf(teamData);
-      team.appendChild(tlaSpan);
+      const note = document.createElement("span");
+      note.className = "c-fixture-row__milestone-note";
+      note.textContent = "Teams TBC";
+      textBlock.appendChild(note);
 
-      return team;
-    };
+      leadingDiv.appendChild(textBlock);
+    } else {
+      leadingDiv = document.createElement("div");
+      leadingDiv.className = "c-fixture-row__teams";
 
-    const teamA = buildTeam(match.teamA, isAnonymous ? "TBD" : nameA);
+      // Build a team cell with both full name AND TLA in the DOM. CSS
+      // toggles which is visible by viewport (TLA below 600px, full name
+      // above) so list rows stay readable on phones without ellipsizing
+      // long names mid-word.
+      const buildTeam = (teamData, displayName) => {
+        const team = document.createElement("span");
+        team.className = "c-fixture-row__team";
 
-    const vs = document.createElement("span");
-    vs.className = "c-fixture-row__vs";
-    vs.textContent = "VS";
+        const flag = document.createElement("span");
+        flag.className = "c-fixture-row__flag";
+        flag.style.backgroundImage = safeBackgroundUrl(teamData?.flag);
+        team.appendChild(flag);
 
-    const teamB = buildTeam(match.teamB, isAnonymous ? "TBD" : nameB);
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "c-fixture-row__name";
+        nameSpan.textContent = displayName;
+        team.appendChild(nameSpan);
 
-    teamsDiv.appendChild(teamA);
-    teamsDiv.appendChild(vs);
-    teamsDiv.appendChild(teamB);
+        const tlaSpan = document.createElement("span");
+        tlaSpan.className = "c-fixture-row__tla";
+        tlaSpan.textContent = tlaOf(teamData);
+        team.appendChild(tlaSpan);
+
+        return team;
+      };
+
+      const nameA = safe(match.teamA?.name).trim();
+      const nameB = safe(match.teamB?.name).trim();
+      const teamA = buildTeam(match.teamA, nameA || "TBD");
+
+      const vs = document.createElement("span");
+      vs.className = "c-fixture-row__vs";
+      vs.textContent = "VS";
+
+      const teamB = buildTeam(match.teamB, nameB || "TBD");
+
+      leadingDiv.appendChild(teamA);
+      leadingDiv.appendChild(vs);
+      leadingDiv.appendChild(teamB);
+    }
 
     const metaDiv = document.createElement("div");
     metaDiv.className = "c-fixture-row__meta";
     const timeEl = document.createElement("time");
 
-    const stageLabel = getDetailedStageLabel(match);
-    timeEl.textContent = `${dateStr} · ${timeStr} · ${stageLabel}`;
+    // Stage label rides in the meta line for confirmed matches (the
+    // user often needs the stage as context against the team names).
+    // For milestone (anonymous) rows the stage is already the headline,
+    // so we keep the meta lean — date · time only.
+    if (isAnonymous) {
+      timeEl.textContent = `${dateStr} · ${timeStr}`;
+    } else {
+      const stageLabel = getDetailedStageLabel(match);
+      timeEl.textContent = `${dateStr} · ${timeStr} · ${stageLabel}`;
+    }
     metaDiv.appendChild(timeEl);
 
-    row.appendChild(teamsDiv);
+    row.appendChild(leadingDiv);
     row.appendChild(metaDiv);
 
     if (isBookable) {

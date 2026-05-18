@@ -316,6 +316,50 @@
   text-wrap: balance;
 }
 
+/* =========================================================================
+   MILESTONE FEATURED CARD (TBD / unconfirmed-teams variant)
+   When the featured (hero) match is a TBD knockout fixture, the card
+   body swaps the flag-name-VS-name-flag grid for a single large trophy
+   emblem above a "Teams to be confirmed" status line. The card header
+   badge above still carries the stage label ("WORLD CUP FINAL"), so the
+   body stays focused: visual anchor + transparent status. The booking
+   CTA below continues to work — TBD matches are bookable when kickoff
+   is outside the 3-hour cut-off.
+   ========================================================================= */
+.c-match-card--milestone .c-match-card__teams {
+  /* Collapse the three-column grid into a single centred column.
+     featuredMatch.js replaces the team children with milestone markup;
+     this rule re-flows the container to suit. */
+  grid-template-columns: 1fr;
+  justify-items: center;
+  text-align: center;
+  gap: var(--space-3);
+}
+
+.c-match-card__milestone-emblem {
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  color: var(--accent-pitch);
+}
+
+.c-match-card__milestone-emblem svg {
+  width: 48px;
+  height: 48px;
+}
+
+.c-match-card__milestone-note {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: var(--weight-medium);
+  font-size: var(--type-small);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--accent-pitch);
+  line-height: var(--leading-tight);
+}
+
 .c-match-card__vs {
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
@@ -1148,34 +1192,41 @@ body:not(.is-menu-open) .c-header__more svg line {
   flex-shrink: 0;
   display: inline-grid;
   place-items: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: var(--space-6);
+  height: var(--space-6);
   border-radius: var(--radius-full);
   background-color: var(--border-accent);
   color: var(--text-on-accent);
-  font-weight: 700;
-  font-size: 0.875rem;
+  font-weight: var(--weight-bold);
+  font-size: var(--type-small);
   line-height: 1;
 }
 
 .c-funnel-hint__text {
   flex: 1;
   margin: 0;
-  font-size: 0.9375rem;
-  line-height: 1.4;
+  font-size: var(--type-small);
+  line-height: var(--leading-normal);
 }
 
+/* Dismiss tap target: 28×28 visual via 4×8 padding around a 20px glyph
+   gives ~28×28 with comfortable surrounding space; combined with the
+   adjacent text it meets WCAG AA's "adequate space" exception for
+   secondary controls. The cursor + hover/focus states make affordance
+   obvious. */
 .c-funnel-hint__dismiss {
   flex-shrink: 0;
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  font-size: 1.25rem;
+  font-size: var(--type-h3);
   line-height: 1;
   padding: var(--space-1) var(--space-2);
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: color 120ms ease, background-color 120ms ease;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
 }
 
 .c-funnel-hint__dismiss:hover,
@@ -1276,6 +1327,28 @@ body:not(.is-menu-open) .c-header__more svg line {
   vertical-align: middle;
 }
 
+/* TBD knockout banner — zonesPage.js promotes flag-A to a trophy emblem
+   host (innerHTML replaced with inline SVG) and hides flag-B. This rule
+   neutralises the flag-rectangle styling so the slot becomes a clean
+   icon container that inherits the accent colour. Visual outcome:
+   `[trophy] WORLD CUP FINAL  ·  Sun 19 Jul · 20:00` — one cohesive
+   line, no orphan flag-coloured boxes. */
+.c-fixture-banner__flag.c-fixture-banner__flag-trophy {
+  width: auto;
+  aspect-ratio: auto;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  color: var(--accent-pitch);
+  line-height: 0;
+}
+
+.c-fixture-banner__flag-trophy svg {
+  width: 28px;
+  height: 28px;
+  vertical-align: middle;
+}
+
 .c-fixture-banner__match #banner-flag-a {
   margin-right: var(--space-2);
 }
@@ -1286,17 +1359,22 @@ body:not(.is-menu-open) .c-header__more svg line {
 
 .c-fixture-banner__slug {
   font-family: var(--font-display);
-  font-size: clamp(1.125rem, 5vw, var(--type-h3));
+  font-size: clamp(1rem, 4.5vw, var(--type-h3));
   font-weight: var(--weight-bold);
   line-height: 1.2;
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--text-primary);
-  /* Inline flow — the slug shares a text stream with the flags so the
-     two flags always sit adjacent to the text on whichever line they
-     fall on. `text-wrap: balance` distributes line breaks evenly when
-     the slug spans multiple lines. */
-  display: inline;
+  /* Inline-block sized to content, capped at calc(100% - 5.5rem) to
+     reserve room for flag A + flag B + margins. Mirrors the booking
+     summary pattern — prevents flag B from wrapping to its own line
+     when the slug fits the line with flag A but not flag B. The 5.5rem
+     reserve is slightly wider than the booking summary's 5rem because
+     the banner flags are 28px (vs 24px), so the per-side overhead is
+     ~36px instead of ~32px. */
+  display: inline-block;
+  width: max-content;
+  max-width: calc(100% - 5.5rem);
   overflow-wrap: break-word;
   text-wrap: balance;
   vertical-align: middle;
@@ -1840,6 +1918,30 @@ body:not(.is-menu-open) .c-header__more svg line {
   vertical-align: middle;
 }
 
+/* TBD booking summary — booking.js promotes flag-A to a trophy emblem
+   host (innerHTML replaced with the inline SVG) and hides flag-B. This
+   rule resets the flag-rectangle styling so the slot becomes a square
+   colour-inheriting icon container instead of a grey 24×16 rectangle.
+   The trophy + title ("WORLD CUP FINAL") + meta line read as a single
+   centered visual unit, consistent with the milestone treatment on
+   fixtures/upcoming list rows and the featured-match hero card. */
+.c-booking-summary .c-fixture-row__flag.c-booking-summary__flag-trophy {
+  width: auto;
+  height: auto;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  color: var(--accent-pitch);
+  line-height: 0;
+  margin-right: var(--space-2);
+}
+
+.c-booking-summary__flag-trophy svg {
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+}
+
 .c-booking-summary #summary-flag-a {
   margin-right: var(--space-2);
 }
@@ -1849,19 +1951,29 @@ body:not(.is-menu-open) .c-header__more svg line {
 }
 
 .c-booking-summary #summary-title {
-  /* Inline so the h3 flows as a continuous text stream with the flags;
-     wrapping happens at word boundaries within the available container
-     width, never at flex-allocated sub-widths that could squeeze the
-     text into a narrow column. Clamp floor lowered to 1rem so common
-     titles ("ENGLAND VS BRAZIL") fit single-line even on a 320px
-     viewport — only the genuinely-long names ("Bosnia and Herzegovina
-     vs Costa Rica") wrap, and they wrap cleanly at spaces. */
-  display: inline;
-  font-size: clamp(1rem, 5.5vw, 2.5rem);
+  /* Inline-block sized to its content (max-content), capped at
+     calc(100% - 5rem) so there's always reserved space for flag A +
+     flag B + their margins on the row. This prevents the "flag B wraps
+     alone" failure mode that pure `display: inline` produced:
+       • Short titles ("ENGLAND VS BRAZIL"): block is content-width, flags
+         hug it closely on both sides — no internal wrap, no orphaned flag.
+       • Long titles ("BOSNIA AND HERZEGOVINA VS COSTA RICA"): block hits
+         the max-width cap, text wraps internally with `text-wrap: balance`
+         distributing lines evenly, flag B sits at the block's right edge
+         (vertically centered against the multi-line text).
+
+     Clamp restored to a confident size (1.125rem floor, 2.5rem ceiling)
+     now that the icon-only "Change" affordance frees ~50px of row width.
+     At 320px viewport this gives ~18px font — readable promotional
+     typography rather than the previously-cramped 14px. */
+  display: inline-block;
+  width: max-content;
+  max-width: calc(100% - 5rem);
+  vertical-align: middle;
+  font-size: clamp(1.125rem, 5vw, 2.5rem);
   line-height: 1.2;
   overflow-wrap: break-word;
   text-wrap: balance;
-  vertical-align: middle;
 }
 
 #summary-meta {
@@ -2088,18 +2200,14 @@ select[readonly].is-locked {
 
 /* =========================================================================
    ZONES PAGE · STEP-2 CUE
-   The existing #zone-cue heading now carries a small caption above the
-   display text. Caption inherits u-caption + u-accent treatment but is
-   forced to its own line for clean two-tier hierarchy.
+   The existing #zone-cue heading carries a step indicator above the
+   display heading. The kicker uses `.c-funnel-step` (defined below) for
+   typography; this rule only handles its layout — forced to its own
+   line above the heading for clean two-tier hierarchy.
    ========================================================================= */
 .c-zone-cue__step {
   display: block;
   margin-bottom: var(--space-2);
-  font-size: var(--type-caption);
-  font-family:
-    Inter,
-    Big Shoulders,
-    Arial;
 }
 
 .c-zone-cue__heading {
@@ -2108,35 +2216,72 @@ select[readonly].is-locked {
 }
 
 /* =========================================================================
-   BOOKING SUMMARY · CHANGE LINK
-   Secondary text-style action — underlined muted caption that sits inside
-   each receipt row. Deliberately NOT styled as a button so it never
-   competes with the primary "Confirm Guests & Book" CTA. Tap-target is a
-   full 44px tall via min-height + padding; flex:0 0 auto keeps the
-   underline-text un-shrunk so the hit-zone survives long match names.
+   FUNNEL STEP INDICATOR
+   Single source of truth for "Step N of 3" wayfinding labels across the
+   booking funnel. Replaces the previous `u-caption u-accent` combo on:
+     • zones.html  — Path A Step 2 kicker (`.c-zone-cue__step`)
+     • fixtures.html — Path B Step 2 banner-hint label
+     • book.html   — Final Step hero kicker
+
+   Why bump from `u-caption` (~13 px medium) to this (~14 px bold,
+   widest tracking)?
+     • Goal-Gradient Effect — users accelerate as they perceive
+       proximity to the goal. A more apparent step indicator makes
+       that proximity easier to perceive.
+     • Visual hierarchy — the step indicator IS the user's wayfinding
+       anchor, not a secondary helper. It should read at a tier above
+       generic captions.
+     • Restraint — still well below the page H1 / display headline so
+       hierarchy stays intact; just lifted above other caption usages.
    ========================================================================= */
+.c-funnel-step {
+  font-family: var(--font-body);
+  font-size: var(--type-small);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-widest);
+  line-height: var(--leading-tight);
+  text-transform: uppercase;
+  color: var(--accent-pitch);
+}
+
+/* =========================================================================
+   BOOKING SUMMARY · CHANGE LINK
+   Compact icon-only edit affordance. Replaced the previous text link
+   ("Change match" / "Change zone") because the ~84px text-link claimed
+   too much of the row width, squeezing the match-title block on narrow
+   viewports and forcing aggressive font shrinkage. The pencil icon is a
+   universally-recognised "edit/change" cue (24+ years of UI convention),
+   the aria-label preserves the action's full name for screen readers,
+   and a 36×36 tap target meets WCAG AA comfort while keeping the visual
+   weight subordinate to the primary "Confirm Guests & Book" CTA. */
 .c-booking-summary__change {
   flex: 0 0 auto;
-  color: var(--text-secondary);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-  font-family: var(--font-body);
-  font-size: var(--type-caption);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-wider);
-  text-transform: uppercase;
-  padding: var(--space-2) 0;
-  min-height: var(--tap-min);
   display: inline-flex;
   align-items: center;
-  white-space: nowrap;
-  transition: color var(--duration-fast) var(--ease-out);
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+  background-color: transparent;
+  text-decoration: none;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.c-booking-summary__change-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .c-booking-summary__change:hover,
 .c-booking-summary__change:focus-visible {
   color: var(--accent-pitch);
+  background-color: var(--surface-overlay);
+  outline: none;
 }
 
 /* =========================================================================
@@ -2310,6 +2455,19 @@ select[readonly].is-locked {
   transform: scale(0.98);
 }
 
+/* Milestone row (TBD knockout fixture) — subtle border-accent so the
+   marquee event reads as distinguished from group-stage rows without
+   over-decorating. The internal trophy + accent "Teams TBC" caption
+   are the primary visual differentiators; this is a quiet supporting
+   cue. Hover deepens the accent in step with the standard hover. */
+.c-fixture-row--milestone {
+  border-color: rgba(57, 255, 20, 0.22);
+}
+
+.c-fixture-row--milestone:hover {
+  border-color: var(--border-accent);
+}
+
 .c-fixture-row__teams {
   grid-row: 1;
   grid-column: 1;
@@ -2368,6 +2526,67 @@ select[readonly].is-locked {
   background-position: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   flex-shrink: 0;
+}
+
+/* =========================================================================
+   MILESTONE FIXTURE ROW (TBD / unconfirmed-teams variant)
+   When a knockout fixture exists with no confirmed teams yet (true for
+   every R32/R16/QF/SF/Final row pre-bracket-resolution), the row swaps
+   its flag-name-VS-name-flag layout for a trophy emblem + stage label +
+   "Teams TBC" sub-line. The stage IS the booking value when teams are
+   unknown — "WORLD CUP FINAL" is the product, not a TBD VS TBD
+   placeholder. Lives at the same grid slot as `__teams` (row 1, col 1)
+   so the meta line + arrow keep the same alignment across both row
+   variants — visual rhythm of the schedule is preserved.
+   ========================================================================= */
+.c-fixture-row__milestone {
+  grid-row: 1;
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.c-fixture-row__milestone-emblem {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--accent-pitch);
+}
+
+.c-fixture-row__milestone-emblem svg {
+  width: 24px;
+  height: 24px;
+}
+
+.c-fixture-row__milestone-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.c-fixture-row__milestone-stage {
+  font-family: var(--font-body);
+  font-weight: var(--weight-semibold);
+  font-size: var(--type-small);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-primary);
+  line-height: var(--leading-tight);
+}
+
+.c-fixture-row__milestone-note {
+  font-family: var(--font-body);
+  font-weight: var(--weight-medium);
+  font-size: var(--type-tiny);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--accent-pitch);
+  line-height: var(--leading-tight);
 }
 
 .c-fixture-row__vs {

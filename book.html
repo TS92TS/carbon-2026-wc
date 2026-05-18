@@ -94,7 +94,7 @@
       <div class="l-page__content p-booking">
         <header class="c-section-header c-section-header--hero">
           <div class="c-section-header__text">
-            <p class="u-caption u-accent">Final Step of 3</p>
+            <p class="c-funnel-step">Final Step of 3</p>
             <h1 class="u-display">
               Secure Your <span class="u-accent">Bench</span>
             </h1>
@@ -133,12 +133,31 @@
                 ></span></h3>
               <p id="summary-meta" class="u-caption u-accent"></p>
             </div>
+            <!-- Icon-only "change" affordance — pencil glyph + aria-label
+                 communicates "edit this selection" without competing with
+                 the match title for horizontal row width. Tap target meets
+                 a11y comfort minimum (36×36 with surrounding space). -->
             <a
               id="summary-change-match"
               href="fixtures.html"
               class="c-booking-summary__change"
-              >Change match</a
+              aria-label="Change match"
+              title="Change match"
             >
+              <svg
+                class="c-booking-summary__change-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+            </a>
           </div>
 
           <div
@@ -161,8 +180,23 @@
               id="summary-change-zone"
               href="zones.html"
               class="c-booking-summary__change"
-              >Change zone</a
+              aria-label="Change zone"
+              title="Change zone"
             >
+              <svg
+                class="c-booking-summary__change-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+            </a>
           </div>
         </div>
 
