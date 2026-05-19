@@ -13,31 +13,21 @@ import {
 } from "../lib/constants.js";
 
 /* -------------------------------------------------------------------------
-   TALLY HANDOFF
-   The booking funnel exits the SPA at submit-time. Five captured metrics
-   ride into the live Tally form as case-sensitive URL params:
+   TALLY HANDOFF · the funnel exits the SPA at submit-time. Five params
+   ride into the live Tally form (case-sensitive):
        fixture, date, time, zone, guests
-   Tally collects name/email/phone, fires a double opt-in verification
-   email, and on confirmation a server webhook commits the row to the
-   Google Sheets ledger + dispatches the Brevo voucher email.
-
-   The form field `name=""` attributes on book.html are intentionally
-   identical to the Tally hidden-field names so the submit handler can
-   forward FormData → URLSearchParams without any renaming layer.
+   Tally → double-opt-in email → webhook → Google Sheets ledger → Brevo.
+   Field `name=""` attributes on book.html match Tally's hidden-field
+   names exactly, so FormData → URLSearchParams forwards directly.
    ------------------------------------------------------------------------- */
 const TALLY_FORM_ID = "9qRELY";
 const TALLY_URL_BASE = `https://tally.so/r/${TALLY_FORM_ID}`;
 const VENUE_PHONE_DISPLAY = "01449 674674";
 
 /* -------------------------------------------------------------------------
-   FUNNEL GATE
-   book.html is the funnel terminal — it cannot serve a useful UI without
-   both fixture and zone context. When either is missing or invalid, the
-   gate redirects the user back to the appropriate step.
-
-   A hint string is stashed in sessionStorage so the destination page can
-   surface a brief "Pick a match to continue your booking" cue (Phase 5
-   will wire the display layer; the write is harmless until then).
+   FUNNEL GATE · book.html has no useful UI without both fixture + zone.
+   Missing/invalid → redirect to the right step with a sessionStorage
+   hint string that funnelHint.js surfaces on arrival.
    ------------------------------------------------------------------------- */
 const REDIRECT_HINT_KEY = "carbon_funnel_redirect_hint";
 
@@ -50,34 +40,19 @@ function redirectToFunnel(destination, hintMessage) {
   } catch (e) {
     /* sessionStorage unavailable — proceed without hint */
   }
-  // `replace` (not `assign`) so the back button doesn't sandwich the user
-  // in a redirect chain. They land on fixtures.html / zones.html and the
-  // browser history has no book.html step between the previous page and
-  // the destination.
+  // `replace` (not `assign`) so the back button doesn't sandwich the
+  // user inside a redirect chain.
   window.location.replace(destination);
 }
 
 /**
- * Find a still-bookable match in matchData whose team slug matches
- * `fixtureSlug`. Two subtleties:
- *
- *   1. SLUG NORMALISATION must mirror urlHelpers.buildMatchURL exactly —
- *      both use `"tbd"` (NOT `""`) as the empty-team fallback. Previously
- *      this side used `""`, producing `"-vs-"`, which never matched the
- *      `"tbd-vs-tbd"` slugs emitted by the URL builder, leaving every
- *      anonymous knockout fixture un-bookable from the gate.
- *
- *   2. AMBIGUOUS SLUGS: all anonymous TBD vs TBD knockout fixtures share
- *      the same slug, so the date hint from the URL is required to pick
- *      the specific kickoff the user clicked. Without the hint we'd
- *      always return the earliest TBD match regardless of which one the
- *      user actually selected on fixtures.html. When the hint is present
- *      and matches a candidate's Europe/London date, that candidate wins;
- *      otherwise we fall back to chronological order so something
- *      bookable is still returned for non-ambiguous slugs.
- *
- * Returns `null` for stale links (passed fixture / withdrawn fixture /
- * inside the 3-hour cut-off).
+ * Find a still-bookable match whose team slug matches `fixtureSlug`.
+ * Slug normalisation MUST mirror urlHelpers.buildMatchURL exactly: both
+ * use "tbd" (not "") as the empty-team fallback so "tbd-vs-tbd" links
+ * resolve. Ambiguous TBD-vs-TBD slugs are disambiguated by the URL's
+ * `hintDate` (the user's clicked Europe/London date); without a hint,
+ * the earliest candidate wins.
+ * Returns null for stale links (passed / withdrawn / past 3-h cutoff).
  */
 function findBookableMatch(matchData, fixtureSlug, hintDate) {
   if (!fixtureSlug || !matchData) return null;

@@ -7,8 +7,9 @@ import {
 import { TROPHY_SVG_MARKUP } from "../lib/constants.js";
 
 /**
- * Renders the primary Hero match card with England priority.
- * @param {Object} matchPayload - The full data object containing .upcoming and .england arrays.
+ * Renders the home hero match card. England fixtures take priority;
+ * falls back to the next upcoming match. Anonymous (TBD) variants swap
+ * to a trophy + stage label so the card never frames empty flag boxes.
  */
 export function renderFeaturedMatch(matchPayload) {
   const card = document.getElementById("featured-match");
@@ -16,10 +17,9 @@ export function renderFeaturedMatch(matchPayload) {
 
   const safe = (v) => (v === undefined || v === null ? "" : v);
 
-  // Signal loading state for assistive tech
   card.setAttribute("aria-busy", "true");
 
-  // 1. THE SELECTION LOGIC (England Priority)
+  // England priority, falling through to the next upcoming match.
   const featured =
     matchPayload.england && matchPayload.england.length > 0
       ? matchPayload.england[0]
@@ -27,7 +27,6 @@ export function renderFeaturedMatch(matchPayload) {
         ? matchPayload.upcoming[0]
         : null;
 
-  // 2. SAFETY CHECK: If the tournament is over or no data exists
   if (matchPayload.status === "concluded" || !featured) {
     card.innerHTML =
       '<div class="c-match-card__header">Tournament Concluded</div>';
@@ -35,12 +34,10 @@ export function renderFeaturedMatch(matchPayload) {
     return;
   }
 
-  // 3. DATA PREPARATION — Europe/London via shared formatter
   const fmt = formatMatchDateTime(featured.datetimeIso);
   const dateFormatted = fmt ? fmt.dateShort : "";
   const timeFormatted = fmt ? fmt.time : "";
 
-  // 4. DOM INJECTION (Scoped Lookups)
   const els = {
     badge: card.querySelector('[data-match-target="badge"]'),
     time: card.querySelector('[data-match-target="time"]'),
@@ -51,7 +48,6 @@ export function renderFeaturedMatch(matchPayload) {
     bookingBtn: card.querySelector('[data-match-target="booking-link"]'),
   };
 
-  // 1. Swap general category string for high-fidelity round names
   if (els.badge) els.badge.textContent = getDetailedStageLabel(featured);
 
   if (els.time) {
@@ -60,13 +56,8 @@ export function renderFeaturedMatch(matchPayload) {
       els.time.setAttribute("datetime", safe(featured.datetimeIso));
   }
 
-  // 2. Anonymous (TBD) featured fixture — the card body becomes a single
-  //    centred trophy emblem + "Teams to be confirmed" status rather than
-  //    two empty flag boxes around redundant TBD VS TBD text. The badge
-  //    in the header still carries the stage label ("WORLD CUP FINAL"),
-  //    so the milestone body stays lean: visual anchor + status. The
-  //    booking button below still wires up to the funnel (TBD matches
-  //    are bookable when kickoff is outside the 3-hour cut-off).
+  // Anonymous TBD: replace flags+names with a trophy + status line. The
+  // header badge still carries the stage so the card body stays lean.
   const isAnonymous = isAnonymousMatch(featured);
   const teamsContainer = card.querySelector(".c-match-card__teams");
 
@@ -123,12 +114,9 @@ export function renderFeaturedMatch(matchPayload) {
         els.bookingBtn.classList.remove("c-button--pulse");
       }
     } else {
-      // Inside the 3-hour cut-off — online booking is closed, but rather
-      // than burning the click impression on a dead-end label, route the
-      // button to the venue phone so the user has a clear next step.
-      // Muted styling differentiates it visually from the live "Book a
-      // Table" CTA; the tel: scheme triggers the dialler on mobile and
-      // is harmless on desktop (browser shows a "Call?" affordance).
+      // Inside the 3-hour cut-off: route the dead "book" tap to the
+      // venue phone so the click still has a clear next step. Muted
+      // styling distinguishes it from the live CTA.
       els.bookingBtn.href = "tel:+441449674674";
       els.bookingBtn.removeAttribute("aria-disabled");
       els.bookingBtn.classList.remove("c-button--pulse");

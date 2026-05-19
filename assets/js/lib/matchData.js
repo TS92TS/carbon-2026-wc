@@ -1,20 +1,19 @@
-// File: matchData.js
+/* =========================================================================
+   MATCH DATA · network fetch + localStorage cache + trading-rules engine.
+   Single authority for fixture timestamps (Europe/London) and viability.
+   ========================================================================= */
+
 const API_URL = "https://carbon-sports-api.pages.dev/api/get-next-match";
 const STORAGE_KEY = "carbon_match_data_cache";
 
-// Cache evaluation thresholds for resilient offline fault tolerance
-const CACHE_STALE_THRESH_MS = 24 * 60 * 60 * 1000; // 24 Hours (Soft Warning Flag)
-const CACHE_ANCIENT_THRESH_MS = 5 * 24 * 60 * 60 * 1000; // 5 Days (Hard Expiration Gate)
+// 24 h · soft-stale flag.   5 d · hard-expire (purged on read).
+const CACHE_STALE_THRESH_MS = 24 * 60 * 60 * 1000;
+const CACHE_ANCIENT_THRESH_MS = 5 * 24 * 60 * 60 * 1000;
 
-// =========================================================================
-// === CRO INSURANCE POLICY: HIGH-AVAILABILITY STATIC EMERGENCY FALLBACK ===
-// Executed strictly during total cache blackout conditions (Incognito / Outage)
-// Preserves critical funnel conversion paths with true whitelisted names and IDs.
-// =========================================================================
-// NOTE: `updatedAt` is intentionally NOT baked in here — see the fallback
-// branch in fetchMatchData() where it's stamped lazily with `Date.now()`
-// at serve-time. A frozen module-load timestamp would lie about freshness
-// in long-lived sessions (kiosks, PWAs, idle tabs that survive for hours).
+/* Last-resort static dataset for total-cache-blackout conditions
+   (incognito + network outage). `updatedAt` is stamped at serve-time
+   (see fetchMatchData) so kiosks / long-lived tabs never see a frozen
+   module-load timestamp. */
 const FALLBACK_DATA = {
   status: "upcoming",
   _source: "static_fallback",
@@ -98,10 +97,7 @@ const FALLBACK_DATA = {
   ],
 };
 
-/**
- * Evaluates the actual freshness context of stored match payloads.
- * Returns an object detailing whether data should be completely rejected or simply flagged.
- */
+/** Classifies cached-payload freshness: valid / stale / ancient. */
 function evaluateCacheAge(parsedData) {
   if (!parsedData || typeof parsedData !== "object") return { isValid: false };
 
@@ -109,14 +105,12 @@ function evaluateCacheAge(parsedData) {
   if (!timestamp) return { isValid: false };
 
   const ageMs = Date.now() - new Date(timestamp).getTime();
-
-  // Guard against corrupted system clocks returning values from the deep future
+  // Guard against clock skew producing values from the deep future.
   if (!Number.isFinite(ageMs) || ageMs < 0) return { isValid: false };
 
   if (ageMs >= CACHE_ANCIENT_THRESH_MS) {
     return { isValid: false, isStale: true, isAncient: true };
   }
-
   return {
     isValid: true,
     isStale: ageMs >= CACHE_STALE_THRESH_MS,
@@ -125,15 +119,9 @@ function evaluateCacheAge(parsedData) {
 }
 
 /* -------------------------------------------------------------------------
-   BOOKING CUTOFF
-   Operations policy: online reservations close strictly 3 hours before
-   kick-off. After that point matches stay visible in every feed (people
-   still want to see the schedule) but the booking funnel is closed and the
-   UI degrades to "Walk-ins Only" affordances.
-   3 hours = 3 * 60 * 60 * 1000 = 10,800,000 ms — checked from
-   `Date.now()` against `Date.parse(match.datetimeIso)`. Both sides are
-   UTC-instant integers, so the comparison is timezone-agnostic and
-   mathematically precise; no Europe/London conversion needed here.
+   BOOKING CUTOFF · online reservations close 3h before kickoff. Matches
+   stay visible in feeds (people still want the schedule) but the funnel
+   closes and the UI degrades to a "Walk-ins Only" affordance.
    ------------------------------------------------------------------------- */
 const BOOKING_CUTOFF_MS = 3 * 60 * 60 * 1000;
 
@@ -145,10 +133,9 @@ function isMatchBookable(match, now) {
 }
 
 /**
- * Mutates each match in `data.upcoming` and `data.england`, stamping it with
- * an `isBookable` boolean computed against the current moment. Called on
- * every `getMatchData()` resolution (both live and cache paths) so the
- * value is always fresh — never read from a stale cache write.
+ * Stamps `isBookable` on every match in `data.upcoming` and `data.england`.
+ * Re-run on every read (live + cache paths) so the value is always fresh
+ * relative to "now" rather than the moment of cache write.
  */
 function stampBookable(data) {
   if (!data || typeof data !== "object") return data;
@@ -166,33 +153,25 @@ function stampBookable(data) {
 }
 
 /* -------------------------------------------------------------------------
-   TRADING-DAY RULES ENGINE
-   Drops low-demand late-night fixtures that would breach the licence. 
-   Runs strictly on read (never on cache write), so the persisted
-   payload remains the raw API response — the filter is a pure projection
-   from raw → UI-visible.
+   TRADING-DAY RULES ENGINE · drops late-night fixtures that would breach
+   the licence. Pure projection from raw API → UI-visible, never mutates
+   the cached payload.
 
-   Rules:
-     A — TIER_0_TEAMS (home nations) are always viable.
-
-     B — Kickoffs 00:00–04:59 London evaluate against the PREVIOUS
-         calendar day's trading slot (e.g. Sat 01:30 = Friday trading day).
-
-     Opening Hour Gate — Kickoffs 05:00–10:59 UK time are dropped: too late
-         to ride the previous night's licence (Rule B) and before the
-         complex opens at 11:00. Tier-0 matches in this window pass via
-         Rule A; an inner re-check in the gate is defence-in-depth
-         against any future re-ordering of the pipeline.
-     C — Knockout matches budget 3h (extra time + pens); group stage 2h.
-     D — Hard-close per evaluated trading day:
-            Mon–Thu → 02:00, Fri/Sat → 03:30, Sun → 01:00.
-         Sunday Gov Extension lifts Sun close to 02:00 when ALL of:
-            match date ∈ {2026-07-14, 2026-07-15, 2026-07-19}
-            AND stage ∈ {Semi-Final, Final}
-            AND a Tier-0 team is playing
-            AND kickoff hour ∈ {21, 22}.
-     E — Viable if expectedEnd ≤ hardClose. Otherwise a Tier-1 / knockout
-         match still passes (Ops will apply a TEN). Everything else drops.
+   Rule A   home-nations (Tier 0) always viable.
+   Rule B   kickoffs 00:00–04:59 London → evaluate against the previous
+            calendar day's trading slot (Sat 01:30 = Friday trading day).
+   Opening  kickoffs 05:00–10:59 dropped: too late for last night's licence,
+   gate     too early for opening (11:00). Tier 0 passes via Rule A; inner
+            re-check is defence-in-depth.
+   Rule C   knockout duration 3h (ET + pens), group 2h.
+   Rule D   hard-close by weekday: Mon–Thu 02:00, Fri/Sat 03:30, Sun 01:00.
+            Sunday Gov Extension lifts Sun close to 02:00 only when ALL of:
+              date ∈ {2026-07-14, 2026-07-15, 2026-07-19}
+              ∧ stage ∈ {Semi-Final, Final}
+              ∧ a Tier-0 team is playing
+              ∧ kickoff hour ∈ {21, 22}.
+   Rule E   viable if expectedEnd ≤ hardClose. Otherwise Tier 1 / knockout
+            still passes (Ops will apply a TEN). Everything else drops.
    ------------------------------------------------------------------------- */
 const TIER_0_TEAMS = ["England", "Scotland", "Wales", "Northern Ireland"];
 const TIER_1_TEAMS = [
@@ -263,11 +242,9 @@ function readLondonParts(dateOrMs) {
 }
 
 /**
- * Resolve a Europe/London wall-clock moment to a UTC ms instant.
- * Iterative offset resolution handles BST↔GMT transitions correctly — the
- * tournament sits entirely inside BST (+1h) but writing it generically
- * costs nothing and protects against off-season fixtures or schedule
- * tweaks that brush against a DST changeover.
+ * London wall-clock → UTC ms instant. The iterative offset resolution
+ * survives BST↔GMT transitions (the tournament is fully inside BST but
+ * generic handling protects against future schedule edits across DST).
  */
 function londonWallClockToUtcMs(year, month, day, hour, minute) {
   const target = Date.UTC(year, month - 1, day, hour, minute);
@@ -300,12 +277,10 @@ function getStage(match) {
 }
 
 /**
- * Forgiving knockout detection — exact-match against `KNOCKOUT_STAGES`
- * preferred, with a substring fallback for legacy badge formats like
- * "Knockout: Round of 16". Erring toward inclusion is safe because the
- * knockout signal only ever upgrades a match's status (longer duration
- * budget + high-yield TEN fallback) — false positives never silently
- * drop a match.
+ * Forgiving knockout detection. Exact match against KNOCKOUT_STAGES first,
+ * substring fallback for legacy badge formats ("Knockout: Round of 16").
+ * Erring toward inclusion is safe — the knockout signal only upgrades a
+ * match (longer duration budget + TEN fallback), never drops one.
  */
 function isKnockoutStage(stage) {
   if (!stage) return false;
@@ -395,17 +370,11 @@ function isMatchViable(match) {
   const london = readLondonParts(kickoffMs);
   if (!london) return false;
 
-  /* -----------------------------------------------------------------------
-     OPENING HOUR GATE — drops morning graveyard kickoffs (05:00–10:59
-     London) that fall after the late-night trading shift (Rule B) but
-     before the complex opens at 11:00. Tier-0 fixtures already
-     short-circuited via Rule A above; the inner re-check below is a
-     defence-in-depth guard so any future pipeline reshuffle can't quietly
-     drop a Home Nation morning blockbuster.
-
-     Fail-closed: a non-integer hour means upstream parsing produced
-     garbage — we treat that as malformed data and drop the match.
-     ----------------------------------------------------------------------- */
+  // Opening Hour Gate — drops 05:00–10:59 London kickoffs (too late for
+  // last night's licence, too early for the complex opening at 11:00).
+  // Tier-0 fixtures already passed via Rule A; the inner re-check is
+  // defence-in-depth against future pipeline re-ordering. Fail-closed on
+  // non-integer hours.
   const kickoffHour = london.hour;
   if (!Number.isInteger(kickoffHour)) return false;
   if (
@@ -439,24 +408,19 @@ function isMatchViable(match) {
   );
   if (hardCloseMs === null) return false;
 
-  // Rule E — verdict
+  // Rule E — verdict. Late Tier-1 or knockouts still pass (Ops applies a
+  // TEN); late group-stage matches between two non-Tier-1 sides drop.
   const expectedEndMs = kickoffMs + durationMs;
   if (expectedEndMs <= hardCloseMs) return true;
-
-  // High-yield TEN fallback: a single late Tier-1 or knockout match earns
-  // its own licence application — but a group-stage match between two
-  // non-Tier-1 sides isn't worth the paperwork and is dropped here.
   const isTier1 = TIER_1_TEAMS.includes(team1) || TIER_1_TEAMS.includes(team2);
   if (isTier1 || isKnockout) return true;
-
   return false;
 }
 
 /**
- * Pure projection — returns a fresh data shape with `upcoming` and `england`
- * trimmed to viable matches only. The input data (and the localStorage
- * cache) are never mutated by this function. Non-array values pass through
- * untouched so error / "concluded" payloads keep their shape.
+ * Pure projection. Returns a fresh data shape with `upcoming` and `england`
+ * trimmed to viable matches only — input + localStorage cache untouched.
+ * Non-array values pass through so error / "concluded" payloads keep shape.
  */
 function filterViableMatches(data) {
   if (!data || typeof data !== "object") return data;
@@ -471,17 +435,14 @@ function filterViableMatches(data) {
   };
 }
 
-// In-flight request deduplication: concurrent callers share one network promise
+// Concurrent callers share one in-flight network promise.
 let pendingPromise = null;
 
 /* -------------------------------------------------------------------------
-   SHARED MATCH DATE/TIME FORMATTER
-   The 2026 World Cup is hosted in North America, so API `datetimeIso` values
-   reference instants that fall hours away from UK wall-clock time. Every
-   render surface on this site MUST present Europe/London time regardless of
-   the viewer's device timezone (travel, VPN, server-side prerender, etc.).
-   Formatter instances are constructed once and reused — `Intl.DateTimeFormat`
-   construction is the expensive part; `.format()` is effectively free.
+   DATE/TIME FORMATTER · Europe/London for every render surface. The 2026
+   World Cup is hosted in North America so API instants sit hours away
+   from UK wall-clock time. Formatter instances are constructed once and
+   reused (construction is expensive, .format() is effectively free).
    ------------------------------------------------------------------------- */
 const UK_LOCALE = "en-GB";
 const UK_TZ = "Europe/London";
@@ -539,36 +500,22 @@ export function formatMatchDateTime(iso) {
   };
 }
 
-/**
- * Long-form weekday of `iso` in Europe/London (e.g. "Saturday").
- * Returns "" for missing/invalid input — string comparison against expected
- * day names then yields false, matching the fail-closed posture of every
- * other classifier in this module. Reuses the pre-allocated London
- * formatter via `readLondonParts`; no new Intl allocations per call.
- */
+/** Long-form weekday of `iso` in Europe/London. "" on missing/invalid input. */
 export function getLondonWeekday(iso) {
   if (!iso) return "";
   const parts = readLondonParts(iso);
   return parts ? parts.weekday : "";
 }
 
-/**
- * Single classification authority for "is this a knockout fixture?".
- * Wraps the internal `getStage(match)` + `isKnockoutStage(stage)` pipeline
- * used by the viability rules engine, so UI filter chips and the
- * trading-day rules cannot drift apart on what counts as a knockout.
- */
+/** Single authority for "is this a knockout fixture?". */
 export function isKnockoutMatch(match) {
   return isKnockoutStage(getStage(match));
 }
 
 /**
- * Single source of truth for "this fixture has no confirmed teams yet."
- * Both empty strings ("") and the literal "TBD" placeholder are treated
- * as anonymous so the helper works against the football-data API's
- * raw response AND the static fallback dataset. Renderers use this to
- * switch to the milestone presentation (trophy emblem + stage label)
- * instead of showing empty flag boxes around redundant TBD VS TBD text.
+ * "Fixture has no confirmed teams yet" — treats both "" and "TBD" as
+ * anonymous so the helper works against the API response AND the static
+ * fallback dataset. Drives the milestone (trophy + stage) presentation.
  */
 export function isAnonymousMatch(match) {
   const nameA = (match?.teamA?.name ?? "").trim().toUpperCase();
@@ -577,12 +524,8 @@ export function isAnonymousMatch(match) {
 }
 
 /**
- * Returns true if `now` falls inside this match's playing window —
- * kickoff (inclusive) through kickoff + budgeted duration (exclusive).
- * Duration mirrors the trading-rules engine: 2h for group fixtures,
- * 3h for knockouts (extra-time + penalties budget). Single authority
- * for "is this match underway?" so the marquee, featured card and any
- * future live-status surface cannot drift on what counts as live.
+ * True if `now` falls inside the playing window [kickoff, kickoff + duration).
+ * Duration mirrors the trading-rules engine (group 2h, knockout 3h).
  */
 export function isMatchLive(match, now = Date.now()) {
   if (!match?.datetimeIso) return false;
@@ -595,13 +538,9 @@ export function isMatchLive(match, now = Date.now()) {
 }
 
 /**
- * "Next England focus" — returns the chronologically nearest England
- * fixture whose playing window hasn't yet concluded, paired with a flag
- * indicating whether it's currently live. Used by the marquee controller
- * to decide between the upcoming-countdown and live-ticker states.
- * Returns `null` when there are no future England fixtures (i.e.
- * England's tournament is over) — caller is expected to fall back to
- * `getHeadlineMatches(data)`.
+ * Chronologically nearest England fixture whose playing window hasn't
+ * concluded, paired with a live/upcoming flag. Returns `null` when
+ * England's tournament is over — callers fall back to getHeadlineMatches.
  */
 export function getNextEnglandFocus(data, now = Date.now()) {
   if (!data || !Array.isArray(data.england)) return null;
@@ -613,7 +552,6 @@ export function getNextEnglandFocus(data, now = Date.now()) {
       const durationMs = isKnockoutMatch(m)
         ? MATCH_DURATION_KNOCKOUT_MS
         : MATCH_DURATION_GROUP_MS;
-      // Include both live and future matches; concluded ones drop out.
       return kickoffMs + durationMs > now;
     })
     .sort((a, b) => Date.parse(a.datetimeIso) - Date.parse(b.datetimeIso));
@@ -623,12 +561,9 @@ export function getNextEnglandFocus(data, now = Date.now()) {
 }
 
 /**
- * Curated fallback dataset surfaced when England exit the tournament:
- * the next `limit` upcoming knockout fixtures, ordered chronologically.
- * The home / fixtures "England" chip silently swaps to this list once
- * `data.england` is empty so the spatial role of the chip is preserved
- * and customers still see a meaningful default of "headline matches
- * coming up at the venue."
+ * Fallback dataset surfaced when England exit the tournament: the next
+ * `limit` upcoming knockout fixtures, chronological. Lets the home /
+ * fixtures "England" chip silently swap to a meaningful headline list.
  */
 export function getHeadlineMatches(data, { limit = 4, now = Date.now() } = {}) {
   if (!data || !Array.isArray(data.upcoming)) return [];
@@ -637,19 +572,15 @@ export function getHeadlineMatches(data, { limit = 4, now = Date.now() } = {}) {
     .filter((m) => {
       const kickoffMs = Date.parse(m?.datetimeIso);
       if (Number.isNaN(kickoffMs)) return false;
-      const durationMs = MATCH_DURATION_KNOCKOUT_MS;
-      return kickoffMs + durationMs > now;
+      return kickoffMs + MATCH_DURATION_KNOCKOUT_MS > now;
     })
     .sort((a, b) => Date.parse(a.datetimeIso) - Date.parse(b.datetimeIso))
     .slice(0, limit);
 }
 
-/**
- * Compact stage label for tight contexts (the marquee, future
- * brackets). Built on top of `getDetailedStageLabel` so the canonical
- * authority stays unified — this is purely a presentation map. Any
- * label not in the table falls through unchanged.
- */
+/* Compact stage label for tight contexts (marquee). Built on
+   getDetailedStageLabel so authorities stay unified — pure presentation
+   map; unknown labels fall through unchanged. */
 const SHORT_STAGE_MAP = {
   "GROUP STAGE": "GROUP",
   "ROUND OF 32": "R32",
@@ -666,14 +597,9 @@ export function getShortStageLabel(match) {
   return SHORT_STAGE_MAP[long] || long;
 }
 
-/**
- * Title-case rewrites of the canonical UPPERCASE stage labels used in the
- * UI. Reserved for non-UI display contexts (Tally confirmation emails,
- * Google Sheets booking-ledger rows) where SHOUTY all-caps reads as
- * unprofessional. The UI surfaces keep using `getDetailedStageLabel`
- * directly (the all-caps version pairs with the display-font
- * typography); these are strictly for human-readable form submission.
- */
+/* Title-case stage labels for non-UI contexts (Tally emails, Sheets rows)
+   where SHOUTY all-caps reads as unprofessional. UI surfaces keep the
+   uppercase form via getDetailedStageLabel. */
 const STAGE_LABEL_DISPLAY = {
   "GROUP STAGE": "Group Stage",
   "ROUND OF 32": "Round of 32",
@@ -686,28 +612,11 @@ const STAGE_LABEL_DISPLAY = {
 };
 
 /**
- * Build a human-readable fixture identifier suitable for the Tally form
- * payload (confirmation email + Google Sheets booking ledger). This is
- * NOT the URL slug — slugs stay machine-parseable (`england-vs-brazil`,
- * `tbd-vs-tbd`) for routing through fixtures → zones → book and for
- * `findBookableMatch` slug normalisation. This helper exists strictly
- * for the form-submission boundary, where humans (the customer and the
- * venue) will be reading the value.
- *
- *   - Anonymous fixtures (TBD vs TBD knockout placeholders) return the
- *     title-case stage label: "World Cup Final", "Quarter-Final", etc.
- *     The user booked the event; "tbd-vs-tbd" was never what they
- *     thought they were booking.
- *   - Confirmed fixtures return "TeamA vs TeamB" with proper case from
- *     the API ("England vs Brazil", not "england-vs-brazil") so the
- *     confirmation email reads naturally.
- *
- * Once a previously-anonymous knockout match has its teams confirmed by
- * the football-data API, the next bookings automatically take the
- * "TeamA vs TeamB" path. Historical bookings made while the match was
- * TBD keep their booking-time label ("World Cup Final") in the Tally
- * record — correct event-ticketing semantics: the email confirms what
- * the customer booked at the moment they booked it.
+ * Human-readable fixture identifier for the Tally form payload
+ * (confirmation email + Sheets ledger). NOT the URL slug — slugs stay
+ * machine-parseable for routing; this is the human-facing boundary.
+ *   - Anonymous TBD-vs-TBD knockouts → title-case stage label ("Quarter-Final")
+ *   - Confirmed fixtures             → "TeamA vs TeamB" with API casing
  */
 export function formatFixtureDisplay(match) {
   if (isAnonymousMatch(match)) {
@@ -720,13 +629,9 @@ export function formatFixtureDisplay(match) {
 }
 
 /**
- * Resolve a team's 3-letter abbreviation for compact list-row rendering.
- * The football-data API exposes `tla` for every World Cup qualifier; this
- * helper degrades gracefully for fallback / anonymous fixtures:
- *   1. Prefer the API-supplied TLA (already uppercase, e.g. "ENG", "BRA")
- *   2. Fall back to the first three letters of the team name, uppercased
- *   3. "TBD" for fully anonymous knockout placeholders
- * Returned strings are always uppercase and never empty.
+ * 3-letter team abbreviation for compact rendering. Prefers API-supplied
+ * `tla`; falls back to first three letters of `name`; "TBD" for
+ * anonymous knockout placeholders. Always uppercase, never empty.
  */
 export function tlaOf(team) {
   const tla = (team?.tla ?? "").trim();
@@ -737,8 +642,9 @@ export function tlaOf(team) {
 }
 
 /**
- * Fetch match data with localStorage fallback.
- * The Worker handles all retry/caching logic; the frontend trusts 200 or falls back.
+ * Fetch with localStorage fallback. Worker handles retry/caching;
+ * frontend trusts 200 or falls back. Concurrent callers share one
+ * in-flight promise via pendingPromise.
  */
 export async function getMatchData() {
   if (pendingPromise) return pendingPromise;
@@ -781,10 +687,9 @@ export async function fetchMatchData() {
     const data = await response.json();
     const enrichedData = { ...data, _source: "live" };
 
-    // Cache BEFORE any read-time enrichment (bookable stamp + viability
-    // filter). The persisted blob must remain the RAW API payload: both
-    // `isBookable` (a function of "now") and the trading-day filter (a
-    // function of "now" + business rules) are recomputed on every read.
+    // Cache BEFORE read-time enrichment. The persisted blob must stay
+    // the raw API payload: isBookable and the viability filter are both
+    // functions of "now" and are recomputed on every read.
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(enrichedData));
     } catch (storageErr) {
@@ -805,7 +710,7 @@ export async function fetchMatchData() {
         const cacheStatus = evaluateCacheAge(parsed);
 
         if (cacheStatus.isValid) {
-          // Serve the data gracefully while soft-flagging stale conditions for layout handling
+          // Serve cached data; layout uses _isStale for soft warnings.
           return filterViableMatches(
             stampBookable({
               ...parsed,
@@ -815,27 +720,17 @@ export async function fetchMatchData() {
             }),
           );
         } else if (cacheStatus.isAncient) {
-          // Purge stale keys to keep timelines free from legacy drift configurations
           localStorage.removeItem(STORAGE_KEY);
-          console.warn(
-            "MatchData Lib: Purged ancient tournament cache safely from local memory",
-          );
+          console.warn("MatchData Lib: Purged ancient cache");
         }
       }
     } catch (cacheErr) {
-      console.warn(
-        "MatchData Lib: Internal cache extraction parser failed",
-        cacheErr.message,
-      );
+      console.warn("MatchData Lib: Cache parse failed", cacheErr.message);
     }
 
-    // =========================================================================
-    // === LAST RESORT: STATIC FALLBACK DATA INTERCEPT ===
-    // This executes only if the network is down AND local memory is non-existent/purged
-    // =========================================================================
-    console.warn(
-      "MatchData Lib: Total cache miss blackout. Serving static fallback matrix.",
-    );
+    // Last resort: network down AND cache empty/purged. Serve static
+    // fallback so the funnel still has data to render against.
+    console.warn("MatchData Lib: Total blackout — serving static fallback.");
     return filterViableMatches(
       stampBookable({
         ...FALLBACK_DATA,
@@ -846,13 +741,9 @@ export async function fetchMatchData() {
   }
 }
 
-/**
- * "Major Tournament Milestones" classifier — R16 through Final + 3rd-place
- * play-off. Group stage + R32 are deliberately excluded: these are the
- * high-yield fixtures we surface at the top of the booking dropdown and
- * use to populate the milestone-curated optgroup. Built on top of
- * `getDetailedStageLabel` so the two stay in lockstep — one label authority.
- */
+/* Major milestone classifier (R16 → Final + 3rd-place). Group stage + R32
+   excluded — these are the high-yield fixtures surfaced at the top of
+   the booking dropdown / milestone optgroup. */
 const MILESTONE_LABELS = new Set([
   "ROUND OF 16",
   "QUARTER-FINAL",
@@ -866,18 +757,11 @@ export function isMilestoneMatch(match) {
 }
 
 /**
- * Canonical stage-group classifier for the fixtures-page accordion view.
- * Returns a `{ key, label, order }` triplet so the rendering layer can
- * bucket matches into the right accordion, sort buckets in tournament
- * progression order, and display the user-friendly label.
- *
- * Group Stage is sub-divided into Matchdays 1–3 (by London calendar date)
- * so the largest single bucket never holds more than one round of group
- * fixtures (24 games max instead of 72).
- *
- * The `order` field is decoupled from chronology so a UI that wants
- * tournament-order even when a feed mis-sorts matches can rely on it.
- * In practice firstKickoff and order both produce the same sequence.
+ * Stage-group classifier for the fixtures-page accordion. Returns
+ * `{ key, label, order }` so the renderer can bucket, sort in tournament
+ * progression, and display a user-friendly label.
+ * Group Stage is sub-divided into Matchdays 1–3 (London calendar date)
+ * so no single bucket exceeds ~24 games.
  */
 export function getStageGroup(match) {
   const label = getDetailedStageLabel(match);
@@ -921,17 +805,13 @@ export function getStageGroup(match) {
 }
 
 /**
- * Resolves the authoritative tournament phase name.
- * Prioritizes the edge-server's pre-calculated stage metadata, with a
- * defensive Europe/London timezone decoder as a local fallback.
+ * Authoritative tournament phase name. Prefers the edge server's
+ * pre-calculated `stageLabel`; falls back to a London-tz date decoder
+ * against the 2026 World Cup calendar.
  */
 export function getDetailedStageLabel(match) {
-  // Path A: Direct server-authoritative mapping pass-through
-  if (match?.stageLabel) {
-    return match.stageLabel.toUpperCase();
-  }
+  if (match?.stageLabel) return match.stageLabel.toUpperCase();
 
-  // Path B: Safe UI fallback layer
   if (!match?.badge || !match.badge.toLowerCase().includes("knockout")) {
     return "Group Stage";
   }
@@ -940,7 +820,6 @@ export function getDetailedStageLabel(match) {
   const date = new Date(match.datetimeIso);
   if (isNaN(date.getTime())) return "Knockout Stage";
 
-  // Use Intl to decode the exact calendar day visible to customers in London
   const formatter = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Europe/London",
     day: "numeric",
@@ -956,7 +835,7 @@ export function getDetailedStageLabel(match) {
   const month = parseInt(p.month, 10);
   const year = parseInt(p.year, 10);
 
-  // High-fidelity local calendar safety net
+  // 2026 World Cup knockout calendar
   if (year === 2026 && month === 7) {
     if (day === 19) return "WORLD CUP FINAL";
     if (day === 18) return "3rd Place Play-Off";

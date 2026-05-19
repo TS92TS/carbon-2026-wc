@@ -24,13 +24,8 @@ const safe = (v) => (v === undefined || v === null ? "" : v);
 
 let matchCache = null;
 
-/**
- * "England's tournament is over" probe — mirrors the helper in
- * upcomingMatches.js. When this fires we keep the page's England HQ
- * strip AND the England chip in place spatially, but swap the data
- * source to the next headline knockouts and rename the visible labels.
- * The filter KEY stays "england" so URL round-trips work unchanged.
- */
+/** "England's tournament is over" probe — mirror of the helper in
+ *  upcomingMatches.js. Drives the chip rename + HQ-strip swap. */
 function isEnglandFallbackActive() {
   if (!matchCache) return false;
   return (
@@ -39,30 +34,19 @@ function isEnglandFallbackActive() {
 }
 
 /* -------------------------------------------------------------------------
-   PATH B FUNNEL STATE — when the user arrives via the zone-first path
-   (zones.html → fixtures.html?zone=<slug>), the page operates as Step 2
-   of the booking funnel:
-     - A zone-context banner mounts above the schedule.
-     - Fixture-row CTAs short-circuit zones.html and link straight to
-       book.html with the zone slug baked in.
-
-   URL-as-single-source-of-truth: when `?zone=` is absent the module
-   falls back to general-purpose schedule browsing and `activeZoneSlug`
-   stays null. There is intentionally NO sessionStorage recovery —
-   surfacing a "Step 2 of 3 · Pick your match for Main Bar" banner on a
-   user who arrived via the Reserve nav (or any direct visit) creates
-   false context for a selection they didn't make. The browser's own
-   URL persistence (back/forward, bookmarks) covers continuation; fresh
-   visits get a fresh page.
+   PATH B FUNNEL STATE — user arrived via zones.html → fixtures.html?zone=…
+   On Path B the page operates as Step 2:
+     • zone-context banner mounts above the schedule
+     • fixture-row CTAs short-circuit zones.html and link straight to
+       book.html with the zone baked in
+   URL is the single source of truth — no sessionStorage recovery so
+   direct visits never surface false step indicators.
    ------------------------------------------------------------------------- */
 let activeZoneSlug = null;
 
 /**
- * Resolve the funnel zone-context from the URL.
- *   - Valid `?zone=<slug>`  → return the slug, banner mounts.
- *   - Invalid `?zone=<bad>` → scrub from the URL (keep address bar clean),
- *                            return null, no banner.
- *   - Missing `?zone=`      → return null, no banner.
+ * Resolve zone-context from the URL. Valid slug → return + banner mounts;
+ * invalid slug → scrub from address bar + return null; missing → null.
  */
 function resolveZoneContext(urlParams) {
   const fromUrl = urlParams.get("zone");
@@ -74,7 +58,7 @@ function resolveZoneContext(urlParams) {
     url.searchParams.delete("zone");
     window.history.replaceState(null, "", url.toString());
   } catch (e) {
-    /* address-bar tidy-up is non-essential — silently skip on failure */
+    /* address-bar tidy-up is non-essential */
   }
   return null;
 }
@@ -87,11 +71,7 @@ function mountZoneBanner(zoneSlug) {
   banner.removeAttribute("hidden");
 }
 
-/**
- * Initializes the full fixtures page rendering.
- * Called by app.js only when #fixtures-list is detected.
- * @param {Object} data - Match payload from matchData.js
- */
+/** Initialise the full fixtures-page rendering. */
 export function initFixturesPage(data) {
   const container = document.getElementById("fixtures-list");
   const englandContainer = document.getElementById("england-fixtures-list");
@@ -100,19 +80,15 @@ export function initFixturesPage(data) {
 
   matchCache = data;
 
-  // Resolve zone context FIRST so every downstream renderRow / createFixtureRow
-  // call sees the same `activeZoneSlug` and emits consistent hrefs.
+  // Resolve zone context first so downstream row builders all see the
+  // same `activeZoneSlug` and emit consistent hrefs.
   const urlParams = new URLSearchParams(window.location.search);
   activeZoneSlug = resolveZoneContext(urlParams);
-  if (activeZoneSlug) {
-    mountZoneBanner(activeZoneSlug);
-  }
+  if (activeZoneSlug) mountZoneBanner(activeZoneSlug);
 
-  // 1. Populate persistent England HQ strip immediately. If England's
-  //    tournament has concluded, the strip's spatial role is preserved
-  //    by swapping in the next headline knockouts and renaming the H2.
-  //    The "Priority" kicker stays because the strip's FUNCTION is still
-  //    "priority content" — only the SUBJECT has shifted.
+  // England HQ strip — swaps to headline knockouts when England are out.
+  // "Priority" kicker stays because the strip's function (priority
+  // content) hasn't changed, only its subject.
   if (englandContainer) {
     const fallbackActive = isEnglandFallbackActive();
     const stripMatches = fallbackActive
@@ -138,31 +114,22 @@ export function initFixturesPage(data) {
     }
   }
 
-  // 2. === INTENT STATE RESOLUTION CASCADE ===
-  // Resolves context arriving from cross-page links or direct bookmarks
+  // Resolve initial filter from URL > HTML default > "all".
   const params = new URLSearchParams(window.location.search);
   const urlFilter = params.get("filter");
   const htmlDefault = filterNav ? filterNav.dataset.defaultFilter : null;
   let initialFilter = urlFilter || htmlDefault || "all";
+  if (!VALID_FILTERS.has(initialFilter)) initialFilter = "all";
 
-  if (!VALID_FILTERS.has(initialFilter)) {
-    initialFilter = "all";
-  }
-
-  // 3. Initialize interactive filter engines with initial filter state passed in
   if (filterNav && !filterNav.dataset.initialized) {
     setupFilters(filterNav, container, initialFilter);
     filterNav.dataset.initialized = "true";
   }
 
-  // 4. Draw correctly segmented datasets on primary layout paint
-  const initialList = getFilteredDataset(initialFilter);
-  renderFixtures(initialList, container);
+  renderFixtures(getFilteredDataset(initialFilter), container);
 }
 
-/**
- * Centrally maps filter states to structural match data scopes
- */
+/** Maps a filter key to its match dataset. */
 function getFilteredDataset(filter) {
   if (!matchCache) return [];
   const upcoming = Array.isArray(matchCache.upcoming)
@@ -172,9 +139,8 @@ function getFilteredDataset(filter) {
 
   switch (filter) {
     case "england":
-      // Mirrors the home-page swap: when England's run is over the
-      // chip continues to serve as the "headline matches" affordance
-      // (chip text updated below by syncChipStates).
+      // Same swap as the home-page chip — see syncChipStates for the
+      // matching visible-label rename.
       return isEnglandFallbackActive() ? getHeadlineMatches(matchCache) : england;
     case "knockout":
       return upcoming.filter(isKnockoutMatch);
@@ -199,9 +165,8 @@ function setupFilters(nav, container, initialFilter) {
       chip.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
 
-    // Chip label swap mirrors the home page: visible label moves from
-    // "England" to "Headlines" once England exits the tournament. The
-    // filter key stays "england" so URL routing is unaffected.
+    // Chip label "England" → "Headlines" once England exit. Filter key
+    // stays "england" so URL routing is unaffected.
     const englandChip = nav.querySelector('[data-filter="england"]');
     if (englandChip) {
       englandChip.textContent = isEnglandFallbackActive()
@@ -213,24 +178,19 @@ function setupFilters(nav, container, initialFilter) {
   const applyFilters = () => {
     syncChipStates();
 
-    // === STATEFUL URL SYNCHRONIZATION ===
-    // Keeps current choice alive in address bar for bookmarks and sharing
+    // Persist the choice in the URL so it survives reload + sharing.
     try {
       const url = new URL(window.location.href);
       url.searchParams.set("filter", activeFilter);
       window.history.replaceState(null, "", url.toString());
     } catch (historyErr) {
-      console.warn(
-        "fixturesPage: Failed to replaceState URL parameters",
-        historyErr,
-      );
+      console.warn("fixturesPage: replaceState failed", historyErr);
     }
 
-    const list = getFilteredDataset(activeFilter);
-    renderFixtures(list, container);
+    renderFixtures(getFilteredDataset(activeFilter), container);
   };
 
-  // Run synchronization on first load to override static HTML active flags
+  // First pass overrides any static `c-chip--active` flag in the HTML.
   syncChipStates();
 
   nav.addEventListener("click", (e) => {
@@ -397,9 +357,8 @@ function createFixtureRow(match, options = {}) {
 
   let row;
   if (isBookable) {
-    // When zone context is already established (Path B Step 2), skip the
-    // zones.html middle step and link straight to book.html with the
-    // full carry. Otherwise fall back to the Path A handoff via zones.
+    // Path B (zone already chosen) → skip zones.html, go straight to
+    // book.html with the full carry. Path A → handoff via zones.html.
     let bookingUrl = "zones.html";
     try {
       bookingUrl = activeZoneSlug
@@ -422,13 +381,9 @@ function createFixtureRow(match, options = {}) {
     .filter(Boolean)
     .join(" ");
 
-  // ---- Leading content: teams (with flags) OR milestone (trophy + stage)
+  // Leading content: teams + flags, or milestone (trophy + stage label).
   let leadingDiv;
   if (isAnonymous) {
-    // Milestone variant: a single trophy emblem replaces the two empty
-    // flag boxes, and the stage label is promoted to the headline. The
-    // stage IS the product when teams are unknown — "WORLD CUP FINAL"
-    // is what the user is booking, not a TBD-vs-TBD placeholder.
     leadingDiv = document.createElement("div");
     leadingDiv.className = "c-fixture-row__milestone";
 
@@ -464,11 +419,9 @@ function createFixtureRow(match, options = {}) {
       flag.style.backgroundImage = safeBackgroundUrl(teamData?.flag);
       team.appendChild(flag);
 
-      // Full name AND TLA both ride in the DOM. CSS toggles which is shown
-      // by viewport width: TLA below 600px (rows are cramped, full names
-      // would ellipsize mid-word), full name at 600px+. `display: none` on
-      // the hidden variant removes it from the accessibility tree as well
-      // as the visual flow, so screen readers only hear one.
+      // Both name and TLA in the DOM; CSS toggles by viewport width.
+      // `display: none` on the hidden variant removes it from the a11y
+      // tree as well as the visual flow.
       const fullName = safe(teamData?.name).trim() || "TBD";
 
       const nameSpan = document.createElement("span");
@@ -502,8 +455,8 @@ function createFixtureRow(match, options = {}) {
   timeEl.textContent = `${dateStr} · ${timeStr}`;
   metaDiv.appendChild(timeEl);
 
-  // Stage-label suffix on the England-strip only — but skip it for the
-  // milestone variant, which already shows the stage as its headline.
+  // Stage-label suffix only on the England-strip (skip for milestone
+  // variants — they show the stage as the headline already).
   if (isEnglandStrip && match.badge && !isAnonymous) {
     const badge = document.createElement("span");
     badge.textContent = ` · ${getDetailedStageLabel(match)}`;

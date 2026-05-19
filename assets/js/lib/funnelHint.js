@@ -1,17 +1,8 @@
 /* =========================================================================
-   FUNNEL HINT CONSUMER
-   The book.html gate writes a contextual hint string to sessionStorage
-   immediately before redirecting (see `redirectToFunnel` in booking.js).
-   This module reads + CLEARS the hint on the destination page and
-   surfaces it via the `#funnel-hint` element.
-
-   Clear-on-read is essential: without it, the hint would persist across
-   unrelated navigations and surface out-of-context on the next page that
-   has the element. The pattern is "consume once, then forget."
-
-   The element is auto-dismissed after a short window so it doesn't linger
-   once the user has had time to read it. Click-to-dismiss is also wired
-   for users who want it gone immediately.
+   FUNNEL HINT · reads + clears the contextual message booking.js stashes
+   in sessionStorage before a gate redirect, then renders it into
+   `#funnel-hint`. Consume-once-then-forget so the message can't surface
+   on an unrelated later navigation.
    ========================================================================= */
 
 const HINT_SESSION_KEY = "carbon_funnel_redirect_hint";
@@ -21,13 +12,10 @@ export function consumeFunnelHint() {
   let message = null;
   try {
     message = sessionStorage.getItem(HINT_SESSION_KEY);
-    // Consume — clear immediately so re-renders / page transitions can't
-    // re-surface a stale hint. Removal happens BEFORE display logic so
-    // even if downstream code throws, the hint won't loop.
+    // Clear before display so a downstream throw can't leave the hint
+    // armed for re-surfacing on the next page.
     if (message) sessionStorage.removeItem(HINT_SESSION_KEY);
   } catch (e) {
-    // sessionStorage unavailable (privacy mode, file://, etc.) — nothing
-    // we can do; bail quietly.
     return;
   }
   if (!message) return;
@@ -38,11 +26,8 @@ export function consumeFunnelHint() {
   const textEl = el.querySelector(".c-funnel-hint__text");
   const dismissBtn = el.querySelector(".c-funnel-hint__dismiss");
 
-  // textContent (not innerHTML) — defends against any future code path
-  // that lets a hint string carry user-derived content. Currently all
-  // hint strings are hard-coded in booking.js, but locking the safe
-  // assignment now means a future refactor can't quietly open an XSS
-  // vector via sessionStorage.
+  // textContent locks the boundary so a future refactor that pipes
+  // user-derived content through here can't open an XSS vector.
   if (textEl) textEl.textContent = message;
   el.removeAttribute("hidden");
 

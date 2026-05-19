@@ -14,12 +14,10 @@ let matchCache = null;
 const DISPLAY_LIMIT = 4;
 
 /**
- * "England's tournament is over" probe. When the data feed comes back
- * with no England fixtures (eliminated or never scheduled), the chip's
- * spatial role and default-filter routing are preserved, but the
- * displayed dataset swaps to the next headline knockouts and the chip
- * label switches to "Headlines". Single source of truth for this swap
- * — used by both the chip-state sync and the dataset selector.
+ * "England's tournament is over" probe. When the data feed has no
+ * England fixtures (eliminated or unscheduled), the chip's spatial role
+ * stays put but the displayed dataset swaps to the next headline
+ * knockouts and the chip label switches to "Headlines".
  */
 function isEnglandFallbackActive() {
   if (!matchCache) return false;
@@ -28,14 +26,12 @@ function isEnglandFallbackActive() {
   );
 }
 
-/**
- * Render the upcoming fixtures feed.
- * Automatically hooks URL state data to preserve filter intent across page jumps.
- */
+/** Render the upcoming fixtures feed, preserving filter intent across pages. */
 export function renderUpcomingList(data) {
   const filterNav = document.getElementById("fixture-filters");
 
-  // DEFENSIVE FALLBACK: Check common container IDs to support multi-page deployments safely
+  // Fall through several container IDs so the same renderer drives
+  // both the home teaser and any future list-style surfaces.
   const container =
     document.getElementById("upcoming-fixtures-list") ||
     document.getElementById("fixtures-list") ||
@@ -44,37 +40,25 @@ export function renderUpcomingList(data) {
   if (!data) return;
   matchCache = data;
 
-  // === INTENT STATE RESOLUTION CASCADE ===
+  // Resolve active filter from URL > HTML default > "england".
   const params = new URLSearchParams(window.location.search);
   const urlFilter = params.get("filter");
   const htmlDefault = filterNav ? filterNav.dataset.defaultFilter : null;
   let activeFilter = urlFilter || htmlDefault || "england";
-  // Hostile or stale ?filter=… values are rejected so the chip-active
-  // state, the URL, and the rendered list never desync.
-  if (!VALID_FILTERS.has(activeFilter)) {
-    activeFilter = "england";
-  }
+  if (!VALID_FILTERS.has(activeFilter)) activeFilter = "england";
 
   if (filterNav && !filterNav.dataset.initialized) {
     setupFilters(filterNav, container);
     filterNav.dataset.initialized = "true";
   }
 
-  // Synchronize visual state of the chips and map outbound link query targets
-  if (filterNav) {
-    syncChipStates(filterNav, activeFilter);
-  }
+  if (filterNav) syncChipStates(filterNav, activeFilter);
 
-  // Render list elements only if a matching display grid exists on the active DOM
   if (container) {
-    const initialList = getFilteredList(activeFilter);
-    updateUI(initialList, container);
+    updateUI(getFilteredList(activeFilter), container);
   }
 }
 
-/**
- * Pure data mapping selector to avoid code duplication between load and click states
- */
 function getFilteredList(filter) {
   if (!matchCache) return [];
   const upcoming = Array.isArray(matchCache.upcoming)
@@ -86,10 +70,9 @@ function getFilteredList(filter) {
     case "all":
       return upcoming;
     case "england":
-      // When England is empty (eliminated / not scheduled), keep the
-      // "what's headline at the venue" intent of the chip by serving
-      // the next knockout fixtures. Chip label is renamed in parallel
-      // via syncChipStates so users see the shift explicitly.
+      // When England is empty, the chip still serves "what's headline
+      // at the venue" — swap to the next knockouts. syncChipStates
+      // renames the chip label in parallel.
       return isEnglandFallbackActive()
         ? getHeadlineMatches(matchCache)
         : england;
@@ -105,9 +88,8 @@ function getFilteredList(filter) {
   }
 }
 
-/**
- * Synchronizes the utility classes and intercepts cross-page anchor configurations
- */
+/** Sync chip aria/active state, swap label on England-out, and carry the
+ *  active filter onto explicit "view more" affordances. */
 function syncChipStates(nav, activeFilter) {
   nav.querySelectorAll("[data-filter]").forEach((chip) => {
     const isActive = chip.dataset.filter === activeFilter;
@@ -115,9 +97,8 @@ function syncChipStates(nav, activeFilter) {
     chip.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
 
-  // Chip label swap: "England" → "Headlines" when England's tournament
-  // is over. The filter KEY stays "england" so URL round-trips and
-  // chip-active semantics work unchanged; only the visible label moves.
+  // Filter KEY stays "england" so URL round-trips work unchanged; only
+  // the visible label moves to "Headlines" when England's run is over.
   const englandChip = nav.querySelector('[data-filter="england"]');
   if (englandChip) {
     englandChip.textContent = isEnglandFallbackActive()
@@ -125,14 +106,10 @@ function syncChipStates(nav, activeFilter) {
       : "England";
   }
 
-  // === OUTBOUND INTENT BRIDGE ===
-  // Carries the active chip filter onto explicit "view more" affordances
-  // only — `.c-link-action` is the semantic carrier for those (see the
-  // "All Fixtures" link beneath the home-page chip strip). The bottom nav,
-  // mobile menu, Reserve CTA, hero CTA, featured-match button and promo
-  // tiles all point at `fixtures.html` too, but they're fresh-funnel
-  // entries — they intentionally start a clean booking flow rather than
-  // inherit a filter the user picked while browsing the home feed.
+  // Filter is carried ONLY onto `.c-link-action` (the "All Fixtures"
+  // affordance). Nav, Reserve CTA, hero, featured button and promo
+  // tiles all point at fixtures.html too but are fresh-funnel entries
+  // and intentionally start clean.
   document
     .querySelectorAll(
       'a.c-link-action[href^="fixtures.html"], a.c-link-action[href*="/fixtures.html"]',
@@ -141,10 +118,8 @@ function syncChipStates(nav, activeFilter) {
       try {
         const url = new URL(link.getAttribute("href"), window.location.origin);
         url.searchParams.set("filter", activeFilter);
-        // Keeps path signatures relative to the file root execution shell
         link.setAttribute("href", url.pathname.split("/").pop() + url.search);
       } catch (e) {
-        // Passive safety catch for structural variations
         link.href = `fixtures.html?filter=${activeFilter}`;
       }
     });
@@ -158,14 +133,13 @@ function setupFilters(nav, container) {
     const rawFilter = btn.dataset.filter;
     const filter = VALID_FILTERS.has(rawFilter) ? rawFilter : "england";
 
-    // === STATEFUL URL SYNCHRONIZATION ===
     try {
       const url = new URL(window.location.href);
       url.searchParams.set("filter", filter);
       window.history.replaceState(null, "", url.toString());
     } catch (historyErr) {
       console.warn(
-        "upcomingMatches: Failed to replaceState URL parameters",
+        "upcomingMatches: replaceState failed",
         historyErr,
       );
     }
@@ -226,11 +200,9 @@ function updateUI(matches, container) {
       .filter(Boolean)
       .join(" ");
 
-    // ---- Leading content: teams OR milestone block ----
+    // Leading content: teams OR milestone block (TBD trophy + stage).
     let leadingDiv;
     if (isAnonymous) {
-      // TBD knockout fixture — trophy emblem + stage label as headline,
-      // "Teams TBC" as transparent status. No empty flag boxes.
       leadingDiv = document.createElement("div");
       leadingDiv.className = "c-fixture-row__milestone";
 
@@ -257,10 +229,9 @@ function updateUI(matches, container) {
       leadingDiv = document.createElement("div");
       leadingDiv.className = "c-fixture-row__teams";
 
-      // Build a team cell with both full name AND TLA in the DOM. CSS
-      // toggles which is visible by viewport (TLA below 600px, full name
-      // above) so list rows stay readable on phones without ellipsizing
-      // long names mid-word.
+      // Both full name and TLA ride in the DOM; CSS toggles which is
+      // visible by viewport (TLA <600px, name ≥600px) so phone rows
+      // never ellipsize mid-word.
       const buildTeam = (teamData, displayName) => {
         const team = document.createElement("span");
         team.className = "c-fixture-row__team";
@@ -302,10 +273,9 @@ function updateUI(matches, container) {
     metaDiv.className = "c-fixture-row__meta";
     const timeEl = document.createElement("time");
 
-    // Stage label rides in the meta line for confirmed matches (the
-    // user often needs the stage as context against the team names).
-    // For milestone (anonymous) rows the stage is already the headline,
-    // so we keep the meta lean — date · time only.
+    // Meta carries the stage for confirmed matches (added context next
+    // to team names). Anonymous rows show the stage as the headline so
+    // meta stays lean — date · time only.
     if (isAnonymous) {
       timeEl.textContent = `${dateStr} · ${timeStr}`;
     } else {

@@ -1,6 +1,5 @@
 /* =========================================================================
-   COMPONENT: MOBILE MENU
-   Handle the Open/Close toggle and scroll-locking logic.
+   MOBILE MENU · open/close toggle + iOS-safe scroll lock + Escape close.
    ========================================================================= */
 
 export function initMobileMenu() {
@@ -10,10 +9,8 @@ export function initMobileMenu() {
 
   if (!menuBtn || !menuOverlay) return;
 
-  // Idempotency gate — without this, a re-bootstrap (HMR, late hydration,
-  // future test harness) would stack duplicate click + document-level
-  // keydown listeners. The Escape handler is document-scoped and globally
-  // visible, so a second binding means double-closing + double-focusing.
+  // Idempotency gate — the Escape listener is document-scoped, so a
+  // double bind would close + re-focus twice on each press.
   if (menuBtn.dataset.menuInitialized === "true") return;
   menuBtn.dataset.menuInitialized = "true";
 

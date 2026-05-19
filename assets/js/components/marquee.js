@@ -1,5 +1,4 @@
-/* =========================================================================
-   MARQUEE COMPONENT — PURE RENDERER
+/* =========================================================================    MARQUEE COMPONENT — PURE RENDERER
    Persistent status bar at the top of every page. Pure presentation: takes
    a config (mode + label + optional countdown target + optional href),
    paints it, and re-renders the countdown number on each wall-clock minute
