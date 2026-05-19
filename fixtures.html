@@ -9,6 +9,13 @@
     <meta name="theme-color" content="#121212" />
     <meta name="color-scheme" content="dark" />
 
+    <!-- Favicons & PWA manifest -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
     <title>Fixtures · Carbon Sports Bar</title>
     <meta
       name="description"
@@ -19,10 +26,10 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Carbon Sports Bar" />
     <meta property="og:locale" content="en_GB" />
-    <meta property="og:title" content="Carbon Football · Stowmarket" />
+    <meta property="og:title" content="Fixtures · Carbon Football" />
     <meta
       property="og:description"
-      content="Stowmarket's home of Football in 2026. Premium screens, Delicious Food, guaranteed seats. Secure your bench."
+      content="Every 2026 World Cup match live at Carbon. England fixtures, knockouts and the full tournament schedule."
     />
     <meta property="og:image" content="assets/img/og-carbon.webp" />
     <meta property="og:image:width" content="1200" />
@@ -34,10 +41,10 @@
     />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Carbon Football · Stowmarket" />
+    <meta name="twitter:title" content="Fixtures · Carbon Football" />
     <meta
       name="twitter:description"
-      content="Stowmarket's home of Football in 2026. Premium screens, Delicious Food, guaranteed seats. Secure your bench."
+      content="Every 2026 World Cup match live at Carbon. England fixtures, knockouts and the full tournament schedule."
     />
     <meta name="twitter:image" content="assets/img/og-carbon.webp" />
     <meta
@@ -69,9 +76,10 @@
         <img
           class="c-header__logo-mark"
           src="assets/img/carbon-logo.webp"
-          alt="Carbon Logo"
+          alt="Carbon Sports Bar logo"
           width="36"
           height="36"
+          decoding="async"
         />
       </a>
 
@@ -276,33 +284,41 @@
           <ul class="c-promo-list" role="list">
             <li class="c-promo-item">
               <a
-                href="menu.html"
+                href="#england-strip"
                 class="c-promo-item__link"
-                aria-label="View pizza and pint deal on menu"
+                aria-label="Pick a match — pizza and pint deal available on match days"
               >
                 <img
                   class="c-promo-item__media"
                   src="assets/img/pizza-pint-deal.webp"
                   alt="12 inch pizza and pint Deal · £10"
+                  loading="lazy"
+                  decoding="async"
+                  width="1000"
+                  height="1000"
                 />
                 <span class="c-promo-item__cta" aria-hidden="true"
-                  >View Deal &rarr;</span
+                  >Pick a Match &rarr;</span
                 >
               </a>
             </li>
             <li class="c-promo-item">
               <a
-                href="menu.html"
+                href="#england-strip"
                 class="c-promo-item__link"
-                aria-label="View pitcher deal on menu"
+                aria-label="Pick a match — pitcher deal available on match days"
               >
                 <img
                   class="c-promo-item__media"
                   src="assets/img/pitcher-deal.webp"
                   alt="4 pint pitcher deal · from £12"
+                  loading="lazy"
+                  decoding="async"
+                  width="1000"
+                  height="1000"
                 />
                 <span class="c-promo-item__cta" aria-hidden="true"
-                  >View Deal &rarr;</span
+                  >Pick a Match &rarr;</span
                 >
               </a>
             </li>
@@ -394,6 +410,130 @@
       </div>
     </main>
 
+    <!-- =========================================================================
+       FOOTER · Legal accordion (Privacy / Booking Terms / Cookies)
+       Native <details> — zero JS. Sits outside <main> so the browser
+       applies the implicit `contentinfo` landmark role.
+       ========================================================================= -->
+    <footer class="c-site-footer">
+      <div class="c-site-footer__inner">
+        <details class="c-site-footer__item">
+          <summary class="c-site-footer__summary">Privacy</summary>
+          <div class="c-site-footer__body">
+            <p>
+              <strong>Maltings Entertainment LTD</strong> (Carbon Sports Bar //
+              Market Place, Stowmarket, Suffolk IP14 1DG) is the data controller
+              for bookings made through this site.
+            </p>
+            <p>
+              When you reserve a table, we collect your
+              <strong>name, email, phone</strong>, party size, and your selected
+              fixture, date, time, and venue zone. This data is processed via
+              <strong>Tally.so</strong>, stored in
+              <strong>Google Sheets</strong> and used to operate the booking
+              system, with confirmation emails sent via <strong>Brevo</strong>.
+              These services act as data processors on our behalf.
+            </p>
+            <p>
+              <strong>Lawful basis:</strong> contract performance (UK GDPR Art.
+              6(1)(b)) — required to manage and fulfil your reservation. Booking
+              data is retained until the relevant fixture has taken place and
+              operational reconciliation is complete, and is deleted within 30
+              days thereafter.
+            </p>
+            <p>
+              We do not currently use tracking cookies, advertising cookies, or
+              marketing profiling. You can request access, correction, deletion,
+              or portability of your data at any time by contacting
+              <a href="mailto:bookings.carbon@gmail.com"
+                >bookings.carbon@gmail.com</a
+              >
+              or calling <a href="tel:+441449674674">01449 674674</a>. You may
+              also raise concerns with the UK Information Commissioner at
+              <a
+                href="https://ico.org.uk"
+                target="_blank"
+                rel="noopener noreferrer"
+                >ico.org.uk</a
+              >.
+            </p>
+          </div>
+        </details>
+
+        <details class="c-site-footer__item">
+          <summary class="c-site-footer__summary">Booking Terms</summary>
+          <div class="c-site-footer__body">
+            <ul>
+              <li>
+                Your booking is confirmed once you receive the confirmation
+                email. If it doesn't arrive within a few minutes, check your
+                spam folder or call the venue.
+              </li>
+              <li>
+                Tables are held until
+                <strong>15 minutes before kickoff</strong>. Please arrive at
+                least 30 minutes prior — late arrivals may forfeit their
+                reservation.
+              </li>
+              <li>
+                Online booking closes
+                <strong>3 hours before kickoff</strong>. Walk-ins remain welcome
+                — call <a href="tel:+441449674674">01449 674674</a> to check
+                availability.
+              </li>
+              <li>
+                Groups of 1–20 can book online. For larger parties please call
+                the venue.
+              </li>
+              <li>
+                We reserve the right to relocate guests within the same zone if
+                seating capacity requires.
+              </li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="c-site-footer__item">
+          <summary class="c-site-footer__summary">
+            Cookies &amp; Storage
+          </summary>
+          <div class="c-site-footer__body">
+            <p>
+              No tracking cookies. No advertising cookies. No third-party
+              analytics that profile you.
+            </p>
+            <p>
+              The booking funnel uses two short-lived browser-storage entries:
+            </p>
+            <ul>
+              <li>
+                <strong>sessionStorage</strong>
+                <code>carbon_funnel_redirect_hint</code> — a single contextual
+                message after the booking gate redirects you; deleted as soon as
+                it's read.
+              </li>
+              <li>
+                <strong>localStorage</strong>
+                <code>carbon_match_data_cache</code> — match-schedule cache (max
+                5 days), so fixtures still load if the data feed is briefly
+                unreachable.
+              </li>
+            </ul>
+            <p>
+              Both are strictly functional and don't require consent under UK
+              PECR. Clearing your browser's storage removes them at any time.
+            </p>
+          </div>
+        </details>
+
+        <p class="c-site-footer__meta">
+          © 2026 Maltings Entertainment Limited · Stowmarket · IP14 1DG
+        </p>
+
+        <p class="c-site-footer__meta">• Site Built By Tommy Smith •</p>
+      </div>
+    </footer>
+
     <nav class="c-nav" aria-label="Primary navigation">
       <ul class="c-nav__list" role="list">
         <li>
@@ -459,11 +599,6 @@
           <li>
             <a href="zones.html" class="c-mobile-nav__link u-display"
               >The Space</a
-            >
-          </li>
-          <li>
-            <a href="menu.html" class="c-mobile-nav__link u-display"
-              >Food & Drink</a
             >
           </li>
           <li>

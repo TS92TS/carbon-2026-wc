@@ -272,3 +272,15 @@ h4 {
 .u-dim {
   color: var(--text-muted);
 }
+
+.u-text-secondary {
+  color: var(--text-secondary);
+}
+
+.u-small {
+  font-size: var(--type-small);
+}
+
+.u-tiny {
+  font-size: var(--type-tiny);
+}

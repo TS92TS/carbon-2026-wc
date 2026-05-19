@@ -1,6 +1,8 @@
 /* =========================================================================
    FORMAT HELPERS
-   Refined for naming consistency and marquee stability.
+   Countdown primitives consumed by the marquee. All other date/time
+   formatting lives in matchData.js (Europe/London timezone-locked) so
+   there is exactly one authority for fixture timestamps site-wide.
    ========================================================================= */
 
 /**
@@ -42,32 +44,4 @@ export function formatCountdown(c) {
   parts.push(`${c.mins}M`);
 
   return parts.join(" ");
-}
-
-/**
- * UK Date formatting for Match Rows
- */
-export function formatMatchDate(iso) {
-  const d = new Date(iso);
-  if (isNaN(d)) return "TBC";
-
-  const day = d.toLocaleDateString("en-GB", { weekday: "short" });
-  const date = d.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-  });
-  const time = d.toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  return `${day} ${date} · ${time}`;
-}
-
-export function formatGBP(amount) {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: "GBP",
-    minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
-  }).format(amount);
 }

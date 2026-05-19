@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C c:/projects/GitHub/carbon-2026-wc log --oneline -20)"
+    ]
+  }
+}

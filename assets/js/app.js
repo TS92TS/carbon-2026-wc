@@ -59,7 +59,10 @@ async function boot() {
   const fullFixtures = document.getElementById("fixtures-list");
 
   if (featuredCard || fixturesList || fullFixtures) {
-    // Adapter wrappers: new object API mapped to existing functional imports/DOM
+    // Adapter wrappers: new object API mapped to existing functional imports/DOM.
+    // Error / concluded states render a single centered caption inside the
+    // card and clear `aria-busy` so screen readers stop announcing "loading"
+    // once the terminal state is on screen.
     const featuredMatch = {
       update: (d) => {
         if (featuredCard) renderFeaturedMatch(d);
@@ -67,15 +70,15 @@ async function boot() {
       renderError: () => {
         if (featuredCard) {
           featuredCard.innerHTML =
-            '<p class="match-error">Match data unavailable. Please try again later.</p>';
-          featuredCard.classList.add("is-error");
+            '<p class="u-caption" style="text-align:center;padding:var(--space-4) 0">Match data unavailable. Please try again later.</p>';
+          featuredCard.setAttribute("aria-busy", "false");
         }
       },
       renderConcluded: () => {
         if (featuredCard) {
           featuredCard.innerHTML =
-            '<p class="match-concluded">The season has concluded. See you next season!</p>';
-          featuredCard.classList.add("is-concluded");
+            '<p class="u-caption" style="text-align:center;padding:var(--space-4) 0">The season has concluded. See you next season!</p>';
+          featuredCard.setAttribute("aria-busy", "false");
         }
       },
     };

@@ -1,12 +1,14 @@
 /* =========================================================================
    MARQUEE COMPONENT
    Persistent status bar at the top of every page.
-   Optimized into an independent, self-terminating "Set-and-Forget" system.
+   Self-terminating "set-and-forget" system: a chained setTimeout re-syncs
+   to the next wall-clock minute boundary on every render, so the countdown
+   ticks exactly when the displayed minute changes (not 60× per minute as a
+   1s setInterval would). When the target passes, the marquee flips to its
+   live state and tears down both the timer and its visibilitychange hook.
    ========================================================================= */
 
 import { countdownTo, formatCountdown } from "../lib/format.js";
-
-const TICK_MS = 1000;
 
 /**
  * Initialise the marquee.
@@ -32,7 +34,7 @@ export function initMarquee(root, config) {
   root.replaceChildren(el);
 
   const textEl = el.querySelector(".c-marquee__text");
-  let interval = null;
+  let timer = null;
 
   // Explicitly declared listener allocation allowing for total memory detachment
   const onVisibilityChange = () => {
@@ -43,47 +45,66 @@ export function initMarquee(root, config) {
     }
   };
 
+  /**
+   * Paints the current marquee state.
+   * @returns {boolean} true if the marquee should keep ticking (countdown
+   *   still active); false if it has self-terminated or is in a static mode
+   *   that needs no further updates.
+   */
   function render() {
     if (config.mode === "countdown" && config.targetIso) {
       const c = countdownTo(config.targetIso);
 
       if (c.hasPassed) {
-        // 1. Force permanent visual transition to live tournament color rule language
+        // Permanent visual transition to live tournament colour language
         el.setAttribute("data-state", "live");
-
-        // 2. Set static, un-maintained milestone string layout anchor
         textEl.innerHTML = `<span class="c-marquee__label">${config.liveText || "TOURNAMENT UNDERWAY"}</span>`;
 
-        // 3. AIRTIGHT SELF-TERMINATION CLEANUP
-        // Halts clock execution and detaches global event listener scopes completely
+        // Airtight self-termination — halt scheduling AND drop the global
+        // visibilitychange hook so nothing can re-arm the marquee later.
         stop();
         document.removeEventListener("visibilitychange", onVisibilityChange);
-        return;
+        return false;
       }
 
       const prefix = config.prefix
         ? `<span class="c-marquee__label">${config.prefix}</span>`
         : "";
       textEl.innerHTML = `${prefix}<span class="c-marquee__num">${formatCountdown(c)}</span>`;
-    } else {
-      // Direct pass-through path for static operations mode
-      const fallbackText =
-        config.text || config.liveText || "TOURNAMENT UNDERWAY";
-      textEl.innerHTML = `<span class="c-marquee__label">${fallbackText}</span>`;
+      return true;
     }
+
+    // Static modes (promo / live / post-match) — paint once, no ticking.
+    const fallbackText =
+      config.text || config.liveText || "TOURNAMENT UNDERWAY";
+    textEl.innerHTML = `<span class="c-marquee__label">${fallbackText}</span>`;
+    return false;
+  }
+
+  /**
+   * Milliseconds until the next wall-clock minute boundary.
+   * +50ms safety so we land just past the boundary instead of just before
+   * it (cheap insurance against the floor calculation drifting one tick
+   * early under load).
+   */
+  function msUntilNextMinute() {
+    return 60000 - (Date.now() % 60000) + 50;
+  }
+
+  function tick() {
+    const keepGoing = render();
+    timer = keepGoing ? setTimeout(tick, msUntilNextMinute()) : null;
   }
 
   function start() {
-    render();
-    if (config.mode === "countdown" && !interval) {
-      interval = setInterval(render, TICK_MS);
-    }
+    if (timer !== null) return; // already scheduled
+    tick();
   }
 
   function stop() {
-    if (interval) {
-      clearInterval(interval);
-      interval = null;
+    if (timer !== null) {
+      clearTimeout(timer);
+      timer = null;
     }
   }
 

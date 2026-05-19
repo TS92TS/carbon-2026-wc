@@ -103,9 +103,17 @@ function syncChipStates(nav, activeFilter) {
   });
 
   // === OUTBOUND INTENT BRIDGE ===
-  // Automatically serializes the active state onto all navigation anchors pointing to the schedule
+  // Carries the active chip filter onto explicit "view more" affordances
+  // only — `.c-link-action` is the semantic carrier for those (see the
+  // "All Fixtures" link beneath the home-page chip strip). The bottom nav,
+  // mobile menu, Reserve CTA, hero CTA, featured-match button and promo
+  // tiles all point at `fixtures.html` too, but they're fresh-funnel
+  // entries — they intentionally start a clean booking flow rather than
+  // inherit a filter the user picked while browsing the home feed.
   document
-    .querySelectorAll('a[href^="fixtures.html"], a[href*="/fixtures.html"]')
+    .querySelectorAll(
+      'a.c-link-action[href^="fixtures.html"], a.c-link-action[href*="/fixtures.html"]',
+    )
     .forEach((link) => {
       try {
         const url = new URL(link.getAttribute("href"), window.location.origin);

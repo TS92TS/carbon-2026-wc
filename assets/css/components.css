@@ -1538,11 +1538,6 @@ body:not(.is-menu-open) .c-header__more svg line {
   width: 100%;
 }
 
-.space-specs {
-  justify-content: center;
-  color: var(--text-secondary);
-}
-
 /* =========================================================================
    COMPONENT · ZONE SLIDER (Native Swiper)
    ========================================================================= */
@@ -2087,84 +2082,10 @@ body:not(.is-menu-open) .c-header__more svg line {
   gap: var(--space-6);
 }
 
-.c-form-row {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: var(--space-4);
-}
-
 .c-form-group {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-}
-
-.c-form-input {
-  appearance: none;
-  background-color: var(--surface-raised);
-  border: 1px solid var(--border-hairline);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: var(--type-body);
-  padding: 0 var(--space-4);
-  min-height: var(--tap-min);
-  transition:
-    border-color var(--duration-fast) var(--ease-out),
-    background-color var(--duration-fast) var(--ease-out);
-}
-
-.c-form-input:hover {
-  border-color: var(--border-strong);
-}
-
-.c-form-input:focus-visible {
-  border-color: var(--border-accent);
-  outline: none;
-}
-
-/* Locked state — set by booking.js when a fixture is selected and the
-   date/time are pinned to canonical kickoff. We deliberately do NOT use the
-   `disabled` attribute (it strips values from the FormData payload); the
-   `readonly` attribute keeps the values submittable while pointer-events
-   prevents the native pickers from opening. */
-.c-form-input.is-locked {
-  background-color: var(--surface-base);
-  border-color: var(--border-hairline);
-  opacity: 0.7;
-  pointer-events: none;
-  cursor: not-allowed;
-}
-
-.c-form-input.is-locked:focus-visible {
-  outline: none;
-  border-color: var(--border-hairline);
-}
-
-/* Label suffix — JS only toggles one class on the input; :has() lets the
-   sibling caption pick up the lock state. Accent green tracks the rest of
-   the lock-state language. */
-.c-form-group:has(.c-form-input.is-locked) > .u-caption::after {
-  content: " · LOCKED";
-  color: var(--accent-pitch);
-  letter-spacing: var(--tracking-widest);
-}
-
-/* -------------------------------------------------------------------------
-   FORM INPUT STATES — Locked Match Context (Readonly Safeguard)
-   ------------------------------------------------------------------------- */
-input[readonly].is-locked,
-select[readonly].is-locked {
-  /* Defeats the iOS Safari touch-tap vector completely */
-  pointer-events: none;
-  background-color: var(--surface-subtle, #1a1a1a);
-  color: var(--text-muted, #a0a0a0);
-  border-color: var(--border-muted, #2a2a2a);
-  /* Visual cue that the field is secure, not broken */
-  cursor: not-allowed;
-  /* Suppress iOS system default callouts */
-  -webkit-touch-callout: none;
-  user-select: none;
 }
 
 /* Policy micro-copy beneath the date/time row. Hidden by default; revealed
@@ -2731,8 +2652,9 @@ select[readonly].is-locked {
   letter-spacing: var(--tracking-tight);
 }
 
-.p-fixtures__header-content .u-text-muted {
-  color: var(--text-muted);
+/* Targets the lede paragraph beneath the fixtures H1 — narrows it so it
+   reads as a single thought beneath the display headline. */
+.p-fixtures__header-content .u-dim {
   max-width: 40ch;
   margin-inline: auto;
   margin-top: var(--space-2);
@@ -3214,5 +3136,150 @@ select[readonly].is-locked {
   .p-fixtures__filters {
     margin-inline: calc(var(--space-10) * -1);
     padding-inline: var(--space-10);
+  }
+}
+
+/* =========================================================================
+   COMPONENT · SITE FOOTER (legal accordion)
+   A quiet, full-bleed strip below the page closer. Three native <details>
+   blocks host Privacy / Booking Terms / Cookies — zero JS, opens/closes via
+   the browser's built-in disclosure semantics. The body copy stays inline
+   on the same page rather than living on dedicated /legal/ routes so users
+   never leave the funnel to satisfy a compliance read.
+   ========================================================================= */
+.c-site-footer {
+  position: relative;
+  /* Sits outside <main> as a top-level <body> sibling so the browser
+     applies the implicit `contentinfo` landmark role. Adds its own
+     bottom-padding to clear the fixed bottom nav (.c-nav is 64px +
+     iOS safe-area). The l-page padding-bottom only covers .l-page
+     descendants, so the footer can't inherit it. */
+  padding:
+    var(--space-10) var(--space-5)
+    calc(var(--space-10) + var(--nav-height) + env(safe-area-inset-bottom));
+  background-color: var(--surface-base);
+  border-top: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+  font-size: var(--type-small);
+  line-height: var(--leading-normal);
+}
+
+.c-site-footer__inner {
+  max-width: var(--max-content);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.c-site-footer__item {
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.c-site-footer__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding-block: var(--space-3);
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-body);
+  font-size: var(--type-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-primary);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.c-site-footer__summary::-webkit-details-marker {
+  display: none;
+}
+
+.c-site-footer__summary:hover {
+  color: var(--accent-pitch);
+}
+
+.c-site-footer__summary:focus-visible {
+  color: var(--accent-pitch);
+  /* Outline inherits from the global :focus-visible rule in base.css —
+     2px solid accent-pitch + 2px offset. Kept visible for WCAG 2.4.7. */
+}
+
+.c-site-footer__summary::after {
+  content: "+";
+  font-family: var(--font-display);
+  font-size: var(--type-h3);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--accent-pitch);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.c-site-footer__item[open] > .c-site-footer__summary::after {
+  transform: rotate(45deg);
+}
+
+.c-site-footer__body {
+  padding-block: 0 var(--space-5);
+  color: var(--text-secondary);
+}
+
+.c-site-footer__body > * + * {
+  margin-top: var(--space-3);
+}
+
+.c-site-footer__body p {
+  font-size: var(--type-small);
+  line-height: var(--leading-relaxed);
+}
+
+.c-site-footer__body strong {
+  color: var(--text-primary);
+  font-weight: var(--weight-semibold);
+}
+
+.c-site-footer__body a {
+  color: var(--accent-pitch);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.c-site-footer__body a:hover {
+  color: var(--accent-pitch-dim);
+}
+
+/* Focus styles fall through to the global :focus-visible rule in base.css
+   (outline + offset). Don't strip — required for keyboard wayfinding. */
+
+.c-site-footer__body ul {
+  list-style: disc;
+  padding-left: var(--space-5);
+}
+
+.c-site-footer__body li + li {
+  margin-top: var(--space-2);
+}
+
+.c-site-footer__meta {
+  margin-top: var(--space-6);
+  font-size: var(--type-tiny);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .c-site-footer {
+    padding-inline: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .c-site-footer {
+    padding-inline: var(--space-8);
   }
 }
