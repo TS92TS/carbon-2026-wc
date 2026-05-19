@@ -2,7 +2,7 @@
    APP ENTRY · Unified Orchestrator
    ========================================================================= */
 
-import { initMarquee } from "./components/marquee.js";
+import { mountMarquee } from "./components/marqueeController.js";
 import { initMobileMenu } from "./components/mobileMenu.js";
 import { updateNavStates } from "./lib/navigation.js";
 import { getMatchData } from "./lib/matchData.js";
@@ -14,7 +14,6 @@ import { initZonesPage } from "./components/zonesPage.js";
 import { initScrollVideos } from "./lib/video.js";
 import { initBookingConcierge } from "./components/booking.js";
 import { consumeFunnelHint } from "./lib/funnelHint.js";
-import { marqueeState } from "./data/content.js";
 
 async function boot() {
   // ---- 1. SHELL · always-on UI ------------------------------------------
@@ -27,7 +26,7 @@ async function boot() {
   consumeFunnelHint();
 
   const marqueeRoot = document.querySelector('[data-component="marquee"]');
-  if (marqueeRoot) initMarquee(marqueeRoot, marqueeState);
+  if (marqueeRoot) mountMarquee(marqueeRoot);
 
   // ---- 2. PAGE-SPECIFIC · only run if the page has markers --------------
   if (document.querySelector('[data-component="zone-slider"]')) {

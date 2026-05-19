@@ -4,22 +4,29 @@ import {
   getLondonWeekday,
   isKnockoutMatch,
   getDetailedStageLabel,
+  getHeadlineMatches,
   tlaOf,
   isAnonymousMatch,
 } from "../lib/matchData.js";
-
-/* Trophy emblem for the milestone (TBD) row variant — inline SVG so it
-   inherits `currentColor`. Mirrors the markup used in fixturesPage.js
-   so both list contexts render identical TBD rows. */
-const TROPHY_SVG_MARKUP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>`;
+import { TROPHY_SVG_MARKUP, VALID_FILTERS } from "../lib/constants.js";
 
 let matchCache = null;
 const DISPLAY_LIMIT = 4;
 
-// Mirrors fixturesPage.js — must stay in lockstep with the filter chips
-// rendered in fixtures.html and index.html. Any new filter key needs to be
-// added here AND in fixturesPage.js until we lift this to a shared module.
-const VALID_FILTERS = new Set(["all", "england", "knockout", "weekend"]);
+/**
+ * "England's tournament is over" probe. When the data feed comes back
+ * with no England fixtures (eliminated or never scheduled), the chip's
+ * spatial role and default-filter routing are preserved, but the
+ * displayed dataset swaps to the next headline knockouts and the chip
+ * label switches to "Headlines". Single source of truth for this swap
+ * — used by both the chip-state sync and the dataset selector.
+ */
+function isEnglandFallbackActive() {
+  if (!matchCache) return false;
+  return (
+    !Array.isArray(matchCache.england) || matchCache.england.length === 0
+  );
+}
 
 /**
  * Render the upcoming fixtures feed.
@@ -79,7 +86,13 @@ function getFilteredList(filter) {
     case "all":
       return upcoming;
     case "england":
-      return england;
+      // When England is empty (eliminated / not scheduled), keep the
+      // "what's headline at the venue" intent of the chip by serving
+      // the next knockout fixtures. Chip label is renamed in parallel
+      // via syncChipStates so users see the shift explicitly.
+      return isEnglandFallbackActive()
+        ? getHeadlineMatches(matchCache)
+        : england;
     case "knockout":
       return upcoming.filter(isKnockoutMatch);
     case "weekend":
@@ -101,6 +114,16 @@ function syncChipStates(nav, activeFilter) {
     chip.classList.toggle("c-chip--active", isActive);
     chip.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
+
+  // Chip label swap: "England" → "Headlines" when England's tournament
+  // is over. The filter KEY stays "england" so URL round-trips and
+  // chip-active semantics work unchanged; only the visible label moves.
+  const englandChip = nav.querySelector('[data-filter="england"]');
+  if (englandChip) {
+    englandChip.textContent = isEnglandFallbackActive()
+      ? "Headlines"
+      : "England";
+  }
 
   // === OUTBOUND INTENT BRIDGE ===
   // Carries the active chip filter onto explicit "view more" affordances

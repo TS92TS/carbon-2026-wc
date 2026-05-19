@@ -32,16 +32,23 @@ export function countdownTo(target) {
 }
 
 /**
- * Scoreboard style: "31D 4H 12M"
- * Removes seconds to prevent marquee jitter on mobile.
+ * Scoreboard countdown format. Granularity collapses as the value grows
+ * so the marquee text stays stable at any horizon:
+ *   t ≥ 24h   →  "31D 4H"      (no minutes — would re-render every minute
+ *                                for no perceivable benefit at this scale)
+ *   1h ≤ t   →  "4H 12M"       (hours + minutes inside a day)
+ *   t < 1h   →  "45M"          (minutes only as kickoff approaches)
+ * Seconds are never shown — the marquee re-renders only on minute
+ * boundaries (see marquee.js's setTimeout chain).
  */
 export function formatCountdown(c) {
   if (c.hasPassed) return "KICK-OFF";
 
-  const parts = [];
-  if (c.days > 0) parts.push(`${c.days}D`);
-  if (c.hours > 0 || c.days > 0) parts.push(`${c.hours}H`);
-  parts.push(`${c.mins}M`);
-
-  return parts.join(" ");
+  if (c.days > 0) {
+    return `${c.days}D ${c.hours}H`;
+  }
+  if (c.hours > 0) {
+    return `${c.hours}H ${c.mins}M`;
+  }
+  return `${c.mins}M`;
 }

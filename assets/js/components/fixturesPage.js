@@ -9,20 +9,34 @@ import {
   isKnockoutMatch,
   getDetailedStageLabel,
   getStageGroup,
+  getHeadlineMatches,
   tlaOf,
   isAnonymousMatch,
 } from "../lib/matchData.js";
-
-/* Trophy emblem used in the milestone (TBD) row variant. Inline SVG so
-   it inherits `currentColor` from the parent — no asset roundtrip, no
-   FOUC. Marked `aria-hidden` because the adjacent text already carries
-   the meaning ("WORLD CUP FINAL · Teams TBC"). */
-const TROPHY_SVG_MARKUP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>`;
+import {
+  TROPHY_SVG_MARKUP,
+  VALID_FILTERS,
+  VALID_ZONES,
+  ZONE_DATA,
+} from "../lib/constants.js";
 
 const safe = (v) => (v === undefined || v === null ? "" : v);
 
 let matchCache = null;
-const VALID_FILTERS = new Set(["all", "england", "knockout", "weekend"]);
+
+/**
+ * "England's tournament is over" probe — mirrors the helper in
+ * upcomingMatches.js. When this fires we keep the page's England HQ
+ * strip AND the England chip in place spatially, but swap the data
+ * source to the next headline knockouts and rename the visible labels.
+ * The filter KEY stays "england" so URL round-trips work unchanged.
+ */
+function isEnglandFallbackActive() {
+  if (!matchCache) return false;
+  return (
+    !Array.isArray(matchCache.england) || matchCache.england.length === 0
+  );
+}
 
 /* -------------------------------------------------------------------------
    PATH B FUNNEL STATE — when the user arrives via the zone-first path
@@ -41,15 +55,6 @@ const VALID_FILTERS = new Set(["all", "england", "knockout", "weekend"]);
    URL persistence (back/forward, bookmarks) covers continuation; fresh
    visits get a fresh page.
    ------------------------------------------------------------------------- */
-// Mirror of booking.js's ZONE_DATA names — must stay in lockstep until we
-// lift this to a shared module.
-const ZONE_NAMES = {
-  carbon: "Main Bar",
-  terrace: "The Mill Terrace",
-  booth: "VIP Booths",
-};
-const VALID_ZONES = new Set(Object.keys(ZONE_NAMES));
-
 let activeZoneSlug = null;
 
 /**
@@ -78,7 +83,7 @@ function mountZoneBanner(zoneSlug) {
   const banner = document.getElementById("zone-banner");
   const nameEl = document.getElementById("zone-banner-name");
   if (!banner || !nameEl) return;
-  nameEl.textContent = (ZONE_NAMES[zoneSlug] || zoneSlug).toUpperCase();
+  nameEl.textContent = (ZONE_DATA[zoneSlug]?.name || zoneSlug).toUpperCase();
   banner.removeAttribute("hidden");
 }
 
@@ -103,19 +108,32 @@ export function initFixturesPage(data) {
     mountZoneBanner(activeZoneSlug);
   }
 
-  // 1. Populate persistent England HQ strip immediately
+  // 1. Populate persistent England HQ strip immediately. If England's
+  //    tournament has concluded, the strip's spatial role is preserved
+  //    by swapping in the next headline knockouts and renaming the H2.
+  //    The "Priority" kicker stays because the strip's FUNCTION is still
+  //    "priority content" — only the SUBJECT has shifted.
   if (englandContainer) {
-    const engMatches = Array.isArray(matchCache.england)
-      ? matchCache.england
-      : [];
-    if (engMatches.length > 0) {
-      renderFixtures(engMatches, englandContainer, {
+    const fallbackActive = isEnglandFallbackActive();
+    const stripMatches = fallbackActive
+      ? getHeadlineMatches(matchCache)
+      : matchCache.england;
+
+    const stripHeading = document.getElementById("england-heading");
+    if (stripHeading) {
+      stripHeading.textContent = fallbackActive
+        ? "Headline Knockouts"
+        : "England Fixtures";
+    }
+
+    if (Array.isArray(stripMatches) && stripMatches.length > 0) {
+      renderFixtures(stripMatches, englandContainer, {
         skipDateHeaders: true,
         isEnglandStrip: true,
       });
     } else {
       englandContainer.innerHTML =
-        '<li class="u-dim u-tiny" style="padding:var(--space-4)">No England fixtures scheduled.</li>';
+        '<li class="u-dim u-tiny" style="padding:var(--space-4)">No fixtures scheduled.</li>';
       englandContainer.setAttribute("aria-busy", "false");
     }
   }
@@ -154,7 +172,10 @@ function getFilteredDataset(filter) {
 
   switch (filter) {
     case "england":
-      return england;
+      // Mirrors the home-page swap: when England's run is over the
+      // chip continues to serve as the "headline matches" affordance
+      // (chip text updated below by syncChipStates).
+      return isEnglandFallbackActive() ? getHeadlineMatches(matchCache) : england;
     case "knockout":
       return upcoming.filter(isKnockoutMatch);
     case "weekend":
@@ -177,6 +198,16 @@ function setupFilters(nav, container, initialFilter) {
       chip.classList.toggle("c-chip--active", isActive);
       chip.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
+
+    // Chip label swap mirrors the home page: visible label moves from
+    // "England" to "Headlines" once England exits the tournament. The
+    // filter key stays "england" so URL routing is unaffected.
+    const englandChip = nav.querySelector('[data-filter="england"]');
+    if (englandChip) {
+      englandChip.textContent = isEnglandFallbackActive()
+        ? "Headlines"
+        : "England";
+    }
   };
 
   const applyFilters = () => {

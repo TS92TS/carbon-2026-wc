@@ -577,6 +577,96 @@ export function isAnonymousMatch(match) {
 }
 
 /**
+ * Returns true if `now` falls inside this match's playing window —
+ * kickoff (inclusive) through kickoff + budgeted duration (exclusive).
+ * Duration mirrors the trading-rules engine: 2h for group fixtures,
+ * 3h for knockouts (extra-time + penalties budget). Single authority
+ * for "is this match underway?" so the marquee, featured card and any
+ * future live-status surface cannot drift on what counts as live.
+ */
+export function isMatchLive(match, now = Date.now()) {
+  if (!match?.datetimeIso) return false;
+  const kickoffMs = Date.parse(match.datetimeIso);
+  if (Number.isNaN(kickoffMs)) return false;
+  const durationMs = isKnockoutMatch(match)
+    ? MATCH_DURATION_KNOCKOUT_MS
+    : MATCH_DURATION_GROUP_MS;
+  return now >= kickoffMs && now < kickoffMs + durationMs;
+}
+
+/**
+ * "Next England focus" — returns the chronologically nearest England
+ * fixture whose playing window hasn't yet concluded, paired with a flag
+ * indicating whether it's currently live. Used by the marquee controller
+ * to decide between the upcoming-countdown and live-ticker states.
+ * Returns `null` when there are no future England fixtures (i.e.
+ * England's tournament is over) — caller is expected to fall back to
+ * `getHeadlineMatches(data)`.
+ */
+export function getNextEnglandFocus(data, now = Date.now()) {
+  if (!data || !Array.isArray(data.england)) return null;
+  const candidates = data.england
+    .filter((m) => {
+      if (!m?.datetimeIso) return false;
+      const kickoffMs = Date.parse(m.datetimeIso);
+      if (Number.isNaN(kickoffMs)) return false;
+      const durationMs = isKnockoutMatch(m)
+        ? MATCH_DURATION_KNOCKOUT_MS
+        : MATCH_DURATION_GROUP_MS;
+      // Include both live and future matches; concluded ones drop out.
+      return kickoffMs + durationMs > now;
+    })
+    .sort((a, b) => Date.parse(a.datetimeIso) - Date.parse(b.datetimeIso));
+  const match = candidates[0];
+  if (!match) return null;
+  return { match, isLive: isMatchLive(match, now) };
+}
+
+/**
+ * Curated fallback dataset surfaced when England exit the tournament:
+ * the next `limit` upcoming knockout fixtures, ordered chronologically.
+ * The home / fixtures "England" chip silently swaps to this list once
+ * `data.england` is empty so the spatial role of the chip is preserved
+ * and customers still see a meaningful default of "headline matches
+ * coming up at the venue."
+ */
+export function getHeadlineMatches(data, { limit = 4, now = Date.now() } = {}) {
+  if (!data || !Array.isArray(data.upcoming)) return [];
+  return data.upcoming
+    .filter(isKnockoutMatch)
+    .filter((m) => {
+      const kickoffMs = Date.parse(m?.datetimeIso);
+      if (Number.isNaN(kickoffMs)) return false;
+      const durationMs = MATCH_DURATION_KNOCKOUT_MS;
+      return kickoffMs + durationMs > now;
+    })
+    .sort((a, b) => Date.parse(a.datetimeIso) - Date.parse(b.datetimeIso))
+    .slice(0, limit);
+}
+
+/**
+ * Compact stage label for tight contexts (the marquee, future
+ * brackets). Built on top of `getDetailedStageLabel` so the canonical
+ * authority stays unified — this is purely a presentation map. Any
+ * label not in the table falls through unchanged.
+ */
+const SHORT_STAGE_MAP = {
+  "GROUP STAGE": "GROUP",
+  "ROUND OF 32": "R32",
+  "ROUND OF 16": "R16",
+  "QUARTER-FINAL": "QF",
+  "SEMI-FINAL": "SF",
+  "WORLD CUP FINAL": "FINAL",
+  "3rd Place Play-Off": "3RD PLACE",
+  "Knockout Stage": "KNOCKOUT",
+};
+
+export function getShortStageLabel(match) {
+  const long = getDetailedStageLabel(match);
+  return SHORT_STAGE_MAP[long] || long;
+}
+
+/**
  * Title-case rewrites of the canonical UPPERCASE stage labels used in the
  * UI. Reserved for non-UI display contexts (Tally confirmation emails,
  * Google Sheets booking-ledger rows) where SHOUTY all-caps reads as

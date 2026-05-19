@@ -4,6 +4,79 @@
    Loaded after tokens.css, before everything else.
    ========================================================================= */
 
+/* ---------- WEB FONTS · LOCAL ---------------------------------------- */
+/* Big Shoulders Display (headings) + Inter (body). Self-hosted at
+   /assets/fonts so there is zero third-party request for fonts — no
+   googleapis preconnect, no gstatic font request, no Google referral on
+   first paint. Privacy-preserving by construction and faster on the
+   critical path (eliminates DNS + TLS to a foreign origin).
+
+   `font-display: swap` matches prior behaviour: the browser paints
+   text in the fallback stack immediately, then swaps to the web font
+   when the .woff2 finishes loading. Avoids FOIT on slow connections.
+
+   Every available weight is declared. Fetches are weight-lazy — the
+   browser only downloads a weight when a rule actually applies it —
+   so declaring unused weights costs nothing at runtime and makes
+   future design tweaks free of font-pipeline churn. */
+@font-face {
+  font-family: "Big Shoulders Display";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/big-shoulders-v4-latin-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Big Shoulders Display";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/big-shoulders-v4-latin-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Big Shoulders Display";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("../fonts/big-shoulders-v4-latin-800.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/inter-v20-latin-regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../fonts/inter-v20-latin-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/inter-v20-latin-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/inter-v20-latin-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("../fonts/inter-v20-latin-800.woff2") format("woff2");
+}
+
 /* ---------- MODERN RESET --------------------------------------------- */
 *,
 *::before,

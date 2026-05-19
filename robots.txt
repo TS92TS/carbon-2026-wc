@@ -1,0 +1,11 @@
+# Carbon Football · Stowmarket
+# Public-facing site. The booking terminal (/book.html) is a gated funnel
+# step that needs URL params from a fixture+zone selection — direct visits
+# redirect, so we Disallow it to save crawl budget and prevent any chance
+# of indexing a redirecting URL.
+
+User-agent: *
+Allow: /
+Disallow: /book.html
+
+Sitemap: https://carbonfootball.uk/sitemap.xml

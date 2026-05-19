@@ -146,9 +146,49 @@
   font-weight: var(--weight-semibold);
 }
 
-/* On very narrow viewports the label hides — dot + number is enough context */
+/* Link variant — appears in states B / C / E when the target match is
+   bookable. Inherits the layout of `.c-marquee__text` and adds a hover
+   shift on its trailing chevron so the affordance reads as "tappable,
+   leads to a fixture" without changing colour at rest. */
+.c-marquee__text--link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.c-marquee__chevron {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  align-self: center;
+  color: var(--accent-pitch);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.c-marquee__text--link:hover .c-marquee__chevron,
+.c-marquee__text--link:focus-visible .c-marquee__chevron {
+  transform: translateX(3px);
+}
+
+/* Static state (tournament concluded) — dim, no pulse. Lets the marquee
+   read as "settled, not awaiting an event" without competing visually
+   with the live brand language. */
+.c-marquee[data-state="static"] .c-marquee__dot {
+  background-color: var(--text-tertiary);
+  box-shadow: none;
+}
+
+.c-marquee[data-state="static"] .c-marquee__label {
+  color: var(--text-secondary);
+}
+
+/* On very narrow viewports the prefix label hides — dot + countdown
+   alone carries enough context. The `:has(.c-marquee__num)` guard means
+   live and static states (which have no countdown number) keep their
+   label visible at any width, so the marquee never collapses to a lone
+   dot. */
 @media (max-width: 419px) {
-  .c-marquee__label {
+  .c-marquee:has(.c-marquee__num) .c-marquee__label {
     display: none;
   }
 }

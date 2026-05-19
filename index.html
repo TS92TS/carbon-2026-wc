@@ -21,11 +21,13 @@
       name="description"
       content="Stowmarket's home of Football in 2026. Premium screens, Delicious Food, guaranteed seats. Secure your bench."
     />
+    <link rel="canonical" href="https://carbonfootball.uk/" />
 
     <!-- Social share · Open Graph & Twitter Card -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Carbon Sports Bar" />
     <meta property="og:locale" content="en_GB" />
+    <meta property="og:url" content="https://carbonfootball.uk/" />
     <meta property="og:title" content="Carbon Football · Stowmarket" />
     <meta
       property="og:description"
@@ -52,12 +54,16 @@
       content="Carbon Sports Bar — Stowmarket's home for live football"
     />
 
-    <!-- Fonts: Big Shoulders Display (headings) + Inter (body) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Fonts: self-hosted at /assets/fonts (see base.css @font-face block).
+         The hero heading uses Big Shoulders 700 — preload it so the LCP text
+         arrives in its final font without a swap flash. `crossorigin` is
+         required for font preload to match the @font-face fetch. -->
     <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="assets/fonts/big-shoulders-v4-latin-700.woff2"
+      crossorigin
     />
 
     <!-- Styles: load order matters (tokens → base → layout → components) -->
