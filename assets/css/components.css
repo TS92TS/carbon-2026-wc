@@ -703,8 +703,8 @@
 .c-stat-tile__num {
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
-  font-size: var(--type-stat); /* 2.75rem — was raw 2.75rem */
-  line-height: var(--leading-flat); /* 0.95 — was raw 0.95 */
+  font-size: var(--type-stat);
+  line-height: var(--leading-flat);
   letter-spacing: var(--tracking-tight);
   color: var(--accent-pitch);
 }
@@ -1365,13 +1365,8 @@ body:not(.is-menu-open) .c-header__more svg line {
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--text-primary);
-  /* Inline-block sized to content, capped at calc(100% - 5.5rem) to
-     reserve room for flag A + flag B + margins. Mirrors the booking
-     summary pattern — prevents flag B from wrapping to its own line
-     when the slug fits the line with flag A but not flag B. The 5.5rem
-     reserve is slightly wider than the booking summary's 5rem because
-     the banner flags are 28px (vs 24px), so the per-side overhead is
-     ~36px instead of ~32px. */
+  /* Content-width block capped at calc(100% - 5.5rem) to reserve room
+     for both 28px flags + margins, so flag B never wraps alone. */
   display: inline-block;
   width: max-content;
   max-width: calc(100% - 5.5rem);
@@ -1884,22 +1879,16 @@ body:not(.is-menu-open) .c-header__more svg line {
   gap: var(--space-3);
 }
 
-/* Match summary title — the h3 itself is the wrapper, with flag spans
-   and a text span flowing INSIDE as inline-block / inline. This ties the
-   flags to the text positions on every line, eliminating the flex
-   orphan-on-wrap problem the previous layout had. The whole title block
-   reads as a single text stream: "[🇪🇳]ENGLAND VS BRAZIL[🇧🇷]". */
+/* Match summary title — flags + text span flow INSIDE the h3 as
+   inline-block so flags track the text on every wrapped line (a flex
+   layout orphaned flag B on wrap). Reads as one stream: "[🇪]ENG VS BRA[🇧]". */
 .c-booking-summary__match {
   display: block;
   margin: 0;
   text-align: center;
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
-  /* Explicit line-height matches the inner #summary-title's value so the
-     line box height stays predictable when the title wraps. Without
-     this, the h3 inherits its line-height from the body (~1.5), and a
-     wrapped line would render taller than the tighter typography
-     intent. */
+  /* Matches #summary-title so the line box stays predictable on wrap. */
   line-height: 1.2;
   text-transform: uppercase;
   letter-spacing: var(--tracking-wide);
@@ -1913,13 +1902,9 @@ body:not(.is-menu-open) .c-header__more svg line {
   vertical-align: middle;
 }
 
-/* TBD booking summary — booking.js promotes flag-A to a trophy emblem
-   host (innerHTML replaced with the inline SVG) and hides flag-B. This
-   rule resets the flag-rectangle styling so the slot becomes a square
-   colour-inheriting icon container instead of a grey 24×16 rectangle.
-   The trophy + title ("WORLD CUP FINAL") + meta line read as a single
-   centered visual unit, consistent with the milestone treatment on
-   fixtures/upcoming list rows and the featured-match hero card. */
+/* TBD summary — flag-A hosts the trophy emblem (booking.js swaps its
+   innerHTML), flag-B hides. Resets the flag-rectangle styling to a
+   colour-inheriting icon slot. */
 .c-booking-summary .c-fixture-row__flag.c-booking-summary__flag-trophy {
   width: auto;
   height: auto;
@@ -1946,21 +1931,9 @@ body:not(.is-menu-open) .c-header__more svg line {
 }
 
 .c-booking-summary #summary-title {
-  /* Inline-block sized to its content (max-content), capped at
-     calc(100% - 5rem) so there's always reserved space for flag A +
-     flag B + their margins on the row. This prevents the "flag B wraps
-     alone" failure mode that pure `display: inline` produced:
-       • Short titles ("ENGLAND VS BRAZIL"): block is content-width, flags
-         hug it closely on both sides — no internal wrap, no orphaned flag.
-       • Long titles ("BOSNIA AND HERZEGOVINA VS COSTA RICA"): block hits
-         the max-width cap, text wraps internally with `text-wrap: balance`
-         distributing lines evenly, flag B sits at the block's right edge
-         (vertically centered against the multi-line text).
-
-     Clamp restored to a confident size (1.125rem floor, 2.5rem ceiling)
-     now that the icon-only "Change" affordance frees ~50px of row width.
-     At 320px viewport this gives ~18px font — readable promotional
-     typography rather than the previously-cramped 14px. */
+  /* Content-width block capped at calc(100% - 5rem) to reserve room for
+     both flags + margins, so flag B never wraps alone. Long titles wrap
+     internally (text-wrap: balance) with flag B pinned to the right edge. */
   display: inline-block;
   width: max-content;
   max-width: calc(100% - 5rem);
@@ -2054,12 +2027,9 @@ body:not(.is-menu-open) .c-header__more svg line {
   display: none !important;
 }
 
-/* Very small screens — tighten panel gaps and shrink the zone snapshot
-   so the booking-summary row never overflows at extreme widths. The
-   title font-size is intentionally NOT overridden here: the base clamp
-   already scales to ~17.6px at 320px, and the inline-flow layout
-   eliminates the flex-allocated narrow-box constraint that previously
-   forced an additional font-size reduction at this breakpoint. */
+/* Very small screens — tighten gaps + shrink the zone snapshot so the
+   summary row never overflows. Title font-size is left to the base
+   clamp. */
 @media (max-width: 370px) {
   .c-booking-summary {
     gap: var(--space-3);
@@ -2137,23 +2107,9 @@ body:not(.is-menu-open) .c-header__more svg line {
 }
 
 /* =========================================================================
-   FUNNEL STEP INDICATOR
-   Single source of truth for "Step N of 3" wayfinding labels across the
-   booking funnel. Replaces the previous `u-caption u-accent` combo on:
-     • zones.html  — Path A Step 2 kicker (`.c-zone-cue__step`)
-     • fixtures.html — Path B Step 2 banner-hint label
-     • book.html   — Final Step hero kicker
-
-   Why bump from `u-caption` (~13 px medium) to this (~14 px bold,
-   widest tracking)?
-     • Goal-Gradient Effect — users accelerate as they perceive
-       proximity to the goal. A more apparent step indicator makes
-       that proximity easier to perceive.
-     • Visual hierarchy — the step indicator IS the user's wayfinding
-       anchor, not a secondary helper. It should read at a tier above
-       generic captions.
-     • Restraint — still well below the page H1 / display headline so
-       hierarchy stays intact; just lifted above other caption usages.
+   FUNNEL STEP INDICATOR · "Step N of 3" wayfinding label, shared across
+   the zones / fixtures / book funnel kickers. Bolder + wider-tracked
+   than a caption so it reads as the wayfinding anchor, not a helper.
    ========================================================================= */
 .c-funnel-step {
   font-family: var(--font-body);
@@ -2167,14 +2123,10 @@ body:not(.is-menu-open) .c-header__more svg line {
 
 /* =========================================================================
    BOOKING SUMMARY · CHANGE LINK
-   Compact icon-only edit affordance. Replaced the previous text link
-   ("Change match" / "Change zone") because the ~84px text-link claimed
-   too much of the row width, squeezing the match-title block on narrow
-   viewports and forcing aggressive font shrinkage. The pencil icon is a
-   universally-recognised "edit/change" cue (24+ years of UI convention),
-   the aria-label preserves the action's full name for screen readers,
-   and a 36×36 tap target meets WCAG AA comfort while keeping the visual
-   weight subordinate to the primary "Confirm Guests & Book" CTA. */
+   Icon-only edit affordance — keeps row width for the match title on
+   narrow viewports. aria-label carries the full action name for SR; the
+   36×36 tap target meets WCAG AA.
+   ========================================================================= */
 .c-booking-summary__change {
   flex: 0 0 auto;
   display: inline-flex;
@@ -2206,13 +2158,9 @@ body:not(.is-menu-open) .c-header__more svg line {
 }
 
 /* =========================================================================
-   BOOKING FORM · RECEIPT MODE
-   Funnel architecture: book.html is gated by booking.js so it only ever
-   renders for users with valid fixture + zone context. There are no
-   interactive match/zone/date/time form inputs — those become hidden
-   inputs populated from the URL — and the stepper is the only visible
-   field. The receipt-mode glow on the stepper signals "this is the only
-   action left" for the user's full visit.
+   BOOKING FORM · RECEIPT MODE · the stepper is the only visible field
+   (match/zone/date/time ride as hidden inputs), so its glow signals
+   "this is the only action left".
    ========================================================================= */
 .c-booking-form .c-stepper {
   border-color: var(--border-accent);

@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git -C c:/projects/GitHub/carbon-2026-wc log --oneline -20)"
+      "Bash(git -C c:/projects/GitHub/carbon-2026-wc log --oneline -20)",
+      "Bash(node --check assets/js/app.js)",
+      "Bash(node --check assets/js/lib/matchData.js)",
+      "Bash(node --check assets/js/lib/constants.js)",
+      "Bash(node --check assets/js/lib/format.js)",
+      "Bash(node --check assets/js/lib/urlHelpers.js)",
+      "PowerShell($f = \\(Get-Command node -ErrorAction SilentlyContinue\\); if \\($f\\) { node --version } else { \"no-node\" })"
     ]
   }
 }

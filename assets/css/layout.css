@@ -282,14 +282,14 @@
 }
 
 .c-nav__item:hover {
-  color: var(--text-primary); /* FIX: added semicolon for consistency */
+  color: var(--text-primary);
 }
 
 .c-nav__icon {
   width: 22px;
   height: 22px;
   fill: none;
-  stroke: currentColor; /* THIS IS THE KEY */
+  stroke: currentColor;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -313,7 +313,7 @@
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: var(--space-8); /* 2rem = 32px — was raw 32px */
+  width: var(--space-8);
   height: 3px; /* decorative stroke — one-off, below 4pt grid */
   border-radius: 0 0 4px 4px;
   background-color: var(--accent-pitch);
@@ -337,9 +337,8 @@
 }
 
 /* =========================================================================
-   DESKTOP ADAPTATION (≥1024px)
-   Shell stays the same — content adapts inside .l-page__content
-   Side-rail nav variant deferred to a later pass.
+   DESKTOP ADAPTATION (≥1024px) · shell unchanged; content adapts inside
+   .l-page__content.
    ========================================================================= */
 @media (min-width: 1024px) {
   .c-header {

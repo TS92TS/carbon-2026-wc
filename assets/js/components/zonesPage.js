@@ -1,23 +1,12 @@
 /* =========================================================================
-   COMPONENT · ZONES PAGE
-   When the user lands on zones.html via a Path A funnel step (clicking a
-   fixture row → URL carries ?fixture=...&date=...&time=...&flagA=...&flagB=...),
-   this module:
-     1. Mounts a "you're booking for X match" banner above the zone list.
-     2. Reveals the "Now Pick Your Zone" step-2 cue.
-     3. Rewrites every zone-card CTA so it jumps straight to book.html
-        with the full carry, skipping the Path B middle step.
-
-   The URL is the SINGLE SOURCE OF TRUTH for funnel context. If the user
-   arrives at zones.html without ?fixture= (via the Reserve nav, the
-   "Browse the Space" CTA, a direct URL, or a bookmark), the page renders
-   in its generic browsing mode with no banner, no cue, and zone-card CTAs
-   pointing at the Path B step-2 entry (fixtures.html?zone=X). This is
-   intentional: prior auto-recovery from sessionStorage surfaced stale
-   step indicators on direct visits, creating confusion. The browser's
-   own URL persistence (back/forward, bookmarks) covers the "continue
-   your booking" use case without falsely flagging arbitrary visits as
-   in-funnel.
+   ZONES PAGE · Path A Step 2. When the user arrives with fixture context
+   (?fixture=…&date=…&time=…&flagA=…&flagB=…) this module:
+     1. mounts the "booking for X" banner above the zone list,
+     2. reveals the step-2 cue,
+     3. rewrites zone-card CTAs straight to book.html (skip the Path B step).
+   URL is the single source of truth — no ?fixture= means generic browsing
+   mode (no banner/cue; cards keep their fixtures.html?zone=X hrefs). No
+   sessionStorage recovery, so direct visits never show stale step cues.
    ========================================================================= */
 
 import { safeBackgroundUrl } from "../lib/urlHelpers.js";
@@ -70,14 +59,10 @@ export function initZonesPage() {
   const params = new URLSearchParams(window.location.search);
   const fixture = params.get("fixture");
 
-  // URL-as-single-source-of-truth: no ?fixture= means generic browsing
-  // mode. Return cleanly — no banner, no cue, no zone-card rewrite. The
-  // page renders as a browseable showcase of the three zones, with zone
-  // cards retaining their static "fixtures.html?zone=X" hrefs (Path B
-  // entry point).
+  // No ?fixture= → generic browsing mode (cards keep their Path B hrefs).
   if (!fixture) return;
 
-  // ---- Banner content ---------------------------------------------------
+  // Banner content
   const slugEl = document.getElementById("banner-slug");
   const metaEl = document.getElementById("banner-meta");
   const flagAEl = document.getElementById("banner-flag-a");
@@ -98,12 +83,9 @@ export function initZonesPage() {
     metaEl.textContent = parts.join(" · ");
   }
 
-  // TBD knockout fixture — promote flag A to a trophy emblem host and
-  // hide flag B. The two empty grey rectangles around "WORLD CUP FINAL"
-  // would otherwise read as a loading state. Detection is slug-based
-  // (URL only — zones.html doesn't load matchData) so this is a single
-  // string comparison, no extra fetches. Confirmed-team fixtures take
-  // the standard flag-background path.
+  // TBD knockout — flag A hosts a trophy, flag B hides (two empty grey
+  // boxes would read as a loading state). Slug-based detection since
+  // zones.html doesn't load matchData.
   const isAnonymousSlug = fixture.toLowerCase() === "tbd-vs-tbd";
 
   if (isAnonymousSlug) {
@@ -123,24 +105,12 @@ export function initZonesPage() {
 
   banner.removeAttribute("hidden");
 
-  // Reveal the directional cue ("Step 2 of 3 · Now Pick Your Zone").
-  // Independent of the banner so the cue can be safely omitted from any
-  // future page that doesn't need it.
   const cue = document.getElementById("zone-cue");
   if (cue) cue.removeAttribute("hidden");
 
-  // ---- Funnel shortcut: rewrite zone-card CTAs --------------------------
-  // When the user arrives with fixture context (Path A Step 2), zone-card
-  // CTAs should jump STRAIGHT to book.html with the full carry, bypassing
-  // the Path B middle step (which exists only for zone-first entries
-  // still needing to pick a fixture). The static zone-card hrefs are
-  // `fixtures.html?zone=X` by default; we rewrite the page prefix to
-  // `book.html` and merge in the carried fixture/date/time/flag context.
-  //
-  // Selector is intentionally narrow (`?zone=` query, not bare
-  // `fixtures.html`) so the nav + mobile-menu Reserve links — which
-  // point at bare `fixtures.html` to start a fresh funnel — are left
-  // alone.
+  // Rewrite zone-card CTAs straight to book.html with the carry. The
+  // `?zone=` selector is deliberately narrow so the nav / Reserve links
+  // (bare fixtures.html, fresh-funnel entries) are left untouched.
   const carry = new URLSearchParams();
   CARRY_KEYS.forEach((k) => {
     const v = params.get(k);

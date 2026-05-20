@@ -92,15 +92,9 @@ export async function initBookingConcierge() {
   if (form.dataset.initialized === "true") return;
   form.dataset.initialized = "true";
 
-  /* -----------------------------------------------------------------------
-      SUBMIT HANDLER — bound SYNCHRONOUSLY
-      Attached before the async gate so any submit attempts during the
-      matchData fetch window are intercepted. Without this, the browser's
-      default form submission would fire (GET-reload to the same URL with
-      form fields appended) when a user clicks submit during the ~50-500ms
-      validation window. The handler short-circuits while `isReady` is
-      false; once population completes, the next submit succeeds.
-      ----------------------------------------------------------------------- */
+  // Submit handler bound synchronously, before the async gate, so a
+  // submit during the validation window can't trigger the browser's
+  // default GET-reload. Short-circuits while `isReady` is false.
   let isReady = false;
   let isSubmitting = false;
 
@@ -141,11 +135,8 @@ export async function initBookingConcierge() {
   const fixtureParam = urlParams.get("fixture");
   const zoneParam = urlParams.get("zone");
 
-  /* -----------------------------------------------------------------------
-      SYNCHRONOUS GATE — param presence + zone validity
-      Runs before any data fetch so a bad URL is bounced in the same tick
-      as init, eliminating the form-flash window.
-      ----------------------------------------------------------------------- */
+  // Synchronous gate (param presence + zone validity) runs before any
+  // fetch, so a bad URL bounces in the same tick as init — no form flash.
   if (!fixtureParam) {
     if (zoneParam && VALID_ZONES.has(zoneParam)) {
       redirectToFunnel(
@@ -162,8 +153,8 @@ export async function initBookingConcierge() {
   }
 
   if (!zoneParam || !VALID_ZONES.has(zoneParam)) {
-    // Fixture is present, zone is missing or invalid. Carry the full
-    // fixture context forward so zones.html mounts its banner on arrival.
+    // Fixture present, zone missing/invalid — carry fixture context to
+    // zones.html so it mounts its banner on arrival.
     const carry = new URLSearchParams();
     for (const k of ["fixture", "date", "time", "flagA", "flagB"]) {
       const v = urlParams.get(k);
@@ -176,12 +167,9 @@ export async function initBookingConcierge() {
     return;
   }
 
-  /* -----------------------------------------------------------------------
-      ASYNC VALIDATION — confirm the fixture still exists and is bookable
-      Stale bookmarks (passed fixture, withdrawn fixture, inside 3-hour
-      cut-off) redirect to fixtures.html with the zone preserved so the
-      user can pick another match without losing their zone choice.
-      ----------------------------------------------------------------------- */
+  // Async validation: confirm the fixture still exists and is bookable.
+  // Stale links redirect to fixtures.html with the zone preserved so the
+  // user can re-pick a match without losing their zone choice.
   let matchData;
   try {
     matchData = await getMatchData();
@@ -231,22 +219,17 @@ export async function initBookingConcierge() {
     return;
   }
 
-  /* -----------------------------------------------------------------------
-      ALL GATES PASSED — populate the page
-      ----------------------------------------------------------------------- */
+  // All gates passed — populate the page, then unblock the submit handler.
   populateSummary(match, fmt, zoneParam);
   populateHiddenInputs(match, fmt, zoneParam);
   wireChangeLinks(match, fmt, fixtureParam, zoneParam);
   initStepper();
-
-  // Last step — unblocks the sync submit handler attached at the top.
   isReady = true;
 }
 
 /**
- * Reveal and populate the locked match + zone summary panel. Hidden
- * elements stay hidden until this runs so users never see an empty or
- * half-loaded card.
+ * Reveal + populate the locked match/zone summary. Elements stay hidden
+ * until this runs so users never see a half-loaded card.
  */
 function populateSummary(match, fmt, zoneSlug) {
   const summary = document.getElementById("booking-summary");
@@ -260,10 +243,8 @@ function populateSummary(match, fmt, zoneSlug) {
   const policy = document.getElementById("match-policy");
   const zoneInfo = ZONE_DATA[zoneSlug];
 
-  // Single source of truth for "no confirmed teams yet" — drives both
-  // the title fallback (stage label instead of "TBD VS TBD") AND the
-  // flag treatment (trophy emblem replaces the two empty grey flag
-  // rectangles that would otherwise frame the title).
+  // "No confirmed teams yet" drives both the title fallback (stage label
+  // instead of "TBD VS TBD") and the flag treatment (trophy emblem).
   const isAnonymous = isAnonymousMatch(match);
 
   if (summary) {
@@ -289,12 +270,8 @@ function populateSummary(match, fmt, zoneSlug) {
   }
 
   if (isAnonymous) {
-    // Replace the two empty flag boxes with a single trophy emblem
-    // inserted in-line with the title. Flag A becomes the emblem host
-    // (preserves DOM order: emblem · title · [hidden]); flag B is
-    // hidden via display:none. Idempotent — re-running populateSummary
-    // on the same anonymous match won't double-insert because we
-    // overwrite flagA's innerHTML wholesale.
+    // Flag A hosts a trophy emblem in-line with the title; flag B hides.
+    // Overwriting flagA's innerHTML wholesale keeps this idempotent.
     if (flagA) {
       flagA.style.backgroundImage = "";
       flagA.classList.add("c-booking-summary__flag-trophy");
@@ -302,9 +279,8 @@ function populateSummary(match, fmt, zoneSlug) {
     }
     if (flagB) flagB.style.display = "none";
   } else {
-    // Restore standard flag rendering — explicit "" clears any prior
-    // milestone-mode display:none so the same elements can re-render
-    // for a confirmed-team match on a hot reload.
+    // Restore standard flags — clears any prior milestone-mode state so
+    // a confirmed-team match re-renders cleanly on hot reload.
     if (flagA) {
       flagA.classList.remove("c-booking-summary__flag-trophy");
       flagA.innerHTML = "";
@@ -318,8 +294,7 @@ function populateSummary(match, fmt, zoneSlug) {
   }
 
   if (snapshotImg && zoneInfo) {
-    // onerror bound BEFORE src (race-safe). The zone is locked on this
-    // page so the image only loads once — no token guard needed.
+    // onerror bound before src (race-safe).
     snapshotImg.onerror = () => {
       snapshotImg.style.display = "none";
       if (snapshot) snapshot.classList.add("c-zone-snapshot--failed");
@@ -334,27 +309,13 @@ function populateSummary(match, fmt, zoneSlug) {
 
 /**
  * Write the four URL-sourced values into their hidden inputs so the form
- * submit handler can forward them via FormData → Tally. The fifth field
- * (guests) is owned by the stepper and is left untouched.
+ * submit handler can forward them via FormData → Tally. `guests` is
+ * owned by the stepper and left untouched.
  *
- * IMPORTANT — display values, not slugs.
- * The URL slug (e.g. `england-vs-brazil`, `tbd-vs-tbd`) and the zone
- * slug (`carbon`/`terrace`/`booth`) are routing/normalisation primitives
- * — they need to stay machine-parseable for `findBookableMatch`, the
- * cross-page funnel URLs, and for matchData lookups. But the moment the
- * form is submitted, the payload is one-way: it lands in a confirmation
- * email and a Google Sheets row that humans (the customer and the
- * venue) will read.
- *
- * So at this boundary we substitute:
- *   `fixture` → `formatFixtureDisplay(match)`  →  "World Cup Final"
- *                                                or "England vs Brazil"
- *   `zone`    → `ZONE_DATA[zoneSlug].name`     →  "Main Bar" (not "carbon")
- *
- * The URL flow, the booking gate, and the in-page summary remain
- * unchanged. Once a TBD knockout's teams are confirmed by the API,
- * subsequent bookings automatically pick up the new team-pair display
- * without any code change here.
+ * Slugs are routing primitives; this boundary substitutes human-readable
+ * display values for the email + Sheets row:
+ *   fixture → formatFixtureDisplay(match)  ("England vs Brazil")
+ *   zone    → ZONE_DATA[zoneSlug].name     ("Carbon", not "carbon")
  */
 function populateHiddenInputs(match, fmt, zoneSlug) {
   const setInput = (id, value) => {
@@ -367,11 +328,8 @@ function populateHiddenInputs(match, fmt, zoneSlug) {
   setInput("f-zone", ZONE_DATA[zoneSlug]?.name || zoneSlug);
 }
 
-/**
- * Wire the two "Change match" / "Change zone" affordances so the user can
- * re-pick either field without losing the other. Mirrors the carry shape
- * produced by urlHelpers.buildMatchURL.
- */
+/** Wire "Change match" / "Change zone" so the user can re-pick either
+ *  field without losing the other. */
 function wireChangeLinks(match, fmt, fixtureSlug, zoneSlug) {
   const changeMatch = document.getElementById("summary-change-match");
   if (changeMatch) {
@@ -392,11 +350,9 @@ function wireChangeLinks(match, fmt, fixtureSlug, zoneSlug) {
 }
 
 /**
- * Guest-count stepper — the only interactive control on this page. Clamps
- * to min/max on blur, strips non-digits during typing, and selects on
- * focus so the first keypress replaces the value. The funnel-cue highlight
- * draws attention to the single remaining field and clears on first
- * interaction.
+ * Guest-count stepper — the only interactive control on this page.
+ * Clamps to min/max on blur, strips non-digits while typing, selects on
+ * focus. A funnel-cue highlight clears on first interaction.
  */
 function initStepper() {
   const stepper = document.querySelector('[data-component="stepper"]');
@@ -406,8 +362,7 @@ function initStepper() {
   if (!stepInput) return;
   const stepBtns = stepper.querySelectorAll("[data-step]");
 
-  // `Number.isFinite` so a legitimate `min="0"` doesn't collapse to the
-  // fallback (the falsy 0 would have under `|| 1`).
+  // Number.isFinite so a legitimate min="0" doesn't collapse via `|| 1`.
   const parsedMin = parseInt(stepInput.min, 10);
   const parsedMax = parseInt(stepInput.max, 10);
   const stepMin = Number.isFinite(parsedMin) ? parsedMin : 1;

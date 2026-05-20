@@ -1,5 +1,6 @@
 /* =========================================================================
-   APP ENTRY · Unified Orchestrator
+   APP ENTRY · boot orchestrator. Mounts always-on shell, then page-
+   specific components and the match-data fetch only where markers exist.
    ========================================================================= */
 
 import { mountMarquee } from "./components/marqueeController.js";
@@ -16,19 +17,15 @@ import { initBookingConcierge } from "./components/booking.js";
 import { consumeFunnelHint } from "./lib/funnelHint.js";
 
 async function boot() {
-  // ---- 1. SHELL · always-on UI ------------------------------------------
+  // ---- shell · always on ----
   initMobileMenu();
   updateNavStates();
-
-  // Surface (and clear) any redirect hint left behind by the book.html
-  // gate. Bails silently on pages without a #funnel-hint element or
-  // when sessionStorage holds no hint.
-  consumeFunnelHint();
+  consumeFunnelHint(); // surfaces + clears any book.html gate redirect hint
 
   const marqueeRoot = document.querySelector('[data-component="marquee"]');
   if (marqueeRoot) mountMarquee(marqueeRoot);
 
-  // ---- 2. PAGE-SPECIFIC · only run if the page has markers --------------
+  // ---- page-specific · only when the marker is present ----
   if (document.querySelector('[data-component="zone-slider"]')) {
     initZoneSliders();
   }
@@ -42,26 +39,21 @@ async function boot() {
   }
 
   if (document.getElementById("booking-form")) {
-    // Fire-and-forget by design — booking init runs in parallel with the
-    // data-fetch branch below. The `.catch` is a safety net for any
-    // exception thrown OUTSIDE the function's internal try/catch (a future
-    // submit-handler bug, a synchronous throw before the try block, etc.)
-    // so it never surfaces as an unhandled Promise rejection.
+    // Fire-and-forget; the .catch nets any throw outside the function's
+    // own try/catch so it never becomes an unhandled rejection.
     initBookingConcierge().catch((err) =>
       console.warn("App: Booking init failed:", err),
     );
   }
 
-  // ---- 3. DATA · only fetch on pages that need it -----------------------
+  // ---- data · fetch only on pages that render fixtures ----
   const featuredCard = document.getElementById("featured-match");
   const fixturesList = document.getElementById("upcoming-fixtures-list");
   const fullFixtures = document.getElementById("fixtures-list");
 
   if (featuredCard || fixturesList || fullFixtures) {
-    // Adapter wrappers: new object API mapped to existing functional imports/DOM.
-    // Error / concluded states render a single centered caption inside the
-    // card and clear `aria-busy` so screen readers stop announcing "loading"
-    // once the terminal state is on screen.
+    // Error / concluded states render a centered caption and clear
+    // aria-busy so SR stops announcing "loading".
     const featuredMatch = {
       update: (d) => {
         if (featuredCard) renderFeaturedMatch(d);
@@ -94,14 +86,12 @@ async function boot() {
     try {
       const data = await getMatchData();
 
-      // 1. Handle Critical Errors (Circuit breaker, network fail, etc.)
       if (!data || data.status === "error") {
         console.error("Match API failed:", data?.error);
         featuredMatch.renderError();
         return;
       }
 
-      // 2. Handle "Season Concluded" state
       if (data.status === "concluded") {
         featuredMatch.renderConcluded();
         upcomingMatches.hide();
@@ -113,7 +103,6 @@ async function boot() {
         return;
       }
 
-      // 3. Normal Path (Match exists)
       featuredMatch.update(data);
       upcomingMatches.update(data);
       if (fullFixtures) initFixturesPage(data);
@@ -124,7 +113,6 @@ async function boot() {
   }
 }
 
-// Single entry point
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", boot);
 } else {

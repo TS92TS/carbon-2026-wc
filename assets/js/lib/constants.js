@@ -4,13 +4,15 @@
 
 const IMG = new URL("../../img/", import.meta.url).href;
 
-/* ZONE_DATA · slug → display name + booking-summary thumbnail.
-   Slugs are the routing primitive; names are what customers see in the
-   booking summary and confirmation emails. */
+/* ZONE_DATA · slug → operational name + booking-summary thumbnail.
+   These names flow through the booking summary, confirmation email, and
+   AppSheet ledger (terse forms for staff). The site showcase shows
+   fuller viewer-facing labels in the HTML — only the terrace differs
+   ("Terrace" here vs "The Mill Terrace" on zones.html). */
 export const ZONE_DATA = {
-  carbon: { name: "Main Bar", img: `${IMG}carbon-thumb.webp` },
-  terrace: { name: "Mill Terrace", img: `${IMG}terrace-thumb.webp` },
-  booth: { name: "VIP Booth", img: `${IMG}booth-thumb.webp` },
+  carbon: { name: "Carbon", img: `${IMG}carbon-thumb.webp` },
+  terrace: { name: "Terrace", img: `${IMG}terrace-thumb.webp` },
+  booth: { name: "Booth", img: `${IMG}booth-thumb.webp` },
 };
 
 /* O(1) zone-slug whitelist, derived from ZONE_DATA so the two cannot
