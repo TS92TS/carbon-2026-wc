@@ -305,6 +305,27 @@
                 +
               </button>
             </div>
+            <!-- Zone-specific guest-range note. Hidden by default; shown by
+                 booking.js only for zones with a minimum group size (booths). -->
+            <p
+              id="guests-note"
+              class="u-small u-text-secondary"
+              aria-live="polite"
+              hidden
+            ></p>
+            <!-- Overflow affordance. Revealed by booking.js only when the
+                 stepper is at its ceiling, giving larger groups a route. -->
+            <p
+              id="guests-max-note"
+              class="u-small u-text-secondary"
+              aria-live="polite"
+              hidden
+            >
+              Larger group?
+              <a href="tel:+441449674674" class="c-guests-call"
+                >Call 01449 674674</a
+              >
+            </p>
           </div>
 
           <button

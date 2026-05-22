@@ -119,6 +119,12 @@ export async function initBookingConcierge() {
       return;
     }
 
+    // Final guarantee: clamp guests into the zone range before handoff.
+    // The live input cap covers typing, but Enter-to-submit (no blur),
+    // an emptied field, or a below-min value can still reach here — Tally
+    // must never receive an out-of-range count.
+    clampGuestsInput();
+
     const fd = new FormData(e.target);
     const params = new URLSearchParams();
     for (const [k, v] of fd.entries()) {
@@ -223,8 +229,58 @@ export async function initBookingConcierge() {
   populateSummary(match, fmt, zoneParam);
   populateHiddenInputs(match, fmt, zoneParam);
   wireChangeLinks(match, fmt, fixtureParam, zoneParam);
+  applyZoneGuestLimits(zoneParam); // before initStepper so it reads the range
   initStepper();
   isReady = true;
+}
+
+/**
+ * Apply the zone's guest range to the stepper input. Booths seat up to
+ * their max and carry a minimum party size; bar + terrace stay at 1–20.
+ * Clamps the starting value into range and surfaces a note when the
+ * minimum exceeds 1 (so the disabled "−" at the floor isn't a mystery).
+ */
+function applyZoneGuestLimits(zoneSlug) {
+  const input = document.getElementById("f-guests");
+  const zone = ZONE_DATA[zoneSlug];
+  if (!input || !zone) return;
+
+  const min = Number.isFinite(zone.minGuests) ? zone.minGuests : 1;
+  const max = Number.isFinite(zone.maxGuests) ? zone.maxGuests : 20;
+  input.min = String(min);
+  input.max = String(max);
+
+  const current = parseInt(input.value, 10);
+  if (!Number.isFinite(current) || current < min) input.value = String(min);
+  else if (current > max) input.value = String(max);
+
+  const note = document.getElementById("guests-note");
+  if (note) {
+    if (min > 1) {
+      note.textContent = `Booths seat up to ${max} — minimum group of ${min}.`;
+      note.removeAttribute("hidden");
+    } else {
+      note.setAttribute("hidden", "");
+    }
+  }
+}
+
+/**
+ * Force #f-guests into its [min, max] range (read from the attributes
+ * applyZoneGuestLimits set). Shared by the stepper blur handler and the
+ * submit safety net so the clamp logic lives in exactly one place.
+ */
+function clampGuestsInput() {
+  const input = document.getElementById("f-guests");
+  if (!input) return;
+  const parsedMin = parseInt(input.min, 10);
+  const parsedMax = parseInt(input.max, 10);
+  const lo = Number.isFinite(parsedMin) ? parsedMin : 1;
+  const hi = Number.isFinite(parsedMax) ? parsedMax : 20;
+  let n = parseInt(input.value, 10);
+  if (!Number.isFinite(n) || n < lo) n = lo;
+  else if (n > hi) n = hi;
+  input.value = String(n);
 }
 
 /**
@@ -368,6 +424,9 @@ function initStepper() {
   const stepMin = Number.isFinite(parsedMin) ? parsedMin : 1;
   const stepMax = Number.isFinite(parsedMax) ? parsedMax : 20;
 
+  // Overflow affordance — surfaced only at the ceiling, for any zone.
+  const maxNote = document.getElementById("guests-max-note");
+
   const syncStepperDisabled = () => {
     const current = parseInt(stepInput.value, 10) || stepMin;
     stepBtns.forEach((btn) => {
@@ -375,6 +434,7 @@ function initStepper() {
       const next = current + delta;
       btn.disabled = next < stepMin || next > stepMax;
     });
+    if (maxNote) maxNote.toggleAttribute("hidden", current < stepMax);
   };
 
   stepper.addEventListener("click", (e) => {
@@ -390,24 +450,28 @@ function initStepper() {
     }
   });
 
-  // Strip non-digits as the user types but don't clamp yet (so they can
-  // transition through invalid intermediate states like "").
+  // Strip non-digits and cap the MAX live so the field can never display
+  // a number the user can't actually book (prevents "typed 50, booked
+  // 20" surprises). The MIN is left to blur so they can clear and retype
+  // through intermediate states like "". Hitting the cap reveals the
+  // "Larger group?" note via syncStepperDisabled, so the limit explains
+  // itself.
   stepInput.addEventListener("input", () => {
-    const cleaned = stepInput.value.replace(/\D/g, "");
+    let cleaned = stepInput.value.replace(/\D/g, "");
+    if (cleaned !== "") {
+      const n = parseInt(cleaned, 10);
+      if (Number.isFinite(n) && n > stepMax) cleaned = String(stepMax);
+    }
     if (cleaned !== stepInput.value) stepInput.value = cleaned;
     syncStepperDisabled();
   });
 
-  // On blur, clamp to min/max. Empty / sub-min snaps to min; over-max
-  // snaps to max. Avoids hostile mid-edit autocorrect.
+  // On blur, clamp to min/max (empty / sub-min → min, over-max → max).
+  // Deferred to blur so mid-edit intermediate states aren't autocorrected.
   stepInput.addEventListener("blur", () => {
-    const n = parseInt(stepInput.value, 10);
-    let clamped;
-    if (!Number.isFinite(n) || n < stepMin) clamped = stepMin;
-    else if (n > stepMax) clamped = stepMax;
-    else clamped = n;
-    if (String(clamped) !== stepInput.value) {
-      stepInput.value = String(clamped);
+    const before = stepInput.value;
+    clampGuestsInput();
+    if (stepInput.value !== before) {
       stepInput.dispatchEvent(new Event("change", { bubbles: true }));
       syncStepperDisabled();
     }

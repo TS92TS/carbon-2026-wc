@@ -4,15 +4,19 @@
 
 const IMG = new URL("../../img/", import.meta.url).href;
 
-/* ZONE_DATA · slug → operational name + booking-summary thumbnail.
-   These names flow through the booking summary, confirmation email, and
-   AppSheet ledger (terse forms for staff). The site showcase shows
-   fuller viewer-facing labels in the HTML — only the terrace differs
-   ("Terrace" here vs "The Mill Terrace" on zones.html). */
+/* ZONE_DATA · slug → operational name + booking-summary thumbnail +
+   guest range. Names flow through the booking summary, confirmation
+   email, and AppSheet ledger (terse forms for staff); the site showcase
+   shows fuller viewer-facing labels in the HTML (only the terrace
+   differs — "Terrace" here vs "The Mill Terrace" on zones.html).
+
+   Guest limits gate the booking stepper. Booths seat 10 and are gated to
+   groups (6-guest minimum) so a 10-seat booth isn't allocated to a pair;
+   bar + terrace take 1–20. Tune here and the stepper + range note follow. */
 export const ZONE_DATA = {
-  carbon: { name: "Carbon", img: `${IMG}carbon-thumb.webp` },
-  terrace: { name: "Terrace", img: `${IMG}terrace-thumb.webp` },
-  booth: { name: "Booth", img: `${IMG}booth-thumb.webp` },
+  carbon: { name: "Carbon", img: `${IMG}carbon-thumb.webp`, minGuests: 1, maxGuests: 20 },
+  terrace: { name: "Terrace", img: `${IMG}terrace-thumb.webp`, minGuests: 1, maxGuests: 20 },
+  booth: { name: "Booth", img: `${IMG}booth-thumb.webp`, minGuests: 6, maxGuests: 10 },
 };
 
 /* O(1) zone-slug whitelist, derived from ZONE_DATA so the two cannot

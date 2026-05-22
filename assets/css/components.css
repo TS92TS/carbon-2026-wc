@@ -2280,6 +2280,21 @@ body:not(.is-menu-open) .c-header__more svg line {
   outline: none;
 }
 
+/* Overflow "Call the venue" link beneath the stepper. Accent-tinted and
+   underlined so it reads as tappable; kept on one line so the number
+   never wraps. Focus falls through to the global :focus-visible outline. */
+.c-guests-call {
+  color: var(--accent-pitch);
+  font-weight: var(--weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.c-guests-call:hover {
+  color: var(--accent-pitch-dim);
+}
+
 /* =========================================================================
    COMPONENT · FIXTURES LIST
    Shared across home teaser and full fixtures page.
@@ -3102,8 +3117,7 @@ body:not(.is-menu-open) .c-header__more svg line {
      bottom-padding to clear the fixed bottom nav (.c-nav is 64px +
      iOS safe-area). The l-page padding-bottom only covers .l-page
      descendants, so the footer can't inherit it. */
-  padding:
-    var(--space-10) var(--space-5)
+  padding: var(--space-10) var(--space-5)
     calc(var(--space-10) + var(--nav-height) + env(safe-area-inset-bottom));
   background-color: var(--surface-base);
   border-top: 1px solid var(--border-hairline);
