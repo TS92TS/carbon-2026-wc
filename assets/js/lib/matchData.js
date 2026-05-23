@@ -170,21 +170,12 @@ function stampBookable(data) {
               ∧ stage ∈ {Semi-Final, Final}
               ∧ a Tier-0 team is playing
               ∧ kickoff hour ∈ {21, 22}.
-   Rule E   viable if expectedEnd ≤ hardClose. Otherwise Tier 1 / knockout
-            still passes (Ops will apply a TEN). Everything else drops.
+   Rule E   viable if expectedEnd ≤ hardClose. A late-running match
+            survives ONLY if it's a knockout (Ops applies a TEN for the
+            marquee fixture); late group games — Tier-1 sides included —
+            must finish within licence hours and otherwise drop.
    ------------------------------------------------------------------------- */
-const TIER_0_TEAMS = ["England", "Scotland", "Wales", "Northern Ireland"];
-const TIER_1_TEAMS = [
-  "Brazil",
-  "Argentina",
-  "France",
-  "Spain",
-  "Germany",
-  "Portugal",
-  "USA",
-  "Italy",
-  "Netherlands",
-];
+const TIER_0_TEAMS = ["England", "Scotland"];
 const KNOCKOUT_STAGES = [
   "Round of 32",
   "Round of 16",
@@ -408,13 +399,14 @@ function isMatchViable(match) {
   );
   if (hardCloseMs === null) return false;
 
-  // Rule E — verdict. Late Tier-1 or knockouts still pass (Ops applies a
-  // TEN); late group-stage matches between two non-Tier-1 sides drop.
+  // Rule E — verdict. Viable if the match ends on or before close. A
+  // late-running match survives ONLY if it's a knockout (Ops applies a
+  // TEN for the marquee fixture); late group games — Tier-1 sides
+  // included — must finish within licence hours. Tier-0 already
+  // short-circuited at Rule A.
   const expectedEndMs = kickoffMs + durationMs;
   if (expectedEndMs <= hardCloseMs) return true;
-  const isTier1 = TIER_1_TEAMS.includes(team1) || TIER_1_TEAMS.includes(team2);
-  if (isTier1 || isKnockout) return true;
-  return false;
+  return isKnockout;
 }
 
 /**

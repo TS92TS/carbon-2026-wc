@@ -17,8 +17,11 @@ function buildMatchURL(baseUrl, match, extras = {}) {
   const fmt = formatMatchDateTime(match.datetimeIso);
   if (!fmt) return baseUrl;
 
-  const teamA = match.teamA?.name || "tbd";
-  const teamB = match.teamB?.name || "tbd";
+  // Trim before slugifying so this stays byte-identical to the slug
+  // re-match in booking.js findBookableMatch — a stray leading/trailing
+  // space in an API team name must not desync the two.
+  const teamA = (match.teamA?.name ?? "").trim() || "tbd";
+  const teamB = (match.teamB?.name ?? "").trim() || "tbd";
   const slug = `${teamA}-vs-${teamB}`.toLowerCase().replace(/\s+/g, "-");
 
   const params = new URLSearchParams({

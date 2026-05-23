@@ -235,10 +235,12 @@ export async function initBookingConcierge() {
 }
 
 /**
- * Apply the zone's guest range to the stepper input. Booths seat up to
- * their max and carry a minimum party size; bar + terrace stay at 1–20.
- * Clamps the starting value into range and surfaces a note when the
- * minimum exceeds 1 (so the disabled "−" at the floor isn't a mystery).
+ * Apply the zone's guest range to the stepper input. Booths carry a
+ * group minimum (and a lower ceiling); bar + terrace take the standard
+ * range. Clamps the starting value into range and surfaces a range note
+ * only when the minimum exceeds a normal small-table party (2) — i.e.
+ * for the booths — so the disabled "−" at that floor isn't a mystery.
+ * Copy is generic so it stays correct for any zone, not just booths.
  */
 function applyZoneGuestLimits(zoneSlug) {
   const input = document.getElementById("f-guests");
@@ -256,8 +258,8 @@ function applyZoneGuestLimits(zoneSlug) {
 
   const note = document.getElementById("guests-note");
   if (note) {
-    if (min > 1) {
-      note.textContent = `Booths seat up to ${max} — minimum group of ${min}.`;
+    if (min > 2) {
+      note.textContent = `Groups of ${min}–${max} guests.`;
       note.removeAttribute("hidden");
     } else {
       note.setAttribute("hidden", "");

@@ -14,8 +14,8 @@ const IMG = new URL("../../img/", import.meta.url).href;
    groups (6-guest minimum) so a 10-seat booth isn't allocated to a pair;
    bar + terrace take 1–20. Tune here and the stepper + range note follow. */
 export const ZONE_DATA = {
-  carbon: { name: "Carbon", img: `${IMG}carbon-thumb.webp`, minGuests: 1, maxGuests: 20 },
-  terrace: { name: "Terrace", img: `${IMG}terrace-thumb.webp`, minGuests: 1, maxGuests: 20 },
+  carbon: { name: "Carbon", img: `${IMG}carbon-thumb.webp`, minGuests: 2, maxGuests: 20 },
+  terrace: { name: "Terrace", img: `${IMG}terrace-thumb.webp`, minGuests: 2, maxGuests: 20 },
   booth: { name: "Booth", img: `${IMG}booth-thumb.webp`, minGuests: 6, maxGuests: 10 },
 };
 
