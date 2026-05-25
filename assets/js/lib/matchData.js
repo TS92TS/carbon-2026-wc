@@ -164,18 +164,19 @@ function stampBookable(data) {
    gate     too early for opening (11:00). Tier 0 passes via Rule A; inner
             re-check is defence-in-depth.
    Rule C   knockout duration 3h (ET + pens), group 2h.
-   Rule D   hard-close by weekday: Mon–Thu 02:00, Fri/Sat 03:30, Sun 01:00.
-            Sunday Gov Extension lifts Sun close to 02:00 only when ALL of:
-              date ∈ {2026-07-14, 2026-07-15, 2026-07-19}
-              ∧ stage ∈ {Semi-Final, Final}
-              ∧ a Tier-0 team is playing
-              ∧ kickoff hour ∈ {21, 22}.
+   Rule D   hard-close by weekday: Mon–Wed 01:00, Thu 01:30, Fri/Sat 03:30,
+            Sun 01:00.
    Rule E   viable if expectedEnd ≤ hardClose. A late-running match
-            survives ONLY if it's a knockout (Ops applies a TEN for the
-            marquee fixture); late group games — Tier-1 sides included —
-            must finish within licence hours and otherwise drop.
+            survives ONLY if it's a marquee knockout — Quarter-Final,
+            Semi-Final or Final (Ops applies a TEN). R32 / R16, 3rd-place
+            and all group games must finish within licence hours.
    ------------------------------------------------------------------------- */
 const TIER_0_TEAMS = ["England", "Scotland"];
+
+// "Is this a knockout at all" — drives the 3h duration budget (every
+// knockout round can run to extra-time + pens) and the UI Knockouts
+// filter. Broad on purpose; matched loosely (substring) since the live
+// feed badges all rounds generically as "Knockout".
 const KNOCKOUT_STAGES = [
   "Round of 32",
   "Round of 16",
@@ -184,27 +185,32 @@ const KNOCKOUT_STAGES = [
   "Final",
 ];
 
+// "Which rounds may run PAST the licence close" — the marquee fixtures
+// Ops will apply a one-off TEN for. Keyed on getDetailedStageLabel's
+// canonical round label (NOT the generic "Knockout" badge, which can't
+// tell a Round of 16 from a Final). R32 / R16 / 3rd-place and all group
+// games must finish within licence hours.
+const LATE_EXEMPT_STAGES = new Set([
+  "QUARTER-FINAL",
+  "SEMI-FINAL",
+  "WORLD CUP FINAL",
+  "FINAL", // defensive alias if the feed sends stageLabel "Final"
+]);
+
 const MATCH_DURATION_GROUP_MS = 2 * 60 * 60 * 1000;
 const MATCH_DURATION_KNOCKOUT_MS = 3 * 60 * 60 * 1000;
 const TRADING_NIGHT_END_HOUR = 5; // 00:00–04:59 → prior trading day
 const COMPLEX_OPEN_HOUR = 11; // 11:00 — hard opening floor for non-Tier-0 fixtures
 
 const HARD_CLOSE_BY_WEEKDAY = {
-  Monday: { hour: 2, minute: 0 },
-  Tuesday: { hour: 2, minute: 0 },
-  Wednesday: { hour: 2, minute: 0 },
-  Thursday: { hour: 2, minute: 0 },
+  Monday: { hour: 1, minute: 0 },
+  Tuesday: { hour: 1, minute: 0 },
+  Wednesday: { hour: 1, minute: 0 },
+  Thursday: { hour: 1, minute: 30 },
   Friday: { hour: 3, minute: 30 },
   Saturday: { hour: 3, minute: 30 },
   Sunday: { hour: 1, minute: 0 },
 };
-const SUNDAY_GOV_EXTENDED_CLOSE = { hour: 2, minute: 0 };
-const SUNDAY_GOV_EXTENSION_DATES = new Set([
-  "2026-07-14",
-  "2026-07-15",
-  "2026-07-19",
-]);
-
 // Shared London UK time formatter — single instance, reused for every match.
 const fmtTradingParts = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Europe/London",
@@ -301,28 +307,9 @@ function getTradingDay(londonParts) {
   };
 }
 
-function computeHardCloseUtcMs(tradingDay, londonParts, stage, team1, team2) {
-  const base = HARD_CLOSE_BY_WEEKDAY[tradingDay.weekday];
-  if (!base) return null;
-
-  let close = base;
-  if (tradingDay.weekday === "Sunday") {
-    const matchDate =
-      `${londonParts.year}-${String(londonParts.month).padStart(2, "0")}-` +
-      `${String(londonParts.day).padStart(2, "0")}`;
-    const tier0Playing =
-      TIER_0_TEAMS.includes(team1) || TIER_0_TEAMS.includes(team2);
-    const isSemiOrFinal = stage === "Semi-Final" || stage === "Final";
-    const inWindow = londonParts.hour === 21 || londonParts.hour === 22;
-    if (
-      SUNDAY_GOV_EXTENSION_DATES.has(matchDate) &&
-      isSemiOrFinal &&
-      tier0Playing &&
-      inWindow
-    ) {
-      close = SUNDAY_GOV_EXTENDED_CLOSE;
-    }
-  }
+function computeHardCloseUtcMs(tradingDay) {
+  const close = HARD_CLOSE_BY_WEEKDAY[tradingDay.weekday];
+  if (!close) return null;
 
   // Hard close lives on the calendar morning AFTER the trading day.
   const anchor = Date.UTC(
@@ -389,24 +376,18 @@ function isMatchViable(match) {
     ? MATCH_DURATION_KNOCKOUT_MS
     : MATCH_DURATION_GROUP_MS;
 
-  // Rule D — hard close (with Sunday Gov Extension)
-  const hardCloseMs = computeHardCloseUtcMs(
-    tradingDay,
-    london,
-    stage,
-    team1,
-    team2,
-  );
+  // Rule D — hard close for the trading day
+  const hardCloseMs = computeHardCloseUtcMs(tradingDay);
   if (hardCloseMs === null) return false;
 
   // Rule E — verdict. Viable if the match ends on or before close. A
-  // late-running match survives ONLY if it's a knockout (Ops applies a
-  // TEN for the marquee fixture); late group games — Tier-1 sides
-  // included — must finish within licence hours. Tier-0 already
-  // short-circuited at Rule A.
+  // late-running match survives ONLY if it's a marquee knockout —
+  // Quarter-Final, Semi-Final or Final (Ops applies a TEN). R32 / R16,
+  // 3rd-place and every group game must finish within licence hours.
+  // Tier-0 already short-circuited at Rule A.
   const expectedEndMs = kickoffMs + durationMs;
   if (expectedEndMs <= hardCloseMs) return true;
-  return isKnockout;
+  return LATE_EXEMPT_STAGES.has(getDetailedStageLabel(match));
 }
 
 /**
