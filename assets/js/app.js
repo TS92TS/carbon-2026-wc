@@ -13,6 +13,7 @@ import { initFixturesPage } from "./components/fixturesPage.js";
 import { initZoneSliders } from "./components/zoneSlider.js";
 import { initZonesPage } from "./components/zonesPage.js";
 import { initScrollVideos } from "./lib/video.js";
+import { initHeroReel } from "./lib/heroReel.js";
 import { initBookingConcierge } from "./components/booking.js";
 import { consumeFunnelHint } from "./lib/funnelHint.js";
 
@@ -36,6 +37,10 @@ async function boot() {
 
   if (document.querySelector('[data-component="scroll-video"]')) {
     initScrollVideos();
+  }
+
+  if (document.querySelector('[data-component="hero-reel"]')) {
+    initHeroReel();
   }
 
   if (document.getElementById("booking-form")) {
