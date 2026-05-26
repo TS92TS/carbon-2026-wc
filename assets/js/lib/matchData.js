@@ -770,7 +770,11 @@ export function getStageGroup(match) {
   if (d <= "2026-06-24") {
     return { key: "group-md2", label: "Group Stage · Matchday 2", order: 12 };
   }
-  if (d <= "2026-06-27") {
+  // MD3 extends to the 28th in London time: the final group round's late
+  // US kickoffs (e.g. 27 Jun 23:30 UTC) roll past UK midnight into the 28th.
+  // R32 is badged "Knockout" and returns via the switch above, so it can
+  // never reach this group-only window.
+  if (d <= "2026-06-28") {
     return { key: "group-md3", label: "Group Stage · Matchday 3", order: 13 };
   }
   // Fallback for any group-flagged match outside the matchday windows.
