@@ -6,7 +6,7 @@
    prefers-reduced-motion; pauses while the tab is hidden.
    ========================================================================= */
 
-const HOLD_MS = 5000;
+const HOLD_MS = 3000;
 const FADE_MS = 1500; // mirror the CSS opacity transition on .c-hero__reel-frame
 
 export function initHeroReel() {

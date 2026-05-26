@@ -128,6 +128,22 @@
   background-image: url("../img/hero-img.webp");
 }
 
+/* Fine film grain over the imagery — masks webp banding/compression and ties
+   the reel's frames into one texture. Static and GPU-cheap; the blend is
+   contained to this layer (media is its own stacking context via z-index:0),
+   so it never reaches the overlay scrim or the headline. Inline SVG noise =
+   no extra request, no dependency. Adjust `opacity` to taste (subtle by
+   design). */
+.c-hero__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.08;
+  mix-blend-mode: soft-light;
+}
+
 /* Curated frames crossfaded over the static base image. Opacity-only
    (compositor) transitions; frame images are lazy-set by JS after load, so
    the base hero image stays the sole LCP asset. Sits below the overlay. */
@@ -144,14 +160,23 @@
   opacity: 1;
 }
 
-/* Stronger overlay — protects text legibility regardless of image */
+/* Overlay protects text legibility (the linear scrim, unchanged) and adds a
+   soft vignette that focuses the eye centrally and quietly masks edge
+   softness in the imagery. The vignette sits behind the scrim, so the bottom
+   text band is exactly as before. */
 .c-hero__overlay {
-  background: linear-gradient(
-    to bottom,
-    rgba(18, 18, 18, 0) 0%,
-    rgba(18, 18, 18, 0.3) 45%,
-    rgba(18, 18, 18, 0.99) 100%
-  );
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(18, 18, 18, 0) 0%,
+      rgba(18, 18, 18, 0.3) 45%,
+      rgba(18, 18, 18, 0.99) 100%
+    ),
+    radial-gradient(
+      ellipse 95% 80% at 50% 42%,
+      rgba(18, 18, 18, 0) 60%,
+      rgba(18, 18, 18, 0.32) 100%
+    );
 }
 
 .c-hero__content {
@@ -2029,13 +2054,18 @@ body:not(.is-menu-open) .c-header__more svg line {
   transform: scale(1.02);
 }
 
+/* Selected-zone label — promoted to a peer of the match title: same display
+   font, bold weight, white, and #summary-title's exact fluid size clamp (keep
+   the two in sync). The failure-state rule above keeps its own treatment via
+   higher specificity. */
 #zone-snapshot-label {
-  font-size: var(--type-tiny);
+  font-family: var(--font-display);
+  font-size: clamp(1.125rem, 5vw, 2.5rem);
   font-weight: var(--weight-bold);
-  color: var(--accent-pitch);
+  color: var(--text-primary);
   text-transform: uppercase;
-  letter-spacing: var(--tracking-widest);
-  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-wide);
+  line-height: 1.2;
   min-width: 0;
 }
 
@@ -2876,6 +2906,12 @@ body:not(.is-menu-open) .c-header__more svg line {
   .c-hero {
     min-height: 480px;
     padding: var(--space-12) var(--space-6) var(--space-8);
+  }
+
+  /* hero-img is tuned for mobile; swap the base to a large-suitable asset
+     from tablet up so the hero never upscales a low-res image. */
+  .c-hero--home .c-hero__media {
+    background-image: url("../img/terrace-2.webp");
   }
 
   .c-hero__content {
