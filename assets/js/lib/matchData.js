@@ -157,7 +157,7 @@ function stampBookable(data) {
    the licence. Pure projection from raw API → UI-visible, never mutates
    the cached payload.
 
-   Rule A   home-nations (Tier 0) always viable.
+   Rule A   England Games (Tier 0) always viable.
    Rule B   kickoffs 00:00–04:59 London → evaluate against the previous
             calendar day's trading slot (Sat 01:30 = Friday trading day).
    Opening  kickoffs 05:00–10:59 dropped: too late for last night's licence,
@@ -165,13 +165,13 @@ function stampBookable(data) {
             re-check is defence-in-depth.
    Rule C   knockout duration 3h (ET + pens), group 2h.
    Rule D   hard-close by weekday: Mon–Wed 01:00, Thu 01:30, Fri/Sat 03:30,
-            Sun 01:00.
+            Sun 00:30.
    Rule E   viable if expectedEnd ≤ hardClose. A late-running match
             survives ONLY if it's a marquee knockout — Quarter-Final,
             Semi-Final or Final (Ops applies a TEN). R32 / R16, 3rd-place
             and all group games must finish within licence hours.
    ------------------------------------------------------------------------- */
-const TIER_0_TEAMS = ["England", "Scotland"];
+const TIER_0_TEAMS = ["England"];
 
 // "Is this a knockout at all" — drives the 3h duration budget (every
 // knockout round can run to extra-time + pens) and the UI Knockouts
@@ -209,7 +209,7 @@ const HARD_CLOSE_BY_WEEKDAY = {
   Thursday: { hour: 1, minute: 30 },
   Friday: { hour: 3, minute: 30 },
   Saturday: { hour: 3, minute: 30 },
-  Sunday: { hour: 1, minute: 0 },
+  Sunday: { hour: 0, minute: 30 },
 };
 // Shared London UK time formatter — single instance, reused for every match.
 const fmtTradingParts = new Intl.DateTimeFormat("en-GB", {
