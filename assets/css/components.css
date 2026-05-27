@@ -2227,11 +2227,97 @@ body:not(.is-menu-open) .c-header__more svg line {
   margin-top: var(--space-2);
 }
 
+/* =========================================================================
+   COMPONENT · BOOKING REINFORCEMENT CHIP (book.html)
+   Non-interactive "match-day food" cue beneath the CTA — anticipatory
+   reinforcement at the point of commitment, kept subordinate to the submit
+   button. A framed square image (shown at its natural aspect and downscaled,
+   so the low-res source reads sharp) paired with the message. Echoes the
+   zone-snapshot frame treatment for visual consistency.
+   ========================================================================= */
+.c-book-promo {
+  margin-top: var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background-color: var(--surface-raised);
+  /* Subtle warm sheen — mirrors the summary card's diagonal gold gradient
+     (its 145deg flipped to 215deg) so the two stacked cards catch light from
+     opposite corners, adding quiet depth. Lighter touch than the summary;
+     gold keeps the brand green reserved for the CTA. Sits behind the content. */
+  background-image: linear-gradient(
+    215deg,
+    rgba(197, 160, 89, 0.07) 0%,
+    transparent 55%
+  );
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+}
+
+.c-book-promo__frame {
+  position: relative;
+  flex: 0 0 auto;
+  width: clamp(112px, 30vw, 128px);
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+/* Inset hairline keeps the image edge crisp against the card so the
+   thumbnail reads as crafted, not pasted on (mirrors the zone snapshot). */
+.c-book-promo__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.c-book-promo__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.c-book-promo__text {
+  min-width: 0;
+}
+
+.c-book-promo__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--type-card-title);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.c-book-promo__note {
+  margin: var(--space-1) 0 0;
+  font-size: var(--type-caption);
+  font-weight: var(--weight-medium);
+  line-height: 1.3;
+  color: var(--text-secondary);
+}
+
 @media (max-width: 768px) {
   /* Extra bottom buffer below the form so the submit button can always
      scroll above the bottom nav + virtual keyboard without clipping. */
   .c-booking-form {
     padding-bottom: var(--space-12);
+  }
+
+  /* The form's bottom buffer above already separates the chip from the CTA
+     on mobile — zero the chip's own top margin so the two don't stack into
+     an oversized gap (the buffer doubles as the chip's breathing room). */
+  .c-book-promo {
+    margin-top: 0;
   }
 }
 
