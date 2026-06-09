@@ -614,6 +614,21 @@ export function tlaOf(team) {
   return "TBD";
 }
 
+/* =========================================================================
+   PREMATURE-CONCLUDED GUARD · client-side failsafe.
+   The upstream API can return status: "concluded" when its own data source
+   returns zero matches transiently — a false verdict that would lock the
+   booking funnel and show "season concluded" to live users. Until the WC
+   Final has plausibly ended, any "concluded" payload we see is by
+   definition stale or poisoned, so we discard it and let the existing
+   fallback chain (cache → static FALLBACK_DATA) run. Bookings still work.
+   ========================================================================= */
+const TOURNAMENT_END_UTC_MS = Date.UTC(2026, 6, 20, 0, 0); // 2026-07-20T00:00Z (Final + 24h UK buffer)
+
+function isPrematureConcluded(payload) {
+  return payload?.status === "concluded" && Date.now() < TOURNAMENT_END_UTC_MS;
+}
+
 /**
  * Fetch with localStorage fallback. Worker handles retry/caching;
  * frontend trusts 200 or falls back. Concurrent callers share one
@@ -658,6 +673,14 @@ export async function fetchMatchData() {
     }
 
     const data = await response.json();
+
+    if (isPrematureConcluded(data)) {
+      // Throw so the catch below falls through to cache → static fallback,
+      // rather than persisting the poisoned verdict to localStorage.
+      console.warn("MatchData Lib: API returned premature 'concluded' — discarded.");
+      throw new Error("PREMATURE_CONCLUDED");
+    }
+
     const enrichedData = { ...data, _source: "live" };
 
     // Cache BEFORE read-time enrichment. The persisted blob must stay
@@ -680,21 +703,29 @@ export async function fetchMatchData() {
       const cached = localStorage.getItem(STORAGE_KEY);
       if (cached) {
         const parsed = JSON.parse(cached);
-        const cacheStatus = evaluateCacheAge(parsed);
 
-        if (cacheStatus.isValid) {
-          // Serve cached data; layout uses _isStale for soft warnings.
-          return filterViableMatches(
-            stampBookable({
-              ...parsed,
-              _source: "local_cache",
-              _isOffline: true,
-              _isStale: cacheStatus.isStale,
-            }),
-          );
-        } else if (cacheStatus.isAncient) {
+        if (isPrematureConcluded(parsed)) {
+          // Cache holds a poisoned verdict from a prior bad API window —
+          // purge it and fall through to the static FALLBACK_DATA below.
           localStorage.removeItem(STORAGE_KEY);
-          console.warn("MatchData Lib: Purged ancient cache");
+          console.warn("MatchData Lib: Discarded cached premature-concluded payload.");
+        } else {
+          const cacheStatus = evaluateCacheAge(parsed);
+
+          if (cacheStatus.isValid) {
+            // Serve cached data; layout uses _isStale for soft warnings.
+            return filterViableMatches(
+              stampBookable({
+                ...parsed,
+                _source: "local_cache",
+                _isOffline: true,
+                _isStale: cacheStatus.isStale,
+              }),
+            );
+          } else if (cacheStatus.isAncient) {
+            localStorage.removeItem(STORAGE_KEY);
+            console.warn("MatchData Lib: Purged ancient cache");
+          }
         }
       }
     } catch (cacheErr) {
