@@ -196,6 +196,25 @@
   }
 }
 
+/* Long-label safety net — if a state's prefix would otherwise overrun the
+   marquee column (e.g. "ENG · QUARTER-FINAL IN" on a tight viewport), the
+   label truncates with an ellipsis rather than pushing the menu button or
+   spilling past the header grid. The min-width:0 cascade lets the nested
+   inline-flex containers shrink below their natural content size — without
+   it, text-overflow has nowhere to take effect. Only the label is
+   constrained, so the countdown number always stays fully visible. */
+.c-marquee,
+.c-marquee__text {
+  min-width: 0;
+}
+
+.c-marquee__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .c-marquee__dot {
   flex-shrink: 0;
   width: 8px;
