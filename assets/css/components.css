@@ -845,6 +845,20 @@
 }
 
 /* =========================================================================
+   PROMO DEALS · FEATURE-ROW MODIFIER
+   When the promo list contains an odd third item, this modifier lets it
+   span the full grid row at tablet+ rather than stranding an orphan beside
+   an empty cell. The card retains its existing 500px max-width + auto
+   margin centring (no overrides), so it anchors as a deliberate feature
+   row, not a stretched variant. Mobile (single-column flex) needs no rule.
+   ========================================================================= */
+@media (min-width: 768px) {
+  .c-promo-item--feature {
+    grid-column: 1 / -1;
+  }
+}
+
+/* =========================================================================
    COMPONENT · VISIT
    The page's final moment. Full-bleed, subtle Mill Amber radial inflection
    from the top edge — roots the venue in its Stowmarket locale. Title takes

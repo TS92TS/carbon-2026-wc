@@ -182,12 +182,15 @@
   color: var(--text-secondary);
 }
 
-/* On very narrow viewports the prefix label hides — dot + countdown
-   alone carries enough context. The `:has(.c-marquee__num)` guard means
-   live and static states (which have no countdown number) keep their
-   label visible at any width, so the marquee never collapses to a lone
-   dot. */
-@media (max-width: 419px) {
+/* On genuinely tiny viewports the prefix label hides so the countdown
+   number can't push the menu button off-grid — dot colour + countdown
+   carries the rest. Threshold set to 359px so every modern mainstream
+   phone (≥360px: Galaxy/Pixel narrow, iPhone SE2/SE3+, 12/13/14/15/16,
+   Pro/Max) keeps the contextual prefix in view; only the iPhone-SE-1st-gen
+   class (≤359px) drops it. The `:has(.c-marquee__num)` guard means live
+   and static states (no countdown number) keep their label visible at any
+   width, so the marquee never collapses to a lone dot. */
+@media (max-width: 359px) {
   .c-marquee:has(.c-marquee__num) .c-marquee__label {
     display: none;
   }
