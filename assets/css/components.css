@@ -125,7 +125,7 @@
 }
 
 .c-hero--home .c-hero__media {
-  background-image: url("../img/hero-img.webp");
+  background-image: url("../img/terrace-new-3.webp");
 }
 
 /* Fine film grain over the imagery — masks webp banding/compression and ties
@@ -3011,7 +3011,7 @@ body:not(.is-menu-open) .c-header__more svg line {
   /* hero-img is tuned for mobile; swap the base to a large-suitable asset
      from tablet up so the hero never upscales a low-res image. */
   .c-hero--home .c-hero__media {
-    background-image: url("../img/terrace-2.webp");
+    background-image: url("../img/terrace-new-3.webp");
   }
 
   .c-hero__content {
