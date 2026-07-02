@@ -108,6 +108,26 @@ export function initZonesPage() {
   const cue = document.getElementById("zone-cue");
   if (cue) cue.removeAttribute("hidden");
 
+  // One-fixture terrace exclusion. The 01:00 BST Mon 6 Jul R16 kickoff
+  // belongs to Sunday's trading day, which sits outside the terrace's
+  // Sunday-licensed hours. Strips the href BEFORE the CTA-rewrite loop
+  // below so the rewrite naturally skips it (selector requires href).
+  // Self-cleaning: check becomes a no-op once the match drops out of the
+  // future-match window.
+  if (params.get("date") === "2026-07-06" && params.get("time") === "01:00") {
+    const terraceCta = document.querySelector(
+      'a[href^="fixtures.html?zone=terrace"]',
+    );
+    if (terraceCta) {
+      terraceCta.classList.remove("c-button--primary");
+      terraceCta.classList.add("c-button--muted");
+      terraceCta.setAttribute("aria-disabled", "true");
+      terraceCta.setAttribute("tabindex", "-1");
+      terraceCta.textContent = "Indoor Zones Only for This Fixture";
+      terraceCta.removeAttribute("href");
+    }
+  }
+
   // Rewrite zone-card CTAs straight to book.html with the carry. The
   // `?zone=` selector is deliberately narrow so the nav / Reserve links
   // (bare fixtures.html, fresh-funnel entries) are left untouched.

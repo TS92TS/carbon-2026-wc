@@ -137,22 +137,46 @@ function getFilteredDataset(filter) {
     : [];
   const england = Array.isArray(matchCache.england) ? matchCache.england : [];
 
+  let dataset;
   switch (filter) {
     case "england":
       // Same swap as the home-page chip — see syncChipStates for the
       // matching visible-label rename.
-      return isEnglandFallbackActive() ? getHeadlineMatches(matchCache) : england;
+      dataset = isEnglandFallbackActive()
+        ? getHeadlineMatches(matchCache)
+        : england;
+      break;
     case "knockout":
-      return upcoming.filter(isKnockoutMatch);
+      dataset = upcoming.filter(isKnockoutMatch);
+      break;
     case "weekend":
-      return upcoming.filter((m) => {
+      dataset = upcoming.filter((m) => {
         const w = getLondonWeekday(m?.datetimeIso);
         return w === "Saturday" || w === "Sunday";
       });
+      break;
     case "all":
     default:
-      return upcoming;
+      dataset = upcoming;
+      break;
   }
+
+  // One-fixture terrace exclusion. The 01:00 BST Mon 6 Jul R16 kickoff
+  // belongs to Sunday's trading day, which sits outside the terrace's
+  // Sunday-licensed hours. Only strips the match from Path B (?zone=terrace
+  // browsing); Path A's terrace card is disabled separately in zonesPage.js.
+  // Compared by parsed timestamp so upstream/offset format changes (Z vs
+  // +00:00 vs +01:00) all collapse to the same instant. Self-cleaning once
+  // the match drops out of the future-match window.
+  if (activeZoneSlug === "terrace") {
+    const excludedMs = Date.parse("2026-07-06T00:00:00Z");
+    dataset = dataset.filter((m) => {
+      if (!m?.datetimeIso) return true;
+      return Date.parse(m.datetimeIso) !== excludedMs;
+    });
+  }
+
+  return dataset;
 }
 
 function setupFilters(nav, container, initialFilter) {
