@@ -91,9 +91,9 @@ export function initFixturesPage(data) {
   // content) hasn't changed, only its subject.
   if (englandContainer) {
     const fallbackActive = isEnglandFallbackActive();
-    const stripMatches = fallbackActive
-      ? getHeadlineMatches(matchCache)
-      : matchCache.england;
+    const stripMatches = applyTerraceZoneExclusions(
+      fallbackActive ? getHeadlineMatches(matchCache) : matchCache.england,
+    );
 
     const stripHeading = document.getElementById("england-heading");
     if (stripHeading) {
@@ -161,22 +161,28 @@ function getFilteredDataset(filter) {
       break;
   }
 
-  // One-fixture terrace exclusion. The 01:00 BST Mon 6 Jul R16 kickoff
-  // belongs to Sunday's trading day, which sits outside the terrace's
-  // Sunday-licensed hours. Only strips the match from Path B (?zone=terrace
-  // browsing); Path A's terrace card is disabled separately in zonesPage.js.
-  // Compared by parsed timestamp so upstream/offset format changes (Z vs
-  // +00:00 vs +01:00) all collapse to the same instant. Self-cleaning once
-  // the match drops out of the future-match window.
-  if (activeZoneSlug === "terrace") {
-    const excludedMs = Date.parse("2026-07-06T00:00:00Z");
-    dataset = dataset.filter((m) => {
-      if (!m?.datetimeIso) return true;
-      return Date.parse(m.datetimeIso) !== excludedMs;
-    });
-  }
+  return applyTerraceZoneExclusions(dataset);
+}
 
-  return dataset;
+/**
+ * One-fixture terrace exclusion. The 01:00 BST Mon 6 Jul R16 kickoff
+ * belongs to Sunday's trading day, which sits outside the terrace's
+ * Sunday-licensed hours. Applied to EVERY render surface on this page
+ * (main filtered list + England HQ strip) so no Path B entry lands the
+ * customer on book.html with terrace + this fixture. Path A's terrace
+ * card is disabled separately in zonesPage.js. Compared by parsed
+ * timestamp so upstream/offset format changes (Z vs +00:00 vs +01:00)
+ * all collapse to the same instant. Self-cleaning once the match drops
+ * out of the future-match window.
+ */
+function applyTerraceZoneExclusions(matches) {
+  if (activeZoneSlug !== "terrace") return matches;
+  if (!Array.isArray(matches)) return matches;
+  const excludedMs = Date.parse("2026-07-06T00:00:00Z");
+  return matches.filter((m) => {
+    if (!m?.datetimeIso) return true;
+    return Date.parse(m.datetimeIso) !== excludedMs;
+  });
 }
 
 function setupFilters(nav, container, initialFilter) {
