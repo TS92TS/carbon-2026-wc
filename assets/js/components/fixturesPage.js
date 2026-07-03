@@ -91,7 +91,7 @@ export function initFixturesPage(data) {
   // content) hasn't changed, only its subject.
   if (englandContainer) {
     const fallbackActive = isEnglandFallbackActive();
-    const stripMatches = applyTerraceZoneExclusions(
+    const stripMatches = applyZoneExclusions(
       fallbackActive ? getHeadlineMatches(matchCache) : matchCache.england,
     );
 
@@ -161,27 +161,41 @@ function getFilteredDataset(filter) {
       break;
   }
 
-  return applyTerraceZoneExclusions(dataset);
+  return applyZoneExclusions(dataset);
 }
 
 /**
- * One-fixture terrace exclusion. The 01:00 BST Mon 6 Jul R16 kickoff
- * belongs to Sunday's trading day, which sits outside the terrace's
- * Sunday-licensed hours. Applied to EVERY render surface on this page
- * (main filtered list + England HQ strip) so no Path B entry lands the
- * customer on book.html with terrace + this fixture. Path A's terrace
- * card is disabled separately in zonesPage.js. Compared by parsed
- * timestamp so upstream/offset format changes (Z vs +00:00 vs +01:00)
- * all collapse to the same instant. Self-cleaning once the match drops
- * out of the future-match window.
+ * Match+zone exclusion registry. Each entry pulls a single fixture out
+ * of booking availability for a single zone. Applied to EVERY render
+ * surface on this page (main filtered list + England HQ strip) so no
+ * Path B entry lands the customer on book.html with a forbidden
+ * zone+fixture combo. Path A's zone-card disables live in zonesPage.js.
+ *
+ * Kickoffs are stored as parsed timestamps so upstream/offset format
+ * changes (Z vs +00:00 vs +01:00) all collapse to the same instant.
+ * Entries self-clean once the match drops out of the future-match
+ * window — a filter against a past timestamp is a no-op.
  */
-function applyTerraceZoneExclusions(matches) {
-  if (activeZoneSlug !== "terrace") return matches;
+const ZONE_MATCH_EXCLUSIONS = [
+  // Mexico vs England R16 · 01:00 BST Mon 6 Jul — kickoff belongs to
+  // Sunday's trading day and sits outside the terrace's Sunday licensed
+  // hours.
+  { kickoffMs: Date.parse("2026-07-06T00:00:00Z"), zoneSlug: "terrace" },
+  // Mexico vs England R16 · 01:00 BST Mon 6 Jul — booths fully booked,
+  // no remaining capacity to sell.
+  { kickoffMs: Date.parse("2026-07-06T00:00:00Z"), zoneSlug: "booth" },
+];
+
+function applyZoneExclusions(matches) {
+  if (!activeZoneSlug) return matches;
   if (!Array.isArray(matches)) return matches;
-  const excludedMs = Date.parse("2026-07-06T00:00:00Z");
+  const excludedKickoffs = ZONE_MATCH_EXCLUSIONS.filter(
+    (e) => e.zoneSlug === activeZoneSlug,
+  ).map((e) => e.kickoffMs);
+  if (excludedKickoffs.length === 0) return matches;
   return matches.filter((m) => {
     if (!m?.datetimeIso) return true;
-    return Date.parse(m.datetimeIso) !== excludedMs;
+    return !excludedKickoffs.includes(Date.parse(m.datetimeIso));
   });
 }
 

@@ -52,6 +52,26 @@ function formatBannerDate(iso) {
   return fmt ? fmt.dateShort : iso;
 }
 
+/**
+ * Disable a zone card's CTA in place: swap primary → muted styling, drop
+ * the href (so the CTA-rewrite loop below naturally skips it, since the
+ * selector requires an href), block keyboard activation, and swap the
+ * label to explain the state. Used by match-specific exclusions where a
+ * given fixture cannot be booked into a given zone.
+ */
+function disableZoneCta(zoneSlug, label) {
+  const cta = document.querySelector(
+    `a[href^="fixtures.html?zone=${zoneSlug}"]`,
+  );
+  if (!cta) return;
+  cta.classList.remove("c-button--primary");
+  cta.classList.add("c-button--muted");
+  cta.setAttribute("aria-disabled", "true");
+  cta.setAttribute("tabindex", "-1");
+  cta.textContent = label;
+  cta.removeAttribute("href");
+}
+
 export function initZonesPage() {
   const banner = document.querySelector('[data-component="fixture-banner"]');
   if (!banner) return;
@@ -108,24 +128,16 @@ export function initZonesPage() {
   const cue = document.getElementById("zone-cue");
   if (cue) cue.removeAttribute("hidden");
 
-  // One-fixture terrace exclusion. The 01:00 BST Mon 6 Jul R16 kickoff
-  // belongs to Sunday's trading day, which sits outside the terrace's
-  // Sunday-licensed hours. Strips the href BEFORE the CTA-rewrite loop
-  // below so the rewrite naturally skips it (selector requires href).
-  // Self-cleaning: check becomes a no-op once the match drops out of the
-  // future-match window.
+  // Match-specific zone-card disables. The 01:00 BST Mon 6 Jul R16 has
+  // the terrace excluded (kickoff falls outside its Sunday licensed
+  // hours) and the booths excluded (sold out — no remaining capacity).
+  // Runs BEFORE the CTA-rewrite loop below so disabled cards (href
+  // stripped by disableZoneCta) are naturally skipped by the rewrite
+  // selector. Self-cleaning: checks become no-ops once the match drops
+  // out of the future-match window.
   if (params.get("date") === "2026-07-06" && params.get("time") === "01:00") {
-    const terraceCta = document.querySelector(
-      'a[href^="fixtures.html?zone=terrace"]',
-    );
-    if (terraceCta) {
-      terraceCta.classList.remove("c-button--primary");
-      terraceCta.classList.add("c-button--muted");
-      terraceCta.setAttribute("aria-disabled", "true");
-      terraceCta.setAttribute("tabindex", "-1");
-      terraceCta.textContent = "Indoor Zones Only for This Fixture";
-      terraceCta.removeAttribute("href");
-    }
+    disableZoneCta("terrace", "Indoor Zones Only for This Fixture");
+    disableZoneCta("booth", "Zone Fully Booked");
   }
 
   // Rewrite zone-card CTAs straight to book.html with the carry. The
