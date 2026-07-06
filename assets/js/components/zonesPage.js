@@ -128,15 +128,13 @@ export function initZonesPage() {
   const cue = document.getElementById("zone-cue");
   if (cue) cue.removeAttribute("hidden");
 
-  // Match-specific zone-card disables. The 01:00 BST Mon 6 Jul R16 has
-  // the terrace excluded (kickoff falls outside its Sunday licensed
-  // hours) and the booths excluded (sold out — no remaining capacity).
-  // Runs BEFORE the CTA-rewrite loop below so disabled cards (href
-  // stripped by disableZoneCta) are naturally skipped by the rewrite
-  // selector. Self-cleaning: checks become no-ops once the match drops
-  // out of the future-match window.
-  if (params.get("date") === "2026-07-06" && params.get("time") === "01:00") {
-    disableZoneCta("terrace", "Indoor Zones Only for This Fixture");
+  // Match-specific zone-card disables. The 22:00 BST Sat 11 Jul QF has
+  // the booths excluded (sold out — no remaining capacity). Runs BEFORE
+  // the CTA-rewrite loop below so the disabled card (href stripped by
+  // disableZoneCta) is naturally skipped by the rewrite selector.
+  // Self-cleaning: check becomes a no-op once the match drops out of
+  // the future-match window.
+  if (params.get("date") === "2026-07-11" && params.get("time") === "22:00") {
     disableZoneCta("booth", "Zone Fully Booked");
   }
 
