@@ -180,9 +180,6 @@ const ZONE_MATCH_EXCLUSIONS = [
   // Norway vs England QF · 22:00 BST Sat 11 Jul — booths fully booked,
   // no remaining capacity to sell.
   { kickoffMs: Date.parse("2026-07-11T21:00:00Z"), zoneSlug: "booth" },
-  // Norway vs England QF · 22:00 BST Sat 11 Jul — terrace fully booked,
-  // no remaining capacity to sell.
-  { kickoffMs: Date.parse("2026-07-11T21:00:00Z"), zoneSlug: "terrace" },
 ];
 
 function applyZoneExclusions(matches) {

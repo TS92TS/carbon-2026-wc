@@ -129,14 +129,13 @@ export function initZonesPage() {
   if (cue) cue.removeAttribute("hidden");
 
   // Match-specific zone-card disables. The 22:00 BST Sat 11 Jul QF has
-  // both booths and terrace excluded (sold out — no remaining capacity
-  // in either). Carbon remains bookable. Runs BEFORE the CTA-rewrite
-  // loop below so disabled cards (href stripped by disableZoneCta) are
-  // naturally skipped by the rewrite selector. Self-cleaning: checks
-  // become no-ops once the match drops out of the future-match window.
+  // the booths excluded (sold out — no remaining capacity). Runs BEFORE
+  // the CTA-rewrite loop below so the disabled card (href stripped by
+  // disableZoneCta) is naturally skipped by the rewrite selector.
+  // Self-cleaning: check becomes a no-op once the match drops out of
+  // the future-match window.
   if (params.get("date") === "2026-07-11" && params.get("time") === "22:00") {
     disableZoneCta("booth", "Zone Fully Booked");
-    disableZoneCta("terrace", "Zone Fully Booked");
   }
 
   // Rewrite zone-card CTAs straight to book.html with the carry. The
