@@ -105,6 +105,7 @@ export function renderFeaturedMatch(matchPayload) {
         els.bookingBtn.href = "zones.html";
       }
       els.bookingBtn.removeAttribute("aria-disabled");
+      els.bookingBtn.removeAttribute("tabindex");
       els.bookingBtn.classList.remove("c-button--muted");
 
       if (status === "live") {
@@ -115,19 +116,27 @@ export function renderFeaturedMatch(matchPayload) {
         els.bookingBtn.classList.remove("c-button--pulse");
       }
     } else {
-      // Non-bookable — route the dead "book" tap to the venue phone so
-      // the click still has a clear next step. Muted styling
-      // distinguishes it from the live CTA. Text differs by reason:
-      //   • Fully booked → state + reassurance ("walk-ins welcome")
-      //   • 3-hour cut-off → walk-ins action, phone number visible
-      // Tapping the button dials the venue in both cases.
-      els.bookingBtn.href = "tel:+441449674674";
-      els.bookingBtn.removeAttribute("aria-disabled");
+      // Non-bookable — muted styling distinguishes the state from the
+      // live CTA. Behaviour splits by reason:
+      //   • Fully booked → purely informational anchor. No href, no
+      //     dial, no navigation. Blocks both click and keyboard
+      //     activation via `aria-disabled` + `tabindex="-1"` + no href.
+      //   • 3-hour cut-off → dead "book" tap routes to the venue phone
+      //     so the click still has a clear next step.
       els.bookingBtn.classList.remove("c-button--pulse");
       els.bookingBtn.classList.add("c-button--muted");
-      els.bookingBtn.textContent = isFullyBookedFixture(featured)
-        ? "Fully Booked · Walk-ins Welcome"
-        : "Walk-ins Only · Call 01449 674674";
+
+      if (isFullyBookedFixture(featured)) {
+        els.bookingBtn.removeAttribute("href");
+        els.bookingBtn.setAttribute("aria-disabled", "true");
+        els.bookingBtn.setAttribute("tabindex", "-1");
+        els.bookingBtn.textContent = "Fully Booked · Walk-ins Welcome";
+      } else {
+        els.bookingBtn.href = "tel:+441449674674";
+        els.bookingBtn.removeAttribute("aria-disabled");
+        els.bookingBtn.removeAttribute("tabindex");
+        els.bookingBtn.textContent = "Walk-ins Only · Call 01449 674674";
+      }
     }
   }
 
