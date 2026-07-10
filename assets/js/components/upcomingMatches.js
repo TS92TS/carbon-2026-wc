@@ -7,6 +7,7 @@ import {
   getHeadlineMatches,
   tlaOf,
   isAnonymousMatch,
+  isFullyBookedFixture,
 } from "../lib/matchData.js";
 import { TROPHY_SVG_MARKUP, VALID_FILTERS } from "../lib/constants.js";
 
@@ -310,7 +311,13 @@ function updateUI(matches, container) {
     } else {
       const lockBadge = document.createElement("span");
       lockBadge.className = "c-badge c-badge--muted c-fixture-row__lock-badge";
-      lockBadge.textContent = "Walk-ins Only";
+      // "Fully Booked" when the fixture is at total venue capacity;
+      // "Walk-ins Only" when the row is locked by the 3-hour cut-off.
+      // Both states are non-bookable — the label just tells the customer
+      // *why*.
+      lockBadge.textContent = isFullyBookedFixture(match)
+        ? "Fully Booked"
+        : "Walk-ins Only";
       row.appendChild(lockBadge);
     }
 

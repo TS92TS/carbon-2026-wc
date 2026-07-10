@@ -3,6 +3,7 @@ import {
   formatMatchDateTime,
   getDetailedStageLabel,
   isAnonymousMatch,
+  isFullyBookedFixture,
 } from "../lib/matchData.js";
 import { TROPHY_SVG_MARKUP } from "../lib/constants.js";
 
@@ -114,14 +115,19 @@ export function renderFeaturedMatch(matchPayload) {
         els.bookingBtn.classList.remove("c-button--pulse");
       }
     } else {
-      // Inside the 3-hour cut-off: route the dead "book" tap to the
-      // venue phone so the click still has a clear next step. Muted
-      // styling distinguishes it from the live CTA.
+      // Non-bookable — route the dead "book" tap to the venue phone so
+      // the click still has a clear next step. Muted styling
+      // distinguishes it from the live CTA. Text differs by reason:
+      //   • Fully booked → state + reassurance ("walk-ins welcome")
+      //   • 3-hour cut-off → walk-ins action, phone number visible
+      // Tapping the button dials the venue in both cases.
       els.bookingBtn.href = "tel:+441449674674";
       els.bookingBtn.removeAttribute("aria-disabled");
       els.bookingBtn.classList.remove("c-button--pulse");
       els.bookingBtn.classList.add("c-button--muted");
-      els.bookingBtn.textContent = "Walk-ins · Call 01449 674674";
+      els.bookingBtn.textContent = isFullyBookedFixture(featured)
+        ? "Fully Booked · Walk-ins Welcome"
+        : "Walk-ins Only · Call 01449 674674";
     }
   }
 

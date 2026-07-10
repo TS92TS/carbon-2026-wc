@@ -12,6 +12,7 @@ import {
   getHeadlineMatches,
   tlaOf,
   isAnonymousMatch,
+  isFullyBookedFixture,
 } from "../lib/matchData.js";
 import {
   TROPHY_SVG_MARKUP,
@@ -177,12 +178,13 @@ function getFilteredDataset(filter) {
  * window — a filter against a past timestamp is a no-op.
  */
 const ZONE_MATCH_EXCLUSIONS = [
-  // Norway vs England QF · 22:00 BST Sat 11 Jul — booths fully booked,
-  // no remaining capacity to sell.
-  { kickoffMs: Date.parse("2026-07-11T21:00:00Z"), zoneSlug: "booth" },
-  // Norway vs England QF · 22:00 BST Sat 11 Jul — terrace fully booked,
-  // no remaining capacity to sell.
-  { kickoffMs: Date.parse("2026-07-11T21:00:00Z"), zoneSlug: "terrace" },
+  // Empty for now — the current sell-out (Norway vs England QF) is a
+  // full-venue closure handled at fixture level via matchData.js's
+  // FULLY_BOOKED_FIXTURES / isBookable, which locks the row across every
+  // render surface. Keep this registry available for future *partial*
+  // sell-outs where only some zones are affected (e.g. terrace-only
+  // capacity issue) — entries take the shape
+  // `{ kickoffMs: Date.parse("<iso>"), zoneSlug: "<slug>" }`.
 ];
 
 function applyZoneExclusions(matches) {
@@ -529,7 +531,13 @@ function createFixtureRow(match, options = {}) {
   } else {
     const lockBadge = document.createElement("span");
     lockBadge.className = "c-badge c-badge--muted c-fixture-row__lock-badge";
-    lockBadge.textContent = "Walk-ins Only";
+    // "Fully Booked" when the fixture is at total venue capacity;
+    // "Walk-ins Only" when the row is locked by the 3-hour cut-off.
+    // Both states are non-bookable — the label just tells the customer
+    // *why*.
+    lockBadge.textContent = isFullyBookedFixture(match)
+      ? "Fully Booked"
+      : "Walk-ins Only";
     row.appendChild(lockBadge);
   }
 

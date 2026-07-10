@@ -125,10 +125,31 @@ function evaluateCacheAge(parsedData) {
    ------------------------------------------------------------------------- */
 const BOOKING_CUTOFF_MS = 3 * 60 * 60 * 1000;
 
+/**
+ * Fixtures at total venue capacity — every zone sold out. Closes the
+ * online funnel the same way the 3-hour cut-off does, so the site-wide
+ * "Walk-ins Only" affordance kicks in across every render surface
+ * (fixture rows, home upcoming, featured CTA, marquee, book.html gate).
+ * Timestamps stored as parsed ms so upstream offset format changes (Z
+ * vs +00:00 vs +01:00) collapse to the same instant. Self-cleaning:
+ * entries become permanent no-ops once the match drops out of upcoming.
+ */
+export const FULLY_BOOKED_FIXTURES = [
+  Date.parse("2026-07-11T21:00:00Z"), // Norway vs England QF · 22:00 BST Sat 11 Jul
+];
+
+export function isFullyBookedFixture(match) {
+  if (!match?.datetimeIso) return false;
+  const kickoffMs = Date.parse(match.datetimeIso);
+  if (Number.isNaN(kickoffMs)) return false;
+  return FULLY_BOOKED_FIXTURES.includes(kickoffMs);
+}
+
 function isMatchBookable(match, now) {
   if (!match?.datetimeIso) return false;
   const kickoffMs = Date.parse(match.datetimeIso);
   if (Number.isNaN(kickoffMs)) return false;
+  if (FULLY_BOOKED_FIXTURES.includes(kickoffMs)) return false;
   return kickoffMs - now > BOOKING_CUTOFF_MS;
 }
 

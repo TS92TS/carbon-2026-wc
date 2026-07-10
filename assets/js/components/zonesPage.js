@@ -13,6 +13,7 @@ import { safeBackgroundUrl } from "../lib/urlHelpers.js";
 import {
   formatMatchDateTime,
   getDetailedStageLabel,
+  isFullyBookedFixture,
 } from "../lib/matchData.js";
 import { TROPHY_SVG_MARKUP } from "../lib/constants.js";
 
@@ -95,11 +96,20 @@ export function initZonesPage() {
       params.get("time"),
     );
   }
+  // Synthesise a pseudo-match from URL params for fixture-level checks.
+  // Europe/London offset is +01:00 across the whole tournament window
+  // (June–July 2026, all in BST) so this is a stable conversion.
+  const pseudoMatch = {
+    datetimeIso: `${params.get("date")}T${params.get("time")}:00+01:00`,
+  };
+  const fullyBooked = isFullyBookedFixture(pseudoMatch);
+
   if (metaEl) {
     const parts = [
       formatBannerDate(params.get("date")),
       params.get("time"),
     ].filter(Boolean);
+    if (fullyBooked) parts.push("Fully Booked");
     metaEl.textContent = parts.join(" · ");
   }
 
@@ -128,15 +138,19 @@ export function initZonesPage() {
   const cue = document.getElementById("zone-cue");
   if (cue) cue.removeAttribute("hidden");
 
-  // Match-specific zone-card disables. The 22:00 BST Sat 11 Jul QF has
-  // both booths and terrace excluded (sold out — no remaining capacity
-  // in either). Carbon remains bookable. Runs BEFORE the CTA-rewrite
-  // loop below so disabled cards (href stripped by disableZoneCta) are
-  // naturally skipped by the rewrite selector. Self-cleaning: checks
-  // become no-ops once the match drops out of the future-match window.
-  if (params.get("date") === "2026-07-11" && params.get("time") === "22:00") {
-    disableZoneCta("booth", "Zone Fully Booked");
-    disableZoneCta("terrace", "Zone Fully Booked");
+  // Full-venue closure. When every zone is at capacity the fixture is
+  // marked unbookable at data level (matchData.js FULLY_BOOKED_FIXTURES
+  // → isBookable=false), which already locks the row on fixtures.html /
+  // index.html and blocks book.html via findBookableMatch. This mirrors
+  // that treatment on zones.html for anyone landing here via a bookmark
+  // or shared URL — all three zone cards degrade to the site-wide
+  // "Walk-ins Only" affordance. Runs BEFORE the CTA-rewrite loop so
+  // disabled cards (href stripped by disableZoneCta) are skipped by
+  // the rewrite selector.
+  if (fullyBooked) {
+    disableZoneCta("carbon", "Walk-ins Only");
+    disableZoneCta("terrace", "Walk-ins Only");
+    disableZoneCta("booth", "Walk-ins Only");
   }
 
   // Rewrite zone-card CTAs straight to book.html with the carry. The
