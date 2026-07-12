@@ -181,6 +181,9 @@ const ZONE_MATCH_EXCLUSIONS = [
   // England vs Argentina SF · 20:00 BST Wed 15 Jul — booths fully
   // booked, no remaining capacity to sell.
   { kickoffMs: Date.parse("2026-07-15T19:00:00Z"), zoneSlug: "booth" },
+  // England vs Argentina SF · 20:00 BST Wed 15 Jul — terrace fully
+  // booked, no remaining capacity to sell.
+  { kickoffMs: Date.parse("2026-07-15T19:00:00Z"), zoneSlug: "terrace" },
 ];
 
 function applyZoneExclusions(matches) {

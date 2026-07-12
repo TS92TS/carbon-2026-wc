@@ -145,6 +145,7 @@ export function initZonesPage() {
   // Only" copy correctly overwrites this "Zone Fully Booked" copy.
   if (params.get("date") === "2026-07-15" && params.get("time") === "20:00") {
     disableZoneCta("booth", "Zone Fully Booked");
+    disableZoneCta("terrace", "Zone Fully Booked");
   }
 
   // Full-venue closure. When every zone is at capacity the fixture is
