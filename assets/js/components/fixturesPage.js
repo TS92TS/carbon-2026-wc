@@ -178,13 +178,9 @@ function getFilteredDataset(filter) {
  * window — a filter against a past timestamp is a no-op.
  */
 const ZONE_MATCH_EXCLUSIONS = [
-  // Empty for now — the current sell-out (Norway vs England QF) is a
-  // full-venue closure handled at fixture level via matchData.js's
-  // FULLY_BOOKED_FIXTURES / isBookable, which locks the row across every
-  // render surface. Keep this registry available for future *partial*
-  // sell-outs where only some zones are affected (e.g. terrace-only
-  // capacity issue) — entries take the shape
-  // `{ kickoffMs: Date.parse("<iso>"), zoneSlug: "<slug>" }`.
+  // England vs Argentina SF · 20:00 BST Wed 15 Jul — booths fully
+  // booked, no remaining capacity to sell.
+  { kickoffMs: Date.parse("2026-07-15T19:00:00Z"), zoneSlug: "booth" },
 ];
 
 function applyZoneExclusions(matches) {

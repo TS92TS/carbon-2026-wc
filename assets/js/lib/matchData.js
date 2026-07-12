@@ -135,7 +135,10 @@ const BOOKING_CUTOFF_MS = 3 * 60 * 60 * 1000;
  * entries become permanent no-ops once the match drops out of upcoming.
  */
 export const FULLY_BOOKED_FIXTURES = [
-  Date.parse("2026-07-11T21:00:00Z"), // Norway vs England QF · 22:00 BST Sat 11 Jul
+  // Empty for now — populate with a fixture's kickoff timestamp when
+  // total venue capacity is reached (all zones sold out). Entries take
+  // the shape `Date.parse("<iso-utc>")` and self-clean once the match
+  // drops out of upcoming.
 ];
 
 export function isFullyBookedFixture(match) {
