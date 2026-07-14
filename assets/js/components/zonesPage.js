@@ -143,10 +143,8 @@ export function initZonesPage() {
   // fixture ever ends up in BOTH states (added to FULLY_BOOKED_FIXTURES
   // without cleanup of the partial entry), the full-venue "Walk-ins
   // Only" copy correctly overwrites this "Zone Fully Booked" copy.
-  if (params.get("date") === "2026-07-15" && params.get("time") === "20:00") {
-    disableZoneCta("booth", "Zone Fully Booked");
-    disableZoneCta("terrace", "Zone Fully Booked");
-  }
+  // (currently no partial exclusions active — England vs Argentina SF
+  // is a full-venue closure handled by the block below.)
 
   // Full-venue closure. When every zone is at capacity the fixture is
   // marked unbookable at data level (matchData.js FULLY_BOOKED_FIXTURES
