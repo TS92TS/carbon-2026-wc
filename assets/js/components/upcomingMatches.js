@@ -8,6 +8,7 @@ import {
   tlaOf,
   isAnonymousMatch,
   isFullyBookedFixture,
+  TOURNAMENT_CONCLUDED,
 } from "../lib/matchData.js";
 import { TROPHY_SVG_MARKUP, VALID_FILTERS } from "../lib/constants.js";
 
@@ -163,7 +164,9 @@ function updateUI(matches, container) {
     const emptyLi = document.createElement("li");
     emptyLi.className = "u-dim u-tiny";
     emptyLi.style.padding = "var(--space-4)";
-    emptyLi.textContent = "No matches found in this category.";
+    emptyLi.textContent = TOURNAMENT_CONCLUDED
+      ? "Tournament concluded — see you next time."
+      : "No matches found in this category.";
     container.appendChild(emptyLi);
     container.setAttribute("aria-busy", "false");
     return;

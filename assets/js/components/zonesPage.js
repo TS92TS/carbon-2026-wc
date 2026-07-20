@@ -14,6 +14,7 @@ import {
   formatMatchDateTime,
   getDetailedStageLabel,
   isFullyBookedFixture,
+  TOURNAMENT_CONCLUDED,
 } from "../lib/matchData.js";
 import { TROPHY_SVG_MARKUP } from "../lib/constants.js";
 
@@ -80,6 +81,17 @@ export function initZonesPage() {
   const params = new URLSearchParams(window.location.search);
   const fixture = params.get("fixture");
 
+  // Tournament concluded — disable every zone card regardless of URL
+  // context (Path A fixture-preselected OR generic Path B browse).
+  // Runs before the Path A early-exit below so generic-browse arrivals
+  // are still guarded. When TOURNAMENT_CONCLUDED flips false for a
+  // future tournament, this becomes a no-op automatically.
+  if (TOURNAMENT_CONCLUDED) {
+    disableZoneCta("carbon", "Bookings Closed");
+    disableZoneCta("terrace", "Bookings Closed");
+    disableZoneCta("booth", "Bookings Closed");
+  }
+
   // No ?fixture= → generic browsing mode (cards keep their Path B hrefs).
   if (!fixture) return;
 
@@ -143,8 +155,7 @@ export function initZonesPage() {
   // fixture ever ends up in BOTH states (added to FULLY_BOOKED_FIXTURES
   // without cleanup of the partial entry), the full-venue "Walk-ins
   // Only" copy correctly overwrites this "Zone Fully Booked" copy.
-  // (currently no partial exclusions active — England vs Argentina SF
-  // is a full-venue closure handled by the block below.)
+  // (currently no partial exclusions active — tournament concluded.)
 
   // Full-venue closure. When every zone is at capacity the fixture is
   // marked unbookable at data level (matchData.js FULLY_BOOKED_FIXTURES

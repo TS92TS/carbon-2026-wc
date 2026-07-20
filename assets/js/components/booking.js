@@ -195,7 +195,9 @@ export async function initBookingConcierge() {
   ) {
     redirectToFunnel(
       "fixtures.html",
-      "No bookable matches are available right now.",
+      matchData?.status === "concluded"
+        ? "The 2026 tournament has concluded — see you next time."
+        : "No bookable matches are available right now.",
     );
     return;
   }

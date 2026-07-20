@@ -32,7 +32,7 @@ const DAY_MS = 24 * HOUR_MS;
 
 const STATE_CONCLUDED = Object.freeze({
   mode: "static",
-  text: "FULL TIME · 2030",
+  text: "FULL TIME · SEE YOU SOON",
 });
 
 /**

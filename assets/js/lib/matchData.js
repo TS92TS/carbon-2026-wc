@@ -135,7 +135,10 @@ const BOOKING_CUTOFF_MS = 3 * 60 * 60 * 1000;
  * entries become permanent no-ops once the match drops out of upcoming.
  */
 export const FULLY_BOOKED_FIXTURES = [
-  Date.parse("2026-07-15T19:00:00Z"), // England vs Argentina SF · 20:00 BST Wed 15 Jul
+  // Empty — the tournament has concluded. Populate with a fixture's
+  // kickoff timestamp when total venue capacity is reached (all zones
+  // sold out). Entries take the shape `Date.parse("<iso-utc>")` and
+  // self-clean once the match drops out of upcoming.
 ];
 
 export function isFullyBookedFixture(match) {
@@ -667,7 +670,37 @@ export async function getMatchData() {
   }
 }
 
+/* -------------------------------------------------------------------------
+   TOURNAMENT CONCLUDED SWITCH · single flag that inactivates the live
+   booking pipeline sitewide. Flip to `false` and the site re-arms for a
+   future tournament — the same API worker, cache chain, trading-rules
+   engine, and booking funnel all resume with zero further code changes.
+
+   Downstream effect (via `{ status: "concluded", upcoming: [], england: [] }`
+   short-circuit below):
+     • marqueeController → STATE_CONCLUDED
+     • featuredMatch     → "Tournament Concluded" card
+     • fixturesPage / upcomingMatches → empty-state copy
+     • booking.js findBookableMatch → redirect out of book.html
+     • zonesPage         → all zone-card CTAs disabled (see companion
+                            guard in zonesPage.js which reads this flag)
+   ------------------------------------------------------------------------- */
+export const TOURNAMENT_CONCLUDED = true;
+
+const CONCLUDED_PAYLOAD = Object.freeze({
+  status: "concluded",
+  upcoming: [],
+  england: [],
+});
+
 export async function fetchMatchData() {
+  if (TOURNAMENT_CONCLUDED) {
+    // Bypass the API entirely — no network round-trip, no loading tail,
+    // no chance of a stale-cache or worker-outage rendering something
+    // misleading. `stampBookable` is a no-op on empty arrays.
+    return { ...CONCLUDED_PAYLOAD };
+  }
+
   try {
     const response = await fetch(API_URL, {
       method: "GET",

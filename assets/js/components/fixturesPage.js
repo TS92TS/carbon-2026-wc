@@ -13,6 +13,7 @@ import {
   tlaOf,
   isAnonymousMatch,
   isFullyBookedFixture,
+  TOURNAMENT_CONCLUDED,
 } from "../lib/matchData.js";
 import {
   TROPHY_SVG_MARKUP,
@@ -109,8 +110,10 @@ export function initFixturesPage(data) {
         isEnglandStrip: true,
       });
     } else {
-      englandContainer.innerHTML =
-        '<li class="u-dim u-tiny" style="padding:var(--space-4)">No fixtures scheduled.</li>';
+      const stripEmptyMessage = TOURNAMENT_CONCLUDED
+        ? "Tournament concluded — see you next time."
+        : "No fixtures scheduled.";
+      englandContainer.innerHTML = `<li class="u-dim u-tiny" style="padding:var(--space-4)">${stripEmptyMessage}</li>`;
       englandContainer.setAttribute("aria-busy", "false");
     }
   }
@@ -178,12 +181,10 @@ function getFilteredDataset(filter) {
  * window — a filter against a past timestamp is a no-op.
  */
 const ZONE_MATCH_EXCLUSIONS = [
-  // Empty for now — the current sell-out (England vs Argentina SF) is
-  // a full-venue closure handled at fixture level via matchData.js's
-  // FULLY_BOOKED_FIXTURES / isBookable, which locks the row across
-  // every render surface. Keep this registry available for future
-  // *partial* sell-outs where only some zones are affected — entries
-  // take the shape `{ kickoffMs: Date.parse("<iso>"), zoneSlug: "<slug>" }`.
+  // Empty — tournament concluded. Keep this registry available for
+  // future *partial* sell-outs (some zones capacity-blocked, others
+  // still open) — entries take the shape
+  // `{ kickoffMs: Date.parse("<iso>"), zoneSlug: "<slug>" }`.
 ];
 
 function applyZoneExclusions(matches) {
@@ -266,7 +267,14 @@ function renderFixtures(matches, container, options = {}) {
     const emptyState = document.createElement("div");
     emptyState.className = "c-loader";
     emptyState.style.padding = "var(--space-12)";
-    emptyState.innerHTML = `<p class="u-caption">No matches found in this category.</p>`;
+    // Concluded state deserves warmer copy than the generic filter-empty
+    // message. Both paths render the same DOM structure — only the text
+    // differs — so a future tournament (TOURNAMENT_CONCLUDED = false)
+    // restores the original phrasing automatically.
+    const emptyMessage = TOURNAMENT_CONCLUDED
+      ? "Tournament concluded — see you next time."
+      : "No matches found in this category.";
+    emptyState.innerHTML = `<p class="u-caption">${emptyMessage}</p>`;
     container.appendChild(emptyState);
     container.setAttribute("aria-busy", "false");
     return;
